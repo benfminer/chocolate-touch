@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chocolate Touch Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..800&family=Nunito+Sans:wght@400;700;800;900&display=swap">
+<style>
+  /* Layout: one fixed 1280x720 stage scaled to the screen (it gets cast), menu + three games + wire test as swappable screens.
+     Single dark "candy shop at night" look on purpose: it projects well. */
+  :root{
+    --cocoa:#2A1810; --cocoa2:#3B2318; --cocoa3:#4E3122; --milk:#7A4A2E; --choc:#5A3420;
+    --cream:#FAF4E8; --muted:#D8CBB8; --dust:#A08B78; --amber:#E0A15C; --butter:#FFE9B8;
+    --foil:#E8C66A; --water:#7CC4EA; --good:#5CC08A; --bad:#E5604D;
+    --p0:#E5484D; --p1:#3E8EDE; --p2:#3BA676; --p3:#E8B23A; --p4:#A274E0; --p5:#E86FA8;
+    --serif:Fraunces,Georgia,"Times New Roman",serif;
+    --sans:"Nunito Sans",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  .noanim, .noanim *{transition:none!important;animation:none!important}
+  html,body{height:100%}
+  body{margin:0;background:#120b07;color:var(--cream);font-family:var(--sans);overflow:hidden}
+  button{font:inherit;color:inherit;cursor:pointer}
+  button:focus-visible,input:focus-visible{outline:3px solid var(--foil);outline-offset:2px}
+
+  #viewport{position:fixed;inset:0;overflow:hidden}
+  #stage{width:1280px;height:720px;position:absolute;left:0;top:0;transform-origin:0 0;overflow:hidden;
+         background:radial-gradient(ellipse at 50% 0%, var(--cocoa3) 0%, var(--cocoa) 60%, #1E110A 100%);
+         border-radius:6px;box-shadow:0 24px 70px rgba(0,0,0,.6);display:flex;flex-direction:column}
+
+  /* top bar */
+  .bar{display:flex;align-items:center;gap:16px;padding:14px 26px;border-bottom:1px solid rgba(250,244,232,.08)}
+  .brand{font-family:var(--serif);font-weight:700;font-size:22px;letter-spacing:.2px}
+  .brand small{font-family:var(--sans);font-weight:800;font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--amber);margin-left:10px}
+  .bar .spacer{flex:1}
+  .mode-name{font-weight:800;font-size:13px;letter-spacing:1.6px;text-transform:uppercase;color:var(--dust)}
+  .tbtn{background:rgba(250,244,232,.06);border:1px solid rgba(250,244,232,.14);border-radius:8px;padding:7px 12px;font-size:14px;font-weight:700}
+  .tbtn:hover{background:rgba(250,244,232,.12)}
+  .tbtn.primary{background:var(--foil);color:var(--cocoa);border-color:var(--foil)}
+
+  main{flex:1;position:relative}
+  .screen{position:absolute;inset:0;display:none;padding:26px 40px}
+  .screen.on{display:flex}
+
+  .keys{padding:10px 26px;font-size:14px;color:var(--dust);border-top:1px solid rgba(250,244,232,.08);display:flex;gap:22px;flex-wrap:wrap}
+  .keys b{color:var(--butter);background:rgba(250,244,232,.08);border-radius:5px;padding:1px 7px;font-weight:800}
+
+  /* pad lights (shared) */
+  .pads{display:flex;gap:10px}
+  .pad{width:20px;height:20px;border-radius:50%;background:var(--pc);opacity:.25;transition:opacity .15s, transform .15s}
+  .pad.hit{opacity:1;transform:scale(1.35);box-shadow:0 0 14px var(--pc)}
+
+  /* ---------- HOME ---------- */
+  #home{flex-direction:column;gap:24px;justify-content:center}
+  #home h1{font-family:var(--serif);font-size:54px;line-height:1.02;margin:0;font-weight:700;text-wrap:balance;max-width:900px}
+  #home h1 em{font-style:italic;color:var(--foil)}
+  #home p.lede{margin:0;font-size:20px;color:var(--muted);max-width:760px;line-height:1.45}
+  .games{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .gcard{text-align:left;background:linear-gradient(170deg,var(--cocoa3),var(--cocoa2));border:1px solid rgba(232,198,106,.25);border-radius:14px;
+         padding:20px 22px;display:flex;flex-direction:column;gap:8px;transition:transform .15s,border-color .15s}
+  .gcard:hover{transform:translateY(-3px);border-color:var(--foil)}
+  .gcard .num{font-weight:900;font-size:13px;letter-spacing:1.6px;text-transform:uppercase;color:var(--amber)}
+  .gcard h2{font-family:var(--serif);font-size:28px;margin:0;font-weight:700}
+  .gcard p{margin:0;font-size:16px;color:var(--muted);line-height:1.4}
+  .gcard .when{margin-top:auto;padding-top:8px;font-size:14px;font-weight:800;color:var(--butter)}
+  .home-foot{display:flex;align-items:center;gap:18px}
+  .home-foot .hint{font-size:15px;color:var(--dust)}
+
+  /* ---------- WIRE TEST ---------- */
+  #wire{flex-direction:column;gap:18px}
+  #wire h2{font-family:var(--serif);font-size:36px;margin:0}
+  .wire-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .slot{background:var(--cocoa2);border:2px solid rgba(250,244,232,.1);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;transition:background .15s,border-color .15s,transform .15s}
+  .slot.hit{border-color:var(--pc);background:color-mix(in srgb,var(--pc) 30%,var(--cocoa2));transform:scale(1.03)}
+  .slot .top{display:flex;align-items:center;gap:10px}
+  .slot .coin{width:34px;height:34px;border-radius:50%;background:var(--pc);box-shadow:inset 0 -3px 0 rgba(0,0,0,.25);flex:none}
+  .slot .key{font-weight:900;font-size:15px;letter-spacing:.5px;color:var(--butter)}
+  .slot .count{margin-left:auto;font-size:13px;color:var(--dust);font-variant-numeric:tabular-nums}
+  .slot input{width:100%;background:rgba(0,0,0,.25);border:1px solid rgba(250,244,232,.15);border-radius:8px;padding:8px 10px;color:var(--cream);font:700 18px var(--sans)}
+  .slot input::placeholder{color:var(--dust)}
+  .wire-help{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;font-size:15px;line-height:1.45;color:var(--muted)}
+  .wire-help h3{margin:0 0 4px;font-size:13px;letter-spacing:1.4px;text-transform:uppercase;color:var(--amber)}
+  .wire-help p{margin:0}
+
+  /* ---------- GAME 1: TURN IT TO CHOCOLATE ---------- */
+  #g1{gap:40px;align-items:center}
+  .g1-left{width:520px;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+  .objwrap{position:relative;width:340px;height:340px;display:flex;align-items:center;justify-content:center}
+  .obj{font-size:230px;line-height:1;transition:filter 1.1s ease, transform .4s;filter:drop-shadow(0 12px 20px rgba(0,0,0,.45));user-select:none}
+  .objwrap.melt .obj{filter:sepia(1) saturate(2.4) hue-rotate(-14deg) brightness(.5) contrast(1.25) drop-shadow(0 12px 20px rgba(0,0,0,.45));transform:scaleY(.94) translateY(8px)}
+  .drips{position:absolute;left:90px;right:90px;top:225px;height:0;display:flex;justify-content:space-around;pointer-events:none}
+  .drip{width:18px;height:0;background:linear-gradient(var(--milk),var(--choc));border-radius:0 0 9px 9px;transition:height 1.4s cubic-bezier(.3,.6,.4,1)}
+  .objwrap.melt .drip{height:var(--h)}
+  .puddle{position:absolute;bottom:-34px;left:50%;width:0;height:0;transform:translateX(-50%);border-radius:50%;
+          background:radial-gradient(ellipse at 50% 40%, var(--milk), var(--choc) 70%);transition:width 1.2s .5s, height 1.2s .5s}
+  .objwrap.melt .puddle{width:360px;height:54px}
+  .objwrap.nope .obj{animation:shake .6s}
+  @keyframes shake{0%,100%{transform:rotate(0)}20%{transform:rotate(-12deg)}40%{transform:rotate(10deg)}60%{transform:rotate(-7deg)}80%{transform:rotate(4deg)}}
+  .stamp{position:absolute;top:30px;right:-10px;transform:rotate(12deg) scale(.4);opacity:0;font-family:var(--serif);font-weight:800;font-size:40px;
+         padding:6px 18px;border:5px solid currentColor;border-radius:12px;transition:transform .35s cubic-bezier(.2,1.6,.4,1),opacity .2s;background:rgba(42,24,16,.85)}
+  .stamp.show{opacity:1;transform:rotate(12deg) scale(1)}
+  .stamp.yes{color:var(--foil)}
+  .stamp.no{color:var(--water)}
+  .g1-right{flex:1;display:flex;flex-direction:column;gap:16px;justify-content:center;min-width:0}
+  .chip{align-self:flex-start;font-weight:900;font-size:13px;letter-spacing:1.6px;text-transform:uppercase;color:var(--cocoa);background:var(--amber);border-radius:999px;padding:5px 12px}
+  .g1-right h2{font-family:var(--serif);font-size:52px;line-height:1.02;margin:0;font-weight:700;text-wrap:balance}
+  .ask{font-size:24px;line-height:1.4;color:var(--muted);margin:0}
+  .ask b{color:var(--butter)}
+  .result{background:rgba(0,0,0,.22);border-left:6px solid var(--foil);border-radius:4px 12px 12px 4px;padding:16px 20px;display:flex;flex-direction:column;gap:8px}
+  .result.no{border-left-color:var(--water)}
+  .result q{font-family:var(--serif);font-style:italic;font-size:26px;line-height:1.3;quotes:"\201C" "\201D"}
+  .result .note{font-size:19px;color:var(--muted);line-height:1.4}
+  .dots{display:flex;gap:8px;margin-top:6px}
+  .dot{width:14px;height:14px;border-radius:50%;background:rgba(250,244,232,.15)}
+  .dot.yes{background:var(--milk);box-shadow:inset 0 0 0 2px var(--amber)}
+  .dot.no{background:transparent;box-shadow:inset 0 0 0 2px var(--water)}
+  .dot.cur{outline:2px solid var(--cream);outline-offset:2px}
+  .navrow{display:flex;gap:10px}
+
+  /* ---------- GAME 2: TRUTH OR EXCUSE ---------- */
+  #g2{flex-direction:column;gap:18px}
+  .q-head{display:flex;align-items:center;gap:12px}
+  .q-count{font-weight:800;font-size:15px;color:var(--dust);font-variant-numeric:tabular-nums}
+  .chip.think{background:var(--water)}
+  .qtext{font-family:var(--serif);font-size:42px;line-height:1.15;font-weight:600;margin:0;text-wrap:balance;max-width:1100px;min-height:150px}
+  .buzzbox{border-radius:16px;padding:18px 24px;display:flex;align-items:center;gap:20px;min-height:110px;background:rgba(0,0,0,.22);border:2px dashed rgba(250,244,232,.18);transition:background .2s,border-color .2s}
+  .buzzbox.locked{border-style:solid;border-color:var(--pc);background:color-mix(in srgb,var(--pc) 28%,transparent)}
+  .buzzbox .big{font-family:var(--serif);font-size:44px;font-weight:800}
+  .buzzbox .sub{font-size:18px;color:var(--muted)}
+  .buzzbox .coin{width:66px;height:66px;border-radius:50%;background:var(--pc);box-shadow:inset 0 -5px 0 rgba(0,0,0,.25),0 0 30px var(--pc);flex:none}
+  .buzzbox.locked .coin{animation:pop .5s}
+  @keyframes pop{0%{transform:scale(.3)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+  .scores{display:flex;gap:12px;flex-wrap:wrap;margin-top:auto}
+  .score{flex:1;min-width:150px;background:var(--cocoa2);border-radius:12px;padding:10px 14px;border-top:5px solid var(--pc);display:flex;flex-direction:column;gap:4px;transition:opacity .2s,transform .2s}
+  .score.out{opacity:.35}
+  .score.lit{transform:translateY(-6px);box-shadow:0 8px 24px color-mix(in srgb,var(--pc) 50%,transparent)}
+  .score .nm{font-weight:900;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .score .pts{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .score .pts .n{font-family:var(--serif);font-size:30px;font-weight:800;color:var(--foil)}
+  .guide{font-size:18px;line-height:1.4;color:var(--butter);background:rgba(232,198,106,.08);border:1px dashed rgba(232,198,106,.5);border-radius:10px;padding:10px 16px}
+  .guide b{letter-spacing:1.2px;text-transform:uppercase;font-size:12px;color:var(--amber);margin-right:8px}
+  .g2-ctrl{display:flex;gap:10px;align-items:center}
+
+  /* ---------- GAME 3: JOHN'S THIRST ---------- */
+  #g3{gap:36px;align-items:center}
+  .scene{width:560px;height:100%;position:relative;display:flex;align-items:flex-end;justify-content:center;gap:20px;padding-bottom:30px}
+  .john{font-size:170px;line-height:1;filter:drop-shadow(0 10px 18px rgba(0,0,0,.4));transition:transform .3s}
+  .john.sip{transform:rotate(-8deg) translateY(-6px)}
+  .glass{width:150px;height:220px;border:6px solid rgba(250,244,232,.75);border-top:none;border-radius:0 0 26px 26px;position:relative;overflow:hidden;background:rgba(250,244,232,.06)}
+  .liquid{position:absolute;left:0;right:0;bottom:0;height:0;background:var(--water);transition:height .8s ease, background-color .9s ease}
+  .liquid::before{content:"";position:absolute;left:-10%;right:-10%;top:-8px;height:16px;border-radius:50%;background:inherit;filter:brightness(1.15)}
+  .glass.full .liquid{height:82%}
+  .glass.choc .liquid{background:var(--milk)}
+  .bubble{position:absolute;top:24px;left:10px;right:10px;background:var(--cream);color:var(--cocoa);border-radius:18px;padding:16px 20px;font-family:var(--serif);font-size:24px;line-height:1.3;font-style:italic;
+          opacity:0;transform:translateY(10px);transition:opacity .3s,transform .3s}
+  .bubble.show{opacity:1;transform:none}
+  .bubble::after{content:"";position:absolute;bottom:-16px;left:110px;border:10px solid transparent;border-top:16px solid var(--cream)}
+  .g3-right{flex:1;display:flex;flex-direction:column;gap:18px;justify-content:center;min-width:0}
+  .g3-right h2{font-family:var(--serif);font-size:46px;line-height:1.05;margin:0;text-wrap:balance}
+  .g3-right p{margin:0;font-size:22px;color:var(--muted);line-height:1.4}
+  .meter{position:relative;height:56px;border-radius:14px;background:rgba(0,0,0,.3);overflow:hidden;border:2px solid rgba(250,244,232,.15)}
+  .meter .fill{position:absolute;inset:0 auto 0 0;width:30%;background:linear-gradient(90deg,var(--amber),var(--bad));transition:width .9s cubic-bezier(.3,1.4,.5,1)}
+  .meter .lbl{position:absolute;inset:0;display:flex;align-items:center;padding:0 18px;font-weight:900;font-size:20px;letter-spacing:1.4px;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+  .scale3{display:flex;justify-content:space-between;font-size:14px;font-weight:800;color:var(--dust);letter-spacing:.6px;text-transform:uppercase}
+  .tally{font-size:20px;color:var(--butter);font-weight:800;font-variant-numeric:tabular-nums}
+  .overlay{position:absolute;inset:0;background:rgba(30,17,10,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;text-align:center;padding:40px 90px}
+  .overlay h2{font-family:var(--serif);font-size:58px;margin:0;color:var(--foil);text-wrap:balance;line-height:1.05}
+  .overlay .tt{font-size:30px;line-height:1.35;max-width:900px;text-wrap:balance}
+  .overlay .frame{font-family:var(--serif);font-style:italic;font-size:30px;color:var(--butter);background:rgba(250,244,232,.06);border-radius:12px;padding:14px 26px}
+  .overlay .sig{font-size:20px;color:var(--muted)}
+
+  /* shown when the page loses keyboard focus, since Makey Makey presses go nowhere until it's clicked */
+  #focusNag{position:fixed;inset:0;z-index:10;background:rgba(18,11,7,.82);display:flex;align-items:center;justify-content:center;cursor:pointer}
+  #focusNag div{background:var(--foil);color:var(--cocoa);font:900 28px var(--sans);padding:22px 34px;border-radius:16px;text-align:center;max-width:80vw}
+  @media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;animation-duration:.01s!important}}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+
+  <header class="bar">
+    <div class="brand">The Chocolate Touch <small>Chapter 6 Lab</small></div>
+    <div class="spacer"></div>
+    <div class="pads" id="barPads" aria-label="Coin lights"></div>
+    <div class="mode-name" id="modeName">Menu</div>
+    <button class="tbtn" id="btnHome" type="button">Menu</button>
+    <button class="tbtn" id="btnSound" type="button">Sound on</button>
+    <button class="tbtn" id="btnFull" type="button">Full screen</button>
+  </header>
+
+  <main>
+    <!-- HOME -->
+    <section class="screen on" id="home">
+      <h1>Everything John touches with his mouth turns to <em>chocolate</em>. Now it's your turn.</h1>
+      <p class="lede">Each player taps a chocolate coin wired to the Makey Makey. Touching the coin is your chocolate touch.</p>
+      <div class="games">
+        <button class="gcard" type="button" data-go="g1">
+          <span class="num">Game 1 · press 1</span>
+          <h2>Turn It to Chocolate</h2>
+          <p>An object from the book appears. Thumbs up or down: did it really turn to chocolate? Then touch the coin and find out.</p>
+          <span class="when">Warm-up · 8 min</span>
+        </button>
+        <button class="gcard" type="button" data-go="g2">
+          <span class="num">Game 2 · press 2</span>
+          <h2>Truth or Excuse?</h2>
+          <p>Miss Plimsoll thinks John is making up stories. First coin to buzz in gets to answer. Questions about Chapter 6.</p>
+          <span class="when">Main event · 15-20 min</span>
+        </button>
+        <button class="gcard" type="button" data-go="g3">
+          <span class="num">Game 3 · press 3</span>
+          <h2>John's Thirst</h2>
+          <p>John just wants a drink of water. Touch the water cup and watch what happens to his thirst meter.</p>
+          <span class="when">Hook or closer · 3-5 min</span>
+        </button>
+      </div>
+      <div class="home-foot">
+        <button class="tbtn primary" type="button" data-go="wire">Test the wires (press T)</button>
+        <span class="hint">Do this before the kids arrive. Every coin should light up its own color.</span>
+      </div>
+    </section>
+
+    <!-- WIRE TEST -->
+    <section class="screen" id="wire">
+      <h2>Test the wires</h2>
+      <div class="wire-grid" id="wireGrid"></div>
+      <div class="wire-help">
+        <div><h3>Coins</h3><p>Clip one alligator clip to each foil coin. Players 1-5 use the front: Up, Down, Left, Right, Space. Player 6 needs a jumper wire in the W hole on the back.</p></div>
+        <div><h3>Earth</h3><p>Clip Earth to a strip of foil taped to the table. Everyone keeps one hand flat on the foil and taps their coin with the other hand.</p></div>
+        <div><h3>Names</h3><p>Type each player's name. Clear a name to turn that coin off for the quiz. Names are saved on this computer.</p></div>
+      </div>
+    </section>
+
+    <!-- GAME 1 -->
+    <section class="screen" id="g1">
+      <div class="g1-left">
+        <div class="objwrap" id="g1wrap">
+          <div class="obj" id="g1obj"></div>
+          <div class="drips"><div class="drip" style="--h:70px"></div><div class="drip" style="--h:120px"></div><div class="drip" style="--h:52px"></div><div class="drip" style="--h:96px"></div><div class="drip" style="--h:64px"></div></div>
+          <div class="puddle"></div>
+          <div class="stamp" id="g1stamp"></div>
+        </div>
+      </div>
+      <div class="g1-right">
+        <span class="chip" id="g1ch"></span>
+        <h2 id="g1name"></h2>
+        <p class="ask" id="g1ask">Thumbs up if it turned to chocolate. Thumbs down if it didn't. <b>Then touch the coin.</b></p>
+        <div class="result" id="g1res" hidden><q id="g1quote"></q><div class="note" id="g1note"></div></div>
+        <div class="dots" id="g1dots"></div>
+        <div class="navrow">
+          <button class="tbtn" type="button" id="g1prev">Back</button>
+          <button class="tbtn primary" type="button" id="g1next">Next object (Enter)</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- GAME 2 -->
+    <section class="screen" id="g2">
+      <div class="q-head">
+        <span class="chip" id="g2type"></span>
+        <span class="q-count" id="g2count"></span>
+      </div>
+      <p class="qtext" id="g2q"></p>
+      <div class="buzzbox" id="g2box">
+        <div class="coin" id="g2coin" hidden></div>
+        <div><div class="big" id="g2big"></div><div class="sub" id="g2sub"></div></div>
+      </div>
+      <div class="guide" id="g2guide" hidden><b>Answer guide</b><span id="g2ans"></span></div>
+      <div class="g2-ctrl">
+        <button class="tbtn" type="button" id="g2yes">Correct (Y)</button>
+        <button class="tbtn" type="button" id="g2no">Try again (N)</button>
+        <button class="tbtn" type="button" id="g2rev">Answer guide (R)</button>
+        <button class="tbtn primary" type="button" id="g2next">Next question (Enter)</button>
+        <span style="flex:1"></span>
+        <button class="tbtn" type="button" id="g2reset">Reset scores</button>
+      </div>
+      <div class="scores" id="g2scores"></div>
+    </section>
+
+    <!-- GAME 3 -->
+    <section class="screen" id="g3">
+      <div class="scene">
+        <div class="bubble" id="g3bubble"></div>
+        <div class="john" id="g3john" aria-hidden="true">&#x1F466;</div>
+        <div class="glass" id="g3glass"><div class="liquid"></div></div>
+      </div>
+      <div class="g3-right">
+        <h2>John just wants a drink of cold water.</h2>
+        <p>Touch the water cup to give him a drink. Watch the meter.</p>
+        <div class="meter"><div class="fill" id="g3fill"></div><div class="lbl" id="g3lbl">Thirst</div></div>
+        <div class="scale3"><span>A little thirsty</span><span>So thirsty</span><span>Terribly thirsty</span></div>
+        <div class="tally" id="g3tally">Drinks tried: 0 · Drinks of water he got: 0</div>
+        <div class="navrow"><button class="tbtn" type="button" id="g3reset">Start over</button></div>
+      </div>
+      <div class="overlay" id="g3over" hidden>
+        <h2>John is terribly thirsty.</h2>
+        <div class="tt">Turn and talk: is the chocolate touch still a gift?</div>
+        <div class="frame">"I think it is a ______ because ______."</div>
+        <div class="sig">Thumbs up = gift · Thumbs down = curse · Press Enter to start over</div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="keys" id="keys"></footer>
+</div></div>
+<div id="focusNag" hidden><div>Click anywhere so the coins work</div></div>
+
+<script>
+(() => {
+  /* ---------- stage scaling ---------- */
+  const stage = document.getElementById('stage');
+  function fit(){
+    const s = Math.min(innerWidth/1280, innerHeight/720);
+    stage.style.transform = `translate(${(innerWidth-1280*s)/2}px,${(innerHeight-720*s)/2}px) scale(${s})`;
+  }
+  addEventListener('resize', fit); fit();
+
+  /* ---------- players / keys ---------- */
+  const KEYS = [
+    {code:'ArrowUp',    label:'Up arrow'},
+    {code:'ArrowDown',  label:'Down arrow'},
+    {code:'ArrowLeft',  label:'Left arrow'},
+    {code:'ArrowRight', label:'Right arrow'},
+    {code:'Space',      label:'Space'},
+    {code:'KeyW',       label:'W (back pins)'},
+  ];
+  const COLORS = ['var(--p0)','var(--p1)','var(--p2)','var(--p3)','var(--p4)','var(--p5)'];
+  const store = {
+    get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } },
+    set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+  };
+  const savedNames = store.get('ct6-names');
+  const players = KEYS.map((k,i) => ({
+    name: (savedNames && typeof savedNames[i] === 'string') ? savedNames[i] : 'Player ' + (i+1),
+    color: COLORS[i], score: 0, hits: 0
+  }));
+  const active = i => players[i].name.trim() !== '';
+  const saveNames = () => store.set('ct6-names', players.map(p => p.name));
+
+  /* ---------- sound ---------- */
+  let ctx = null, muted = false;
+  function audio(){
+    if (!ctx) { try { ctx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){ return null; } }
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+  function tone(freq, dur, type='sine', vol=.2, when=0, slideTo=null){
+    if (muted) return; const a = audio(); if (!a) return;
+    const t = a.currentTime + when, o = a.createOscillator(), g = a.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t+dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t+.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    o.connect(g).connect(a.destination); o.start(t); o.stop(t+dur+.05);
+  }
+  const PITCH = [523, 587, 659, 784, 880, 988];
+  const sfx = {
+    player: i => { tone(PITCH[i], .18, 'square', .09); tone(PITCH[i]*2, .12, 'sine', .08, .05); },
+    buzz:   i => { tone(PITCH[i]/2, .35, 'square', .12); tone(PITCH[i], .35, 'sawtooth', .05); },
+    melt:   () => { tone(660, 1.1, 'sine', .22, 0, 110); tone(990, .9, 'triangle', .08, .05, 160); },
+    nope:   () => { tone(300, .14, 'triangle', .25, 0, 480); tone(480, .14, 'triangle', .25, .14, 260); tone(260, .2, 'triangle', .2, .28, 200); },
+    right:  () => [523,659,784,1047].forEach((f,k) => tone(f, .22, 'triangle', .18, k*.09)),
+    wrong:  () => tone(150, .4, 'sawtooth', .12, 0, 110),
+    pour:   () => { for (let k=0;k<6;k++) tone(700+Math.random()*500, .08, 'sine', .07, k*.09); },
+    gulp:   () => tone(420, .5, 'sine', .2, 0, 90),
+  };
+
+  /* ---------- screens ---------- */
+  const MODES = {
+    home:{name:'Menu', keys:[['1','Game 1'],['2','Game 2'],['3','Game 3'],['T','Test the wires'],['M','Sound on/off']]},
+    wire:{name:'Wire test', keys:[['Touch a coin','it lights up'],['Esc','Menu']]},
+    g1:{name:'Game 1 · Turn It to Chocolate', keys:[['Any coin','touch the chocolate'],['Enter','Next object'],['Backspace','Back'],['Esc','Menu']]},
+    g2:{name:'Game 2 · Truth or Excuse?', keys:[['Coin','buzz in'],['Y','Correct'],['N','Try again'],['R','Answer guide'],['Enter','Next question'],['Esc','Menu']]},
+    g3:{name:"Game 3 · John's Thirst", keys:[['Any coin or the water cup','give John a drink'],['Enter','Start over'],['Esc','Menu']]},
+  };
+  let mode = 'home';
+  function go(m){
+    mode = m;
+    document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === m));
+    document.getElementById('modeName').textContent = MODES[m].name;
+    document.getElementById('keys').innerHTML = MODES[m].keys.map(([k,v]) => `<span><b>${k}</b> ${v}</span>`).join('');
+    if (m === 'wire') renderWire();
+    if (m === 'g1') renderG1();
+    if (m === 'g2') renderG2();
+    if (m === 'g3') renderG3();
+    document.activeElement && document.activeElement.blur && document.activeElement.blur();
+  }
+  document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => { audio(); go(b.dataset.go); }));
+  document.getElementById('btnHome').onclick = () => go('home');
+  const btnSound = document.getElementById('btnSound');
+  function toggleMute(){ muted = !muted; btnSound.textContent = muted ? 'Sound off' : 'Sound on'; }
+  btnSound.onclick = () => { audio(); toggleMute(); };
+  document.getElementById('btnFull').onclick = () => {
+    const d = document;
+    if (d.fullscreenElement) d.exitFullscreen().catch(()=>{});
+    else d.documentElement.requestFullscreen?.().catch(()=>{});
+  };
+
+  /* bar lights */
+  const barPads = document.getElementById('barPads');
+  barPads.innerHTML = players.map((p,i) => `<div class="pad" style="--pc:${p.color}" data-i="${i}" title="${KEYS[i].label}"></div>`).join('');
+  function flashBar(i){
+    const el = barPads.children[i]; el.classList.add('hit');
+    clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('hit'), 260);
+  }
+
+  /* ---------- WIRE TEST ---------- */
+  const wireGrid = document.getElementById('wireGrid');
+  function renderWire(){
+    wireGrid.innerHTML = players.map((p,i) => `
+      <div class="slot" style="--pc:${p.color}" data-i="${i}">
+        <div class="top"><div class="coin"></div><span class="key">Player ${i+1} · ${KEYS[i].label}</span><span class="count" data-c>${p.hits ? p.hits + (p.hits===1?' tap':' taps') : 'not tapped yet'}</span></div>
+        <input id="name${i}" type="text" maxlength="14" placeholder="(off)" value="${p.name.replace(/"/g,'&quot;')}" aria-label="Player ${i+1} name">
+      </div>`).join('');
+    wireGrid.querySelectorAll('input').forEach((inp,i) => inp.addEventListener('input', () => { players[i].name = inp.value; saveNames(); }));
+  }
+  function wireHit(i){
+    players[i].hits++;
+    const slot = wireGrid.children[i]; if (!slot) return;
+    slot.querySelector('[data-c]').textContent = players[i].hits + (players[i].hits===1?' tap':' taps');
+    slot.classList.add('hit'); clearTimeout(slot._t); slot._t = setTimeout(() => slot.classList.remove('hit'), 300);
+  }
+
+  /* ---------- GAME 1 ---------- */
+  const OBJECTS = [
+    {e:'\u{1FAA5}', name:"John's toothpaste", ch:'Chapter 3', yes:true,
+     q:'It squeezed out like thick, creamy chocolate.', n:'This is the very first thing that changed.'},
+    {e:'\u{1F9C3}', name:"John's orange juice", ch:'Chapter 3', yes:true,
+     q:'Chocolate juice.', n:'John drank the whole glass without being told.'},
+    {e:'\u{1F34A}', name:"Mary's orange juice", ch:'Chapter 3', yes:false,
+     q:'It tasted like orange to her.', n:'The magic only works for John. Mary tasted hers and it was still orange juice.'},
+    {e:'\u{1F373}', name:'Bacon and egg', ch:'Chapter 3', yes:true,
+     q:'Chocolate white and chocolate yolk.', n:'Then the toast, the butter, and the marmalade turned too.'},
+    {e:'\u{1F9E4}', name:"John's glove", ch:'Chapter 4', yes:true,
+     q:'It was like chewing leather made of chocolate.', n:'Uh oh. What will his mother say about the gloves?'},
+    {e:'\u{1FA99}', name:"Susan's silver dollar", ch:'Chapter 5', yes:true,
+     q:'He sadly handed back a crescent.', n:'Susan gave John a whole coin and got back half. That is why she is so angry in Chapter 6.'},
+    {e:'\u{1F6B0}', name:'The water fountain', ch:'Chapter 5', yes:true,
+     q:'Ice-cold chocolate water, thin and sweet.', n:'John is getting thirstier and thirstier.'},
+    {e:'✏️', name:"John's pencil", ch:'Chapters 5-6', yes:true,
+     q:'Changing it into a chocolate pencil before John’s very eyes.', n:'This time the whole pencil changed, not just the part in his mouth. The magic is getting stronger.'},
+    {e:'\u{1FAA2}', name:"Susan's skipping rope", ch:'Chapter 6', yes:false,
+     q:'Just you give me that skipping rope, and I’ll prove it.', n:'Not yet! The bell rang before John could bite it.'},
+    {e:'\u{1F4DD}', name:'The new pencil from Miss Plimsoll', ch:'Chapter 6', yes:false,
+     q:'Be a good boy, and try not to lose it.', n:'Not yet. Do you think it will stay a pencil?'},
+    {e:'\u{1F382}', name:"Susan's birthday cake", ch:'Chapter 6', yes:false,
+     q:'The one who does it the most times gets the first slice of my birthday cake.', n:'Susan only talked about it. John never got near it.'},
+    {e:'\u{1F466}', name:'John himself', ch:'Chapter 6', yes:false,
+     q:'Maybe I’ll turn to chocolate myself.', n:'Not yet. John is scared it could happen. What do you predict?'},
+  ];
+  let g1i = 0, g1done = new Array(OBJECTS.length).fill(false), g1busy = false;
+  const $ = id => document.getElementById(id);
+  function renderG1(){
+    const o = OBJECTS[g1i], wrap = $('g1wrap');
+    wrap.classList.add('noanim');
+    wrap.classList.remove('melt','nope');
+    void wrap.offsetWidth;
+    wrap.classList.remove('noanim');
+    $('g1obj').textContent = o.e;
+    $('g1name').textContent = o.name;
+    $('g1ch').textContent = o.ch;
+    $('g1ask').hidden = g1done[g1i];
+    $('g1stamp').className = 'stamp';
+    $('g1res').hidden = true;
+    if (g1done[g1i]) showG1Result(false);
+    $('g1dots').innerHTML = OBJECTS.map((x,k) => `<span class="dot ${g1done[k] ? (x.yes?'yes':'no') : ''} ${k===g1i?'cur':''}"></span>`).join('');
+    $('g1next').textContent = g1i === OBJECTS.length-1 ? 'Start over (Enter)' : 'Next object (Enter)';
+  }
+  function showG1Result(animate){
+    const o = OBJECTS[g1i], wrap = $('g1wrap'), st = $('g1stamp');
+    wrap.classList.add(o.yes ? 'melt' : 'nope');
+    if (!animate) { wrap.classList.add('noanim'); wrap.classList.remove('nope'); void wrap.offsetWidth; wrap.classList.remove('noanim'); }
+    st.textContent = o.yes ? 'CHOCOLATE!' : 'NOT CHOCOLATE';
+    st.className = 'stamp show ' + (o.yes ? 'yes' : 'no');
+    $('g1quote').textContent = o.q;
+    $('g1note').textContent = o.n;
+    $('g1res').className = 'result' + (o.yes ? '' : ' no');
+    $('g1res').hidden = false;
+    $('g1ask').hidden = true;
+  }
+  function g1Touch(){
+    if (g1done[g1i] || g1busy) return;
+    const o = OBJECTS[g1i];
+    g1done[g1i] = true; g1busy = true;
+    if (o.yes) {
+      sfx.melt(); $('g1wrap').classList.add('melt');
+      setTimeout(() => { showG1Result(true); g1busy = false; renderDots(); }, 900);
+    } else {
+      sfx.nope(); showG1Result(true); g1busy = false; renderDots();
+    }
+  }
+  function renderDots(){
+    $('g1dots').innerHTML = OBJECTS.map((x,k) => `<span class="dot ${g1done[k] ? (x.yes?'yes':'no') : ''} ${k===g1i?'cur':''}"></span>`).join('');
+  }
+  function g1Next(){
+    if (g1busy) return;
+    if (g1i === OBJECTS.length-1) { g1i = 0; g1done.fill(false); }
+    else g1i++;
+    renderG1();
+  }
+  function g1Prev(){ if (g1busy || g1i === 0) return; g1i--; renderG1(); }
+  $('g1next').onclick = g1Next; $('g1prev').onclick = g1Prev;
+
+  /* ---------- GAME 2 ---------- */
+  const QUESTIONS = [
+    {t:'find', q:'Miss Plimsoll says John is making up "silly stories." What does John show her to prove he is telling the truth?',
+     a:'The pointed stick of chocolate. It used to be his pencil.'},
+    {t:'find', q:'Besides the pencil, what else does John tell Miss Plimsoll turned to chocolate?',
+     a:'His gloves, and the water from the water fountain (and the water upstairs).'},
+    {t:'think', q:'Miss Plimsoll "suddenly looked pale" and goes to talk to the nurse. What do you think she is thinking?',
+     a:'Any reasonable inference: she is worried John is sick, or she is starting to think something really is wrong. Ask: what clue made you think that?'},
+    {t:'find', q:'Why does Miss Plimsoll keep the chocolate pencil in her desk drawer?',
+     a:'"We don’t allow anyone to eat candy in class." She will keep it until school is out.'},
+    {t:'think', q:'John thinks skipping rope is silly. So why does he offer to skip with Susan?',
+     a:'He feels sorry for spoiling her silver dollar. The book says he was willing to make a sacrifice.'},
+    {t:'find', q:'How does Susan show John she is still mad at him?',
+     a:'She ignores him, raises her eyebrows, shuts her eyes, sticks out her tongue, and whispers and laughs with Betty and Ellen.'},
+    {t:'find', q:'John says the magic is getting worse. What is his evidence?',
+     a:'At first only the part in his mouth turned to chocolate. Now the whole pencil changed after one nibble.'},
+    {t:'think', q:'Susan says if the magic were real, John would be glad. Why does she say that? Is she right?',
+     a:'Because all John ever likes eating is chocolate. Most kids should say no: he is thirsty, in trouble, and sad. Ask for evidence.'},
+    {t:'find', q:'How does John want to prove the magic to Susan? Why doesn’t it happen?',
+     a:'He wants to bite her skipping rope. The bell rings before he can.'},
+    {t:'find', q:'At the end of the chapter John is worried about a lot of things. Name two.',
+     a:'His mother being cross about the gloves, his messed-up arithmetic test, Susan being angry, and being terribly thirsty.'},
+    {t:'think', q:'Susan saw her silver dollar turn to chocolate in Chapter 5. So why does she say "I don’t believe one word"?',
+     a:'Any reasonable idea: she is still mad, she doesn’t want to look silly in front of her friends, or it seems impossible. Push for "because."'},
+    {t:'think', q:'Big question: is John lucky or unlucky right now? Give one reason from Chapter 6.',
+     a:'Either answer is fine with a reason. Unlucky: thirsty, in trouble, lost his friend. Lucky is harder to argue now. Ask who changed their answer since Chapter 3.'},
+  ];
+  let g2i = 0, g2phase = 'open', g2who = -1, g2out = new Set(), g2reveal = false;
+  function renderG2(){
+    const Q = QUESTIONS[g2i];
+    const chip = $('g2type');
+    chip.textContent = Q.t === 'find' ? 'Find it in the book' : 'Think about it';
+    chip.className = 'chip' + (Q.t === 'think' ? ' think' : '');
+    $('g2count').textContent = `Question ${g2i+1} of ${QUESTIONS.length}`;
+    $('g2q').textContent = Q.q;
+    $('g2ans').textContent = Q.a;
+    $('g2guide').hidden = !g2reveal;
+    const box = $('g2box'), coin = $('g2coin');
+    box.classList.toggle('locked', g2phase !== 'open' && g2who >= 0);
+    coin.hidden = !(g2who >= 0 && g2phase !== 'open');
+    if (g2who >= 0) box.style.setProperty('--pc', players[g2who].color);
+    if (g2phase === 'open') {
+      $('g2big').textContent = g2out.size ? 'Anyone else? Buzzers open.' : 'Buzzers open!';
+      $('g2sub').textContent = 'Think first. Then touch your coin to answer.';
+    } else if (g2phase === 'locked') {
+      $('g2big').textContent = players[g2who].name + ' buzzed in!';
+      $('g2sub').textContent = 'Say your answer out loud.';
+    } else if (g2who >= 0) {
+      $('g2big').textContent = players[g2who].name + ' got it!';
+      $('g2sub').textContent = 'Press Enter for the next question.';
+    } else {
+      $('g2big').textContent = 'Nobody got that one.';
+      $('g2sub').textContent = 'Let’s look at the answer together.';
+    }
+    $('g2scores').innerHTML = players.map((p,i) => !active(i) ? '' : `
+      <div class="score ${g2out.has(i)?'out':''} ${g2who===i && g2phase!=='open'?'lit':''}" style="--pc:${p.color}">
+        <div class="nm">${p.name.replace(/</g,'&lt;')}</div>
+        <div class="pts"><span class="n">${p.score}</span> coin${p.score===1?'':'s'}</div>
+      </div>`).join('');
+  }
+  function g2Buzz(i){
+    if (!active(i) || g2phase !== 'open' || g2out.has(i)) return;
+    g2phase = 'locked'; g2who = i; sfx.buzz(i); renderG2();
+  }
+  function g2Yes(){ if (g2phase !== 'locked') return; players[g2who].score++; g2phase = 'scored'; sfx.right(); renderG2(); }
+  function g2No(){
+    if (g2phase !== 'locked') return;
+    g2out.add(g2who); sfx.wrong();
+    const left = players.some((p,i) => active(i) && !g2out.has(i));
+    if (left) { g2phase = 'open'; g2who = -1; }
+    else { g2phase = 'scored'; g2who = -1; g2reveal = true; }
+    renderG2();
+  }
+  function g2Next(){
+    g2i = (g2i + 1) % QUESTIONS.length;
+    g2phase = 'open'; g2who = -1; g2out.clear(); g2reveal = false; renderG2();
+  }
+  function g2Rev(){ g2reveal = !g2reveal; renderG2(); }
+  $('g2yes').onclick = g2Yes; $('g2no').onclick = g2No; $('g2next').onclick = g2Next; $('g2rev').onclick = g2Rev;
+  $('g2reset').onclick = () => { players.forEach(p => p.score = 0); renderG2(); };
+
+  /* ---------- GAME 3 ---------- */
+  const LINES = [
+    'I would like a drink of cold water.',
+    'It turned into ice-cold chocolate water, thin and sweet.',
+    'I’m getting so thirsty.',
+    'He swallowed nothing but sweet chocolate.',
+    'His mouth was getting stickier, and sweeter, and drier by the minute.',
+    'I think it’s getting worse.',
+  ];
+  const START = 30, STEP = 14;
+  let thirst = START, drinks = 0, g3busy = false, g3timers = [];
+  function renderG3(){
+    $('g3fill').style.width = Math.min(thirst,100) + '%';
+    $('g3lbl').textContent = thirst >= 100 ? 'Terribly thirsty!' : thirst >= 66 ? 'So thirsty' : 'Thirst';
+    $('g3tally').textContent = `Drinks tried: ${drinks} · Drinks of water he got: 0`;
+    $('g3over').hidden = thirst < 100 || g3busy;
+  }
+  function g3Drink(){
+    if (g3busy || thirst >= 100) return;
+    g3busy = true; drinks++;
+    const glass = $('g3glass'), bub = $('g3bubble'), john = $('g3john');
+    bub.classList.remove('show');
+    sfx.pour(); glass.classList.add('full');
+    const T = (fn, ms) => g3timers.push(setTimeout(fn, ms));
+    T(() => { john.classList.add('sip'); glass.classList.add('choc'); sfx.melt(); }, 700);
+    T(() => {
+      sfx.gulp();
+      bub.textContent = '“' + LINES[(drinks-1) % LINES.length] + '”';
+      bub.classList.add('show');
+      thirst = Math.min(100, thirst + STEP);
+      renderG3();
+    }, 1300);
+    T(() => { john.classList.remove('sip'); glass.classList.remove('full'); }, 1900);
+    T(() => { glass.classList.remove('choc'); g3busy = false; renderG3(); }, 2600);
+  }
+  function g3Reset(){
+    g3timers.forEach(clearTimeout); g3timers = [];
+    thirst = START; drinks = 0; g3busy = false;
+    $('g3glass').className = 'glass'; $('g3bubble').classList.remove('show'); $('g3john').classList.remove('sip');
+    renderG3();
+  }
+  $('g3reset').onclick = g3Reset;
+
+  /* ---------- input ---------- */
+  const lastHit = new Array(KEYS.length).fill(0);
+  function onPad(i){
+    flashBar(i);
+    if (mode === 'wire') { sfx.player(i); wireHit(i); }
+    else if (mode === 'home') sfx.player(i);
+    else if (mode === 'g1') g1Touch();
+    else if (mode === 'g2') g2Buzz(i);
+    else if (mode === 'g3') g3Drink();
+  }
+  addEventListener('keydown', e => {
+    if (e.target.matches && e.target.matches('input, textarea')) {
+      if (e.key === 'Escape') e.target.blur();
+      return;
+    }
+    audio();
+    const i = KEYS.findIndex(k => k.code === e.code);
+    if (i >= 0) {
+      e.preventDefault();
+      if (e.repeat) return;
+      const now = performance.now();
+      if (now - lastHit[i] < 250) return;   // foil coins can "chatter"; ignore double taps
+      lastHit[i] = now;
+      onPad(i);
+      return;
+    }
+    const k = e.key.toLowerCase();
+    if (k === 'escape') return go('home');
+    if (k === 'm') return toggleMute();
+    if (mode === 'home') {
+      if (k === '1') go('g1'); else if (k === '2') go('g2'); else if (k === '3') go('g3'); else if (k === 't') go('wire');
+      return;
+    }
+    if (mode === 'g1') { if (k === 'enter') { e.preventDefault(); g1Next(); } else if (k === 'backspace') { e.preventDefault(); g1Prev(); } }
+    if (mode === 'g2') {
+      if (k === 'y') g2Yes(); else if (k === 'n') g2No(); else if (k === 'r') g2Rev();
+      else if (k === 'enter') { e.preventDefault(); g2Next(); }
+    }
+    if (mode === 'g3' && k === 'enter') { e.preventDefault(); g3Reset(); }
+  });
+
+  // a clicked button keeps focus, so Enter/Space would press it again; drop focus after every click
+  document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('button'); if (b) b.blur(); });
+
+  // test hook: lets an automated check drive the page without a keyboard
+  window.__ct6 = { go, onPad, g2Yes, g2No, g2Rev, g2Next, g1Next, state: () => ({mode, g1i, g2phase, g2who, thirst}) };
+
+  const nag = document.getElementById('focusNag');
+  const checkFocus = () => { nag.hidden = document.hasFocus(); };
+  addEventListener('blur', checkFocus); addEventListener('focus', checkFocus);
+  nag.addEventListener('click', () => { nag.hidden = true; audio(); });
+  setTimeout(checkFocus, 300);
+
+  go('home');
+})();
+</script>
+</body>
+</html>

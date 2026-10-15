@@ -1,0 +1,782 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Chocolate Touch Recap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=Nunito+Sans:wght@400;700;800&display=swap">
+<style>
+  /* Layout: a 1280x720 projected stage, scaled to fit. Home is a box of chocolates, one piece per chapter.
+     Single committed look (cocoa + cream, same as the Ch 3 deck), so every color is set explicitly. */
+  :root{
+    --cocoa:#3B2318; --cocoa2:#4E3122; --cocoa3:#2A1810; --cream:#FAF4E8; --amber:#E0A15C;
+    --orange:#C97B34; --green:#2E6B5E; --green-pale:#BFE0D6; --dust:#7A6656; --butter:#FFE9B8;
+    --milk:#8B5534; --dark-choc:#5E331F; --ground:#16110D; --hud:#A08D7A;
+    --serif:Fraunces,Georgia,"Times New Roman",serif;
+    --sans:"Nunito Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--ground);color:var(--cream);font-family:var(--sans);overflow:hidden}
+  button{font:inherit;color:inherit;cursor:pointer}
+  button:focus-visible{outline:4px solid var(--amber);outline-offset:3px}
+
+  #viewport{position:fixed;left:0;right:0;top:0;bottom:44px;overflow:hidden}
+  #stage{width:1280px;height:720px;position:absolute;left:0;top:0;transform-origin:0 0;border-radius:8px;overflow:hidden;background:var(--cream);box-shadow:0 24px 70px rgba(0,0,0,.55)}
+
+  .slide{position:absolute;inset:0;display:flex;flex-direction:column;padding:52px 68px 54px;gap:24px}
+  .slide h1,.slide h2{font-family:var(--serif);font-weight:600;line-height:1.04;margin:0;text-wrap:balance}
+  .slide p{margin:0}
+  .s-dark{background:var(--cocoa);color:var(--cream)}
+  .s-cream{background:var(--cream);color:var(--cocoa)}
+  .s-butter{background:var(--butter);color:var(--cocoa)}
+  .eyebrow{font-size:19px;letter-spacing:4px;font-weight:800;text-transform:uppercase;color:var(--orange)}
+  .s-dark .eyebrow{color:var(--amber)}
+  .title-xl{font-size:84px}
+  .title-lg{font-size:62px}
+  .title-md{font-size:46px}
+  .lead{font-size:28px;line-height:1.35}
+  .spacer{flex:1}
+  .hint{font-size:17px;color:var(--dust);font-weight:700}
+  .s-dark .hint{color:var(--hud)}
+
+  /* ---------- buttons ---------- */
+  .btn{border:none;border-radius:999px;padding:16px 28px;font-weight:800;font-size:22px}
+  .btn.primary{background:var(--amber);color:var(--cocoa)}
+  .btn.primary:hover{background:#ECB577}
+  .btn.ghost{background:transparent;border:3px solid var(--amber);color:var(--amber)}
+  .btn.ghost:hover{background:rgba(224,161,92,.12)}
+  .btn.dark{background:var(--cocoa);color:var(--cream)}
+  .btn.small{font-size:17px;padding:10px 18px}
+  .btn[disabled]{opacity:.35;cursor:default}
+
+  /* ---------- home ---------- */
+  .home{flex-direction:row;align-items:center;gap:56px}
+  .home .left{flex:1;display:flex;flex-direction:column;gap:22px;min-width:0}
+  .home .by{font-size:21px;color:var(--hud);font-style:italic;font-family:var(--serif)}
+  .gatebox{display:flex;flex-direction:column;gap:10px;background:var(--cocoa2);border-radius:16px;padding:18px 22px}
+  .gatebox .lbl{font-size:18px;font-weight:800;letter-spacing:1px;color:var(--amber);text-transform:uppercase}
+  .stepper{display:flex;align-items:center;gap:16px}
+  .stepper b{font-family:var(--serif);font-size:34px;font-weight:600;min-width:200px;text-align:center}
+  .stepper button{width:52px;height:52px;border-radius:50%;border:3px solid var(--amber);background:transparent;color:var(--amber);font-size:30px;font-weight:800;line-height:1}
+  .stepper button:hover{background:rgba(224,161,92,.15)}
+  .gatebox small{font-size:16px;color:var(--hud)}
+  .cta{display:flex;gap:14px;flex-wrap:wrap}
+
+  .box{width:604px;flex:none;background:var(--cocoa3);border-radius:18px;padding:18px;
+       box-shadow:inset 0 0 0 4px #C9963F, inset 0 0 0 9px var(--cocoa3), inset 0 0 0 10px #6d4a2a, 0 14px 30px rgba(0,0,0,.4)}
+  .box .cap{text-align:center;font-family:var(--serif);font-style:italic;color:#C9963F;font-size:17px;margin:2px 0 12px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .pc{position:relative;height:132px;border:none;border-radius:14px;padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+      background:radial-gradient(circle at 50% 50%, #3a2216 58%, #24140c 59%, #2f1b11 62%, #24140c 66%, #2f1b11 70%, #24140c 74%)}
+  .pc .piece{width:86px;height:70px;border-radius:12px;display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:38px;color:var(--butter);
+       background:linear-gradient(160deg,#9A603D,#6B3E26 55%,#552F1C);box-shadow:inset 0 3px 0 rgba(255,255,255,.18), inset 0 -5px 0 rgba(0,0,0,.25), 0 4px 6px rgba(0,0,0,.4);transition:transform .15s}
+  .pc .nm{font-size:14px;font-weight:800;color:var(--cream);line-height:1.15;text-align:center}
+  .pc:hover .piece{transform:translateY(-3px) rotate(-2deg)}
+  .pc.locked .piece{color:#7a5a12;font-size:34px;background:
+       repeating-linear-gradient(115deg,rgba(255,255,255,.28) 0 3px,transparent 3px 11px),
+       repeating-linear-gradient(35deg,rgba(120,80,0,.22) 0 2px,transparent 2px 9px),
+       linear-gradient(150deg,#F6D774,#D9A934 50%,#B8861E)}
+  .pc.locked .nm{color:#C9963F}
+  .pc.next .nm{color:var(--amber)}
+  .pc.shake{animation:shake .4s}
+  @keyframes shake{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+  /* ---------- chapter title ---------- */
+  .t-title{flex-direction:row;gap:46px;align-items:stretch}
+  .t-title .tl{flex:1;display:flex;flex-direction:column;gap:20px;min-width:0;justify-content:center}
+  .art{margin:0;width:560px;flex:none;align-self:center;border-radius:20px;overflow:hidden;border:5px solid var(--amber);background:var(--cream);line-height:0}
+  .art svg{width:100%;height:auto;display:block}
+  .meter{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+  .meter .lbl{font-size:16px;font-weight:800;letter-spacing:3px;color:var(--amber);text-transform:uppercase}
+  .bar{display:flex;gap:5px;padding:6px;background:#2A1810;border-radius:10px;width:max-content}
+  .bar i{width:44px;height:36px;border-radius:5px;border:2px dashed #5d4433}
+  .bar i.f{border:none;background:linear-gradient(160deg,#A8693F,#6B3E26);box-shadow:inset 0 3px 0 rgba(255,255,255,.2), inset 0 -4px 0 rgba(0,0,0,.25)}
+  .meter .cap{font-size:21px;color:var(--butter)}
+
+  /* ---------- events ---------- */
+  .events{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:16px;cursor:pointer}
+  .events li{display:flex;gap:20px;align-items:flex-start;font-size:29px;line-height:1.3;opacity:.08;transform:translateY(8px);transition:opacity .35s,transform .35s}
+  .events li.on{opacity:1;transform:none}
+  .events .n{flex:none;width:52px;height:52px;border-radius:50%;background:var(--cocoa);color:var(--butter);display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:27px}
+  .events li>span:last-child{padding-top:6px;min-width:0}
+  .events b{color:var(--green)}
+
+  /* ---------- tap to chocolatify ---------- */
+  .objs{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;align-content:center;flex:1}
+  .obj{width:150px;border:3px solid #E6D6BC;background:#fff;border-radius:18px;padding:14px 10px 12px;display:flex;flex-direction:column;align-items:center;gap:8px;transition:border-color .3s, transform .15s}
+  .obj:hover{transform:translateY(-3px);border-color:var(--amber)}
+  .objs.big .obj{width:260px}
+  .ob{position:relative;width:112px;height:112px}
+  .objs.big .ob{width:200px;height:200px}
+  .ob svg{position:absolute;inset:0;width:100%;height:100%}
+  .ob .over{clip-path:var(--from);transition:clip-path 1.4s ease-in-out}
+  .obj.on .over{clip-path:var(--to)}
+  .obj.on{border-color:var(--milk)}
+  .ol{font-size:21px;font-weight:800;line-height:1.15;text-align:center;color:var(--cocoa)}
+  .obj.on .ol{color:var(--milk)}
+  .obj.stay.on{border-color:var(--green)}
+  .obj.stay.on .ol{color:var(--green)}
+  .obj.stay.on .ob{animation:wiggle .6s}
+  @keyframes wiggle{0%,100%{transform:none}20%{transform:rotate(-6deg)}50%{transform:rotate(5deg)}80%{transform:rotate(-3deg)}}
+  .tally{font-size:22px;font-weight:800;color:var(--milk);text-align:center;min-height:30px}
+
+  .chocv [fill]:not([fill="none"]):not(.keep){fill:var(--dark-choc)}
+  .chocv .hl:not(.keep){fill:var(--milk)}
+  .chocv text{fill:var(--milk)}
+  .chocv .wet{stroke:var(--dark-choc)}
+  .chocv [fill="none"][stroke]:not(.wet){stroke:#A8693F}
+
+  /* ---------- flip cards ---------- */
+  .flips{display:grid;gap:16px;flex:1;grid-auto-rows:1fr;min-height:0}
+  .flip{perspective:1000px;border:none;background:none;padding:0;min-height:0;height:100%}
+  .flip .in{display:block;position:relative;width:100%;height:100%;transition:transform .55s;transform-style:preserve-3d}
+  .flip.on .in{transform:rotateY(180deg)}
+  .flip .fc{position:absolute;inset:0;border-radius:16px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:14px 16px;text-align:center}
+  .flip .front{background:#fff;border:3px solid #E6D6BC;color:var(--cocoa)}
+  .flip:hover .front{border-color:var(--amber)}
+  .flip .back{background:var(--cocoa);color:var(--cream);transform:rotateY(180deg);font-size:20px;line-height:1.3}
+  .flip .back b{color:var(--amber);font-size:21px}
+  .mono{width:66px;height:66px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:26px;color:var(--cream)}
+  .flip .front .nm{font-size:22px;font-weight:800}
+  .flip .front .tap{font-size:14px;color:var(--dust);font-weight:700;letter-spacing:1px;text-transform:uppercase}
+  .flip .word{font-family:var(--serif);font-size:42px;font-weight:600;color:var(--green)}
+
+  /* ---------- unwrap ---------- */
+  .unwrap{flex:1;display:flex;gap:44px;align-items:center}
+  .unwrap .pic{width:560px;flex:none;border-radius:18px;overflow:hidden;line-height:0;border:4px solid #E6D6BC}
+  .unwrap svg{width:100%;height:auto;display:block}
+  .unwrap .layer{transition:opacity .5s, transform .5s}
+  .unwrap .layer.gone{opacity:0;transform:translateY(-40px)}
+  .unwrap .side{flex:1;display:flex;flex-direction:column;gap:18px;min-width:0}
+  .unwrap .msg{font-size:30px;line-height:1.3;font-weight:700;min-height:120px}
+  .unwrap .cnt{font-size:18px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--orange)}
+  .unwrap .row{display:flex;gap:12px;flex-wrap:wrap}
+
+  /* ---------- choice ---------- */
+  .choice{flex:1;display:flex;flex-direction:column;gap:26px;justify-content:center}
+  .choice .opts{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+  .choice .opt{border:4px solid var(--amber);background:var(--cocoa2);color:var(--cream);border-radius:20px;padding:28px;font-size:30px;font-weight:800;line-height:1.25;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center}
+  .choice .opt svg{width:110px;height:110px}
+  .choice .opt:hover{background:#5c3a28}
+  .choice .opt.pick{border-color:var(--butter);background:var(--green)}
+  .choice .reveal{font-size:27px;line-height:1.35;background:var(--cocoa2);border-radius:16px;padding:20px 24px;color:var(--butter)}
+
+  /* ---------- think ---------- */
+  .think{flex:1;display:grid;grid-template-columns:1.25fr 1fr;gap:28px;min-height:0}
+  .qs{display:flex;flex-direction:column;gap:16px;min-width:0}
+  .q{background:#fff;border:3px solid #E6D6BC;border-radius:16px;padding:18px 22px;display:flex;flex-direction:column;gap:12px}
+  .q .qt{font-size:25px;font-weight:800;line-height:1.3}
+  .q .ans{font-size:22px;line-height:1.35;color:var(--green);font-weight:700}
+  .q .ans em{display:block;font-style:normal;font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--dust);margin-bottom:3px}
+  .side2{display:flex;flex-direction:column;gap:16px;min-width:0}
+  .quote{background:var(--cocoa);color:var(--cream);border-radius:16px;padding:24px 26px;display:flex;flex-direction:column;gap:10px}
+  .quote p{font-family:var(--serif);font-style:italic;font-size:26px;line-height:1.3}
+  .quote .src{font-size:15px;letter-spacing:2px;text-transform:uppercase;color:var(--amber);font-weight:800}
+  .vote{background:var(--butter);border-radius:16px;padding:18px 22px;display:flex;flex-direction:column;gap:12px}
+  .vote .vt{font-size:21px;font-weight:800}
+  .vote .vb{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .vote .vb button{border:3px solid var(--cocoa);background:#fff;border-radius:14px;padding:10px;font-size:21px;font-weight:800;color:var(--cocoa);display:flex;flex-direction:column;align-items:center}
+  .vote .vb button b{font-family:var(--serif);font-size:38px;line-height:1.1;font-variant-numeric:tabular-nums}
+  .vote .vb button:hover{background:var(--cream)}
+  .vote .clr{align-self:flex-end;border:none;background:none;font-size:15px;color:var(--dust);font-weight:700;text-decoration:underline;padding:0}
+
+  /* ---------- recap ---------- */
+  .sofar{display:grid;gap:12px 28px;flex:1;align-content:start}
+  .sofar .it{display:flex;gap:16px;align-items:flex-start;min-width:0}
+  .sofar .n{flex:none;width:46px;height:46px;border-radius:10px;background:linear-gradient(160deg,#9A603D,#6B3E26);color:var(--butter);display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:24px}
+  .sofar .tx{min-width:0;display:flex;flex-direction:column;gap:2px}
+  .sofar .tx b{font-size:20px;color:var(--green)}
+  .sofar .tx span{font-size:20px;line-height:1.3}
+  .sofar.big .tx b{font-size:24px}
+  .sofar.big .tx span{font-size:25px}
+  .chip{display:inline-block;font-size:14px;font-weight:800;color:var(--dust);margin-left:8px}
+  .coll{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-content:center;flex:1}
+  .ci{width:140px;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .ci svg{width:100px;height:100px}
+  .ci span{font-size:16px;font-weight:800;text-align:center;line-height:1.15}
+  .ci small{font-size:13px;color:var(--dust);font-weight:700}
+  .empty{flex:1;display:grid;place-items:center;text-align:center;font-size:28px;color:var(--dust);line-height:1.4}
+
+  .frames{display:flex;flex-direction:column;gap:14px}
+  .frames div{font-size:30px;background:var(--cocoa2);border-radius:14px;padding:18px 24px}
+  .frames span{display:inline-block;min-width:220px;border-bottom:3px dashed var(--amber);margin:0 6px}
+
+  /* ---------- hud ---------- */
+  #hud{position:fixed;left:0;right:0;bottom:0;height:44px;display:flex;gap:10px;align-items:center;padding:0 14px calc(env(safe-area-inset-bottom,0px)) 14px;font-size:13px;color:var(--hud)}
+  #hud b{color:#D9C6B0}
+  #hud button{background:#2A1E16;border:1px solid #4a372a;color:#E6D6BC;border-radius:8px;padding:5px 12px;font-size:14px;font-weight:700}
+  #hud button:hover{border-color:var(--amber)}
+  #hud .keys{margin-left:auto}
+  @media (max-width:700px){#hud .keys{display:none}}
+  #toast{position:fixed;left:50%;bottom:58px;transform:translateX(-50%);background:#2A1E16;border:1px solid var(--amber);color:#F2E6D6;border-radius:10px;padding:12px 18px;font-size:15px;max-width:min(560px,90vw);text-align:center;opacity:0;transition:opacity .2s;pointer-events:none}
+  #toast.on{opacity:1}
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}
+  }
+</style>
+
+<div id="viewport"><div id="stage" role="region" aria-live="polite"></div></div>
+<div id="hud">
+  <button id="bHome" type="button">Box</button>
+  <button id="bPrev" type="button">◀ Back</button>
+  <button id="bNext" type="button">Next ▶</button>
+  <span id="where"></span>
+  <span class="keys"><b>← →</b> move &nbsp; <b>H</b> box &nbsp; <b>F</b> full screen</span>
+</div>
+<div id="toast"></div>
+
+<script>
+/* ================= drawings ================= */
+const S = '#3B2318';
+const I = {
+  candy:`<path d="M8 50 L26 36 L26 64Z" fill="#E0A15C"/><path d="M92 50 L74 36 L74 64Z" fill="#E0A15C"/><ellipse cx="50" cy="50" rx="27" ry="19" fill="#C0392B"/><path d="M37 43 q13 -8 26 0" fill="none" stroke="#fff" stroke-width="3"/>`,
+  lollipop:`<line x1="50" y1="58" x2="50" y2="97" stroke-width="5"/><circle cx="50" cy="36" r="27" fill="#F28AB2"/><path d="M50 36 m-15 0 a15 15 0 1 1 15 15 a9 9 0 1 1 -9 -9" fill="none" stroke="#fff" stroke-width="4"/>`,
+  chocbar:`<rect x="12" y="24" width="76" height="52" rx="4" fill="#6B3E26"/><path d="M37 24 V76 M62 24 V76 M12 50 H88" fill="none" stroke="#4A2817" stroke-width="2.5"/><path d="M12 58 L88 34 L88 76 L12 76Z" fill="#2E6B5E"/><path d="M30 66 L70 54" fill="none" stroke="#E0A15C" stroke-width="3"/>`,
+  hammer:`<rect x="46" y="34" width="8" height="60" rx="3" fill="#B9B9B9"/><path d="M22 18 h56 a11 11 0 0 1 0 22 h-56 a11 11 0 0 1 0 -22z" fill="#E36B4F"/>`,
+  coinJM:`<circle cx="50" cy="50" r="40" fill="#A9ADB1"/><circle cx="50" cy="50" r="31" fill="none" stroke="#7D8186" stroke-width="2.5"/><text x="50" y="60" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-weight="700" font-size="27" fill="#55595e" stroke="none">J.M.</text>`,
+  coin:`<circle cx="50" cy="50" r="40" fill="#DADDE0"/><circle cx="50" cy="50" r="31" fill="none" stroke="#9AA0A6" stroke-width="2.5"/><text x="50" y="62" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-weight="700" font-size="32" fill="#7A8087" stroke="none">$1</text><path d="M26 34 q6 -10 16 -14" fill="none" stroke="#fff" stroke-width="4"/>`,
+  coinBite:`<path d="M75.7 19.4 A40 40 0 1 0 80.6 75.7 A11 11 0 0 1 71 62 A11 11 0 0 1 70 44 A11 11 0 0 1 71 29 A11 11 0 0 1 75.7 19.4Z" fill="#DADDE0"/><text x="44" y="62" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-weight="700" font-size="32" fill="#7A8087" stroke="none">$1</text><path d="M24 34 q6 -10 16 -14" fill="none" stroke="#fff" stroke-width="4"/>`,
+  store:`<rect x="6" y="20" width="88" height="10" fill="#7A2E1F"/><rect x="10" y="30" width="80" height="64" fill="#B5462F"/><path d="M10 40 H90 M10 50 H90 M10 60 H90 M10 70 H90 M10 80 H90" fill="none" stroke="#9A3826" stroke-width="1.5"/><path d="M10 38 h80 l-5 11 h-70z" fill="#FAF4E8"/><path d="M22 38 l-2 11 M38 38 l-1 11 M54 38 l0 11 M70 38 l1 11" fill="none" stroke="#C0392B" stroke-width="5"/><rect x="14" y="55" width="26" height="24" fill="#FFE9B8"/><rect x="60" y="55" width="26" height="24" fill="#FFE9B8"/><rect x="43" y="57" width="14" height="37" fill="#4E3122"/><circle cx="21" cy="71" r="4" fill="#C0392B" stroke-width="1.5"/><circle cx="30" cy="70" r="4" fill="#6B3E26" stroke-width="1.5"/><circle cx="67" cy="71" r="4" fill="#F28AB2" stroke-width="1.5"/><circle cx="77" cy="70" r="4" fill="#6B3E26" stroke-width="1.5"/><text x="50" y="28.5" text-anchor="middle" font-family="Nunito Sans,Arial,sans-serif" font-weight="800" font-size="8" fill="#FFE9B8" stroke="none">CANDY</text>`,
+  box:`<rect x="12" y="36" width="76" height="52" rx="3" fill="#C0392B"/><rect x="8" y="28" width="84" height="16" rx="3" fill="#D9503F"/><rect x="45" y="28" width="10" height="60" fill="#E0A15C"/><path d="M50 28 c-16 -18 -28 -4 0 0 c16 -18 28 -4 0 0" fill="#E0A15C"/>`,
+  toothbrush:`<g transform="rotate(-22 50 50)"><rect x="4" y="54" width="68" height="11" rx="5.5" fill="#5DADE2"/><rect x="60" y="48" width="30" height="8" rx="2" fill="#5DADE2"/><rect x="62" y="34" width="26" height="14" rx="2" fill="#6B3E26" class="hl"/><path d="M67 34 V48 M73 34 V48 M79 34 V48 M85 34 V48" fill="none" stroke="#4A2817" stroke-width="1.5"/></g>`,
+  toothpaste:`<g transform="rotate(-20 50 50)"><path d="M16 36 L74 38 L74 62 L16 64 L10 60 L10 40Z" fill="#F4F4F4"/><rect x="74" y="42" width="14" height="16" rx="2" fill="#2E6B5E"/><rect x="28" y="44" width="34" height="12" rx="3" fill="#E58FA0"/><path d="M10 40 L10 60" fill="none"/></g>`,
+  oj:`<path d="M31 38 L69 38 L65.5 84 L34.5 84Z" fill="#F7A230" class="wet0"/><path d="M28 16 L72 16 L66 86 L34 86Z" fill="none"/><path d="M36 24 L35 60" fill="none" stroke="#fff" stroke-width="4" opacity=".7"/>`,
+  milk:`<path d="M30.5 30 L69.5 30 L65.5 84 L34.5 84Z" fill="#FDFDF7"/><path d="M28 16 L72 16 L66 86 L34 86Z" fill="none"/><path d="M36 24 L35 60" fill="none" stroke="#DCE6EE" stroke-width="4"/>`,
+  water:`<path d="M30.5 32 L69.5 32 L65.5 84 L34.5 84Z" fill="#BFE3F2"/><rect x="38" y="40" width="12" height="12" rx="2" fill="#EAF7FC" stroke-width="2" transform="rotate(12 44 46)"/><rect x="52" y="52" width="12" height="12" rx="2" fill="#EAF7FC" stroke-width="2" transform="rotate(-10 58 58)"/><path d="M28 16 L72 16 L66 86 L34 86Z" fill="none"/>`,
+  egg:`<path d="M14 56 C8 34 34 22 52 28 C74 22 94 42 84 62 C76 82 30 86 14 56Z" fill="#FFFFFF"/><circle cx="50" cy="52" r="15" fill="#F6C232"/><path d="M44 46 q4 -4 9 -3" fill="none" stroke="#fff" stroke-width="3"/>`,
+  bacon:`<path d="M10 30 q10 -10 20 0 t20 0 t20 0 t20 0 v14 q-10 -10 -20 0 t-20 0 t-20 0 t-20 0z" fill="#C8553D"/><path d="M14 38 q8 -6 16 0 t20 0 t20 0 t16 0" fill="none" stroke="#F3B9A8" stroke-width="2.5"/><path d="M10 60 q10 -10 20 0 t20 0 t20 0 t20 0 v14 q-10 -10 -20 0 t-20 0 t-20 0 t-20 0z" fill="#C8553D"/><path d="M14 68 q8 -6 16 0 t20 0 t20 0 t16 0" fill="none" stroke="#F3B9A8" stroke-width="2.5"/>`,
+  toast:`<path d="M20 42 C14 18 40 12 50 22 C60 12 86 18 80 42 L78 86 L22 86Z" fill="#C98A45"/><path d="M29 44 C26 28 42 24 50 31 C58 24 74 28 71 44 L69 78 L31 78Z" fill="#F3D59A"/><path d="M36 48 q14 -6 28 2 q2 12 -8 16 q-14 4 -20 -6z" fill="#F7A230" stroke-width="2"/>`,
+  glove:`<path d="M30 92 L30 52 L22 38 Q20 30 27 30 L36 42 L36 18 Q36 11 42 11 Q48 11 48 18 L48 40 L49 13 Q49 6 55 6 Q61 6 61 13 L60 40 L62 17 Q63 11 68.5 11.5 Q74 12.5 73 19 L70 46 L73 33 Q75 27 80 28.5 Q84 30.5 83 36 L76 64 Q73 80 68 92Z" fill="#33302E"/><rect x="28" y="84" width="42" height="12" rx="3" fill="#4B4643"/><path d="M42 50 L42 62 M54 48 L54 62" fill="none" stroke="#56514D" stroke-width="2"/>`,
+  fountain:`<path d="M48 40 Q36 8 22 46" fill="none" stroke="#5DADE2" stroke-width="5" class="wet"/><path d="M12 50 h76 l-9 22 h-58z" fill="#F4F4F4"/><rect x="44" y="72" width="12" height="22" fill="#B9B9B9"/><rect x="46" y="38" width="8" height="12" fill="#B9B9B9"/><ellipse cx="34" cy="55" rx="14" ry="3" fill="#BFE3F2" stroke="none"/>`,
+  pencil:`<g transform="rotate(-30 50 50)"><rect x="20" y="41" width="56" height="18" fill="#F2C230"/><path d="M20 47 H76 M20 53 H76" fill="none" stroke="#C0392B" stroke-width="2.5"/><rect x="8" y="41" width="12" height="18" rx="3" fill="#E58FA0"/><rect x="18" y="41" width="6" height="18" fill="#B9B9B9"/><path d="M76 41 L94 50 L76 59Z" fill="#F3D59A"/><path d="M88 47 L94 50 L88 53Z" fill="#222"/></g>`,
+  rope:`<path d="M18 30 Q50 130 82 30" fill="none" stroke="#C0392B" stroke-width="5" class="wet"/><rect x="11" y="8" width="14" height="26" rx="5" fill="#E0A15C"/><rect x="75" y="8" width="14" height="26" rx="5" fill="#E0A15C"/>`,
+  lettuce:`<path d="M18 62 q-8 -26 16 -30 q6 -18 24 -10 q20 -8 26 12 q16 10 4 28 q-4 18 -24 16 q-14 10 -28 0 q-20 0 -18 -16z" fill="#7DBE5A"/><path d="M50 30 V76 M50 48 L36 40 M50 58 L64 50 M50 66 L38 60" fill="none" stroke="#4F8F37" stroke-width="2.5"/>`,
+  chip:`<path d="M14 48 q10 -28 40 -26 q30 6 28 32 q-4 28 -36 28 q-30 -4 -32 -34z" fill="#F2C76B"/><circle cx="38" cy="44" r="3" fill="#D99A2B" stroke="none"/><circle cx="58" cy="56" r="3" fill="#D99A2B" stroke="none"/><circle cx="46" cy="66" r="2.5" fill="#D99A2B" stroke="none"/>`,
+  fruit:`<circle cx="38" cy="58" r="27" fill="#F7A230"/><circle cx="38" cy="58" r="20" fill="#FBC56A" stroke="none"/><path d="M38 38 V78 M18 58 H58 M24 44 L52 72 M52 44 L24 72" fill="none" stroke="#F7A230" stroke-width="2.5"/><circle cx="73" cy="36" r="10" fill="#8E5BB5"/><circle cx="82" cy="53" r="10" fill="#8E5BB5"/><circle cx="66" cy="54" r="10" fill="#8E5BB5"/><circle cx="76" cy="70" r="10" fill="#8E5BB5"/>`,
+  fork:`<rect x="45" y="46" width="10" height="48" rx="4" fill="#C8CDD2"/><path d="M34 8 V30 Q34 48 50 48 Q66 48 66 30 V8 L60 8 V30 L55 30 V8 L45 8 V30 L40 30 V8Z" fill="#C8CDD2"/>`,
+  spoon:`<rect x="46" y="46" width="8" height="48" rx="4" fill="#C8CDD2"/><ellipse cx="50" cy="28" rx="17" ry="22" fill="#C8CDD2"/><path d="M42 16 q4 -6 10 -6" fill="none" stroke="#fff" stroke-width="3"/>`,
+  medspoon:`<rect x="46" y="46" width="8" height="48" rx="4" fill="#C8CDD2"/><ellipse cx="50" cy="28" rx="17" ry="22" fill="#C8CDD2"/><ellipse cx="50" cy="30" rx="12" ry="15" fill="#B8C24A"/><circle cx="46" cy="25" r="3" fill="#E36B4F" stroke="none"/>`,
+  trumpet:`<path d="M24 56 q0 18 18 18 h16 q8 0 8 -10" fill="none" stroke="#E8B83A" stroke-width="6" class="wet"/><rect x="6" y="44" width="11" height="12" rx="2" fill="#E8B83A"/><rect x="16" y="46" width="44" height="8" fill="#E8B83A"/><path d="M58 46 L84 28 Q94 50 84 72 L58 54Z" fill="#E8B83A"/><rect x="28" y="33" width="5" height="13" fill="#E8B83A"/><rect x="37" y="33" width="5" height="13" fill="#E8B83A"/><rect x="46" y="33" width="5" height="13" fill="#E8B83A"/><path d="M86 34 Q90 50 86 66" fill="none" stroke="#FFF3C4" stroke-width="3"/>`,
+  bucket:`<path d="M16 34 Q50 -18 84 34" fill="none" stroke="#7D868D" stroke-width="3"/><path d="M16 36 h68 l-9 56 h-50z" fill="#AEB6BD" class="keep"/><path d="M24 50 H76 M26 66 H74 M28 80 H72" fill="none" stroke="#8E979E" stroke-width="2"/><ellipse cx="50" cy="36" rx="34" ry="9" fill="#7FC4E8"/><circle cx="60" cy="34" r="9" fill="#C0392B" class="keep"/><path d="M60 25 v-6" fill="none" stroke-width="3"/>`,
+  sign:`<rect x="46" y="50" width="8" height="46" fill="#8A6A4A"/><rect x="10" y="14" width="80" height="42" rx="3" fill="#EFE3CC"/><text x="50" y="33" text-anchor="middle" font-family="Nunito Sans,Arial,sans-serif" font-weight="800" font-size="15" fill="#B5462F" stroke="none">FOR</text><text x="50" y="50" text-anchor="middle" font-family="Nunito Sans,Arial,sans-serif" font-weight="800" font-size="15" fill="#B5462F" stroke="none">SALE</text>`,
+  sold:`<rect x="46" y="50" width="8" height="46" fill="#8A6A4A"/><rect x="10" y="20" width="80" height="36" rx="3" fill="#FAF4E8"/><text x="50" y="46" text-anchor="middle" font-family="Nunito Sans,Arial,sans-serif" font-weight="800" font-size="22" fill="#2E6B5E" stroke="none">SOLD</text>`,
+  cans:`<rect x="10" y="50" width="26" height="38" rx="3" fill="#A65B3A"/><path d="M10 60 H36 M10 78 H36" fill="none" stroke="#7d4128" stroke-width="2"/><rect x="40" y="62" width="34" height="22" rx="3" fill="#9C7A5A" transform="rotate(-12 57 73)"/><path d="M78 88 L78 52 Q78 46 82 44 L82 34 L88 34 L88 44 Q92 46 92 52 L92 88Z" fill="#5E8C6A"/>`,
+  heart:`<path d="M50 86 C10 60 12 22 34 20 C45 19 50 28 50 33 C50 28 55 19 66 20 C88 22 90 60 50 86Z" fill="#E58FA0"/><path d="M30 34 q4 -6 10 -6" fill="none" stroke="#fff" stroke-width="4"/>`,
+  hanky:`<path d="M18 22 h64 v56 h-64z" fill="#FFFFFF"/><path d="M18 22 h64 v56 h-64z" fill="none" stroke="#C9B9A3" stroke-width="2" stroke-dasharray="3 4" transform="translate(50 50) scale(.84) translate(-50 -50)"/><circle cx="34" cy="40" r="5" fill="none" stroke="#C9B9A3" stroke-width="2"/><circle cx="66" cy="60" r="5" fill="none" stroke="#C9B9A3" stroke-width="2"/>`,
+  goldball:`<circle cx="50" cy="50" r="18" fill="#E8B83A"/><path d="M40 42 q4 -6 10 -6" fill="none" stroke="#FFF3C4" stroke-width="3"/>`,
+  notes:`<path d="M30 70 V26 L52 20 V62" fill="none" stroke-width="4"/><ellipse cx="24" cy="72" rx="8" ry="6" fill="#3B2318"/><ellipse cx="46" cy="64" rx="8" ry="6" fill="#3B2318"/><path d="M74 78 V44" fill="none" stroke-width="4"/><ellipse cx="68" cy="80" rx="8" ry="6" fill="#3B2318"/><path d="M74 44 q10 4 8 14" fill="none" stroke-width="3"/>`
+};
+const g = k => `<g stroke="${S}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">${I[k]}</g>`;
+let uid = 0;
+/* place an icon in a 400x300 scene; o.choc = [x,y,w,h] in icon space to show that part as chocolate */
+function put(k, x, y, s, o = {}) {
+  let out = `<g transform="translate(${x} ${y}) scale(${s / 100})${o.rot ? ` rotate(${o.rot} 50 50)` : ''}">${g(k)}`;
+  if (o.choc) {
+    const [cx, cy, cw, ch] = o.choc === true ? [0, 0, 100, 100] : o.choc, id = 'cp' + (++uid);
+    out += `<clipPath id="${id}"><rect x="${cx}" y="${cy}" width="${cw}" height="${ch}"/></clipPath><g class="chocv" clip-path="url(#${id})">${g(k)}</g>`;
+  }
+  return out + '</g>';
+}
+const scene = body => `<svg viewBox="0 0 400 300" role="img" aria-hidden="true">${body}</svg>`;
+const sky = (top, ground, gy = 215) => `<rect width="400" height="300" fill="${top}"/><rect y="${gy}" width="400" height="${300 - gy}" fill="${ground}"/><path d="M0 ${gy} H400" stroke="${S}" stroke-width="3"/>`;
+
+const ART = {
+  1: () => scene(sky('#FFE9B8', '#C97B34', 205) +
+      `<path d="M0 225 H400" stroke="#A8642A" stroke-width="2"/>` +
+      put('hammer', 268, 26, 110, { rot: 28 }) + put('lollipop', 30, 48, 130, { rot: -14 }) +
+      put('chocbar', 130, 112, 140, { rot: -6 }) + put('candy', 256, 160, 100, { rot: 12 }) + put('candy', 26, 178, 86, { rot: -20 })),
+  2: () => scene(sky('#F4C27A', '#D8CBB8', 228) +
+      `<circle cx="70" cy="70" r="34" fill="#F7A230"/><path d="M0 250 H400" stroke="#C3B49E" stroke-width="2"/>` +
+      put('store', 170, 22, 220) + put('coinJM', 24, 140, 132)),
+  3: () => scene(`<rect width="400" height="300" fill="#BFE0D6"/>` +
+      [40, 80, 120, 160, 200].map(y => `<path d="M0 ${y} H400" stroke="#A6CFC2" stroke-width="2"/>`).join('') +
+      [50, 100, 150, 200, 250, 300, 350].map(x => `<path d="M${x} 0 V210" stroke="#A6CFC2" stroke-width="2"/>`).join('') +
+      `<rect y="210" width="400" height="90" fill="#FAF4E8"/><path d="M0 210 H400" stroke="${S}" stroke-width="3"/>` +
+      put('toothbrush', 10, 70, 170) + put('toothpaste', 140, 140, 120) + put('oj', 262, 60, 140, { choc: [0, 50, 100, 50] })),
+  4: () => scene(sky('#CFE6F2', '#8CC084', 222) +
+      `<rect x="18" y="60" width="34" height="164" fill="#D8D2C8" stroke="${S}" stroke-width="3"/><rect x="12" y="50" width="46" height="14" fill="#C9C2B6" stroke="${S}" stroke-width="3"/>` +
+      `<rect x="348" y="60" width="34" height="164" fill="#D8D2C8" stroke="${S}" stroke-width="3"/><rect x="342" y="50" width="46" height="14" fill="#C9C2B6" stroke="${S}" stroke-width="3"/>` +
+      put('glove', 66, 56, 170, { choc: [0, 0, 100, 34], rot: -8 }) + put('coinBite', 212, 86, 140)),
+  5: () => scene(sky('#F3E3C7', '#C97B34', 222) +
+      `<rect x="44" y="22" width="312" height="140" rx="6" fill="#2E6B5E" stroke="#6B3E26" stroke-width="8"/>` +
+      `<text x="200" y="60" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-size="26" fill="#EAF2EE">TEST</text>` +
+      `<text x="78" y="102" font-family="Nunito Sans,Arial,sans-serif" font-size="22" font-weight="700" fill="#EAF2EE">1.</text><text x="148" y="102" font-family="Nunito Sans,Arial,sans-serif" font-size="22" font-weight="700" fill="#EAF2EE">2.</text><text x="218" y="102" font-family="Nunito Sans,Arial,sans-serif" font-size="22" font-weight="700" fill="#EAF2EE">3.</text><text x="288" y="102" font-family="Nunito Sans,Arial,sans-serif" font-size="22" font-weight="700" fill="#EAF2EE">4.</text>` +
+      `<path d="M70 140 H330" stroke="#EAF2EE" stroke-width="2" stroke-dasharray="6 8"/>` +
+      `<rect x="40" y="232" width="150" height="54" fill="#FAF4E8" stroke="${S}" stroke-width="3" transform="rotate(-4 115 259)"/><path d="M60 262 q20 -8 34 4 q12 6 22 -2" fill="none" stroke="#5E331F" stroke-width="7" stroke-linecap="round"/>` +
+      put('pencil', 200, 150, 160, { choc: [0, 0, 52, 100] })),
+  6: () => scene(sky('#FFE9B8', '#E2D2B6', 212) +
+      put('rope', 30, 40, 190) +
+      `<path d="M236 30 h146 a14 14 0 0 1 14 14 v84 a14 14 0 0 1 -14 14 h-96 l-26 26 l4 -26 h-28 a14 14 0 0 1 -14 -14 v-84 a14 14 0 0 1 14 -14z" fill="#fff" stroke="${S}" stroke-width="3"/>` +
+      `<text x="309" y="72" text-anchor="middle" font-family="Nunito Sans,Arial,sans-serif" font-weight="800" font-size="19" fill="#3B2318">I don’t believe</text><text x="309" y="98" text-anchor="middle" font-family="Nunito Sans,Arial,sans-serif" font-weight="800" font-size="19" fill="#3B2318">one word about</text><text x="309" y="124" text-anchor="middle" font-family="Nunito Sans,Arial,sans-serif" font-weight="800" font-size="19" fill="#3B2318">the chocolate!</text>` +
+      put('water', 270, 190, 100, { choc: [0, 30, 100, 70] })),
+  7: () => scene(`<rect width="400" height="300" fill="#FAF4E8"/>` +
+      [24, 148, 272].map(x => `<rect x="${x}" y="22" width="104" height="110" rx="4" fill="#CFE6F2" stroke="${S}" stroke-width="3"/><path d="M${x + 52} 22 V132 M${x} 77 H${x + 104}" stroke="${S}" stroke-width="2"/>`).join('') +
+      `<rect y="196" width="400" height="104" fill="#C97B34"/><path d="M0 196 H400" stroke="${S}" stroke-width="3"/>` +
+      `<rect x="30" y="206" width="340" height="80" rx="10" fill="#9FB7AE" stroke="${S}" stroke-width="3"/>` +
+      put('milk', 40, 130, 120, { choc: true }) + put('fork', 150, 150, 110, { choc: true, rot: 10 }) +
+      put('spoon', 210, 150, 110, { choc: [0, 0, 100, 60], rot: -10 }) + put('lettuce', 280, 176, 100)),
+  8: () => scene(`<rect width="400" height="300" fill="#4E3122"/><ellipse cx="200" cy="250" rx="170" ry="40" fill="#6B4630"/>` +
+      `<path d="M0 0 H70 Q60 120 84 300 H0Z" fill="#8E2C2C" stroke="${S}" stroke-width="3"/><path d="M20 0 Q14 150 30 300 M44 0 Q38 150 56 300" stroke="#6E1F1F" stroke-width="3" fill="none"/>` +
+      `<path d="M400 0 H330 Q340 120 316 300 H400Z" fill="#8E2C2C" stroke="${S}" stroke-width="3"/><path d="M380 0 Q386 150 370 300 M356 0 Q362 150 344 300" stroke="#6E1F1F" stroke-width="3" fill="none"/>` +
+      `<path d="M0 238 H400" stroke="#2A1810" stroke-width="3"/>` +
+      put('trumpet', 86, 64, 200, { choc: [0, 0, 56, 100] }) + put('notes', 250, 20, 80, { rot: 16 })),
+  9: () => scene(sky('#CFE6F2', '#8CC084', 196) +
+      `<path d="M0 26 Q200 70 400 26" fill="none" stroke="${S}" stroke-width="2"/>` +
+      [[30, '#E58FA0'], [80, '#E0A15C'], [130, '#5DADE2'], [180, '#E58FA0'], [230, '#E0A15C'], [280, '#5DADE2'], [330, '#E58FA0']].map(([x, c]) => { const y = 26 + 44 * (1 - Math.pow((x + 15 - 200) / 200, 2)); return `<path d="M${x} ${y - 4} L${x + 30} ${y - 1} L${x + 15} ${y + 26}Z" fill="${c}" stroke="${S}" stroke-width="2"/>`; }).join('') +
+      put('bucket', 120, 78, 170, { choc: true }) ),
+  10: () => scene(sky('#D8A27A', '#A08770', 216) +
+      `<circle cx="320" cy="64" r="26" fill="#F2C76B"/><path d="M0 240 q60 -10 120 4 t140 -6 t140 8" fill="none" stroke="#8A7260" stroke-width="2"/>` +
+      put('sign', 200, 60, 160) + put('cans', 30, 148, 120) + put('medspoon', 110, 190, 90, { choc: true, rot: 70 })),
+  11: () => scene(`<rect width="400" height="300" fill="#2E4A5A"/><circle cx="60" cy="50" r="2" fill="#fff"/><circle cx="340" cy="40" r="2" fill="#fff"/><circle cx="300" cy="80" r="1.6" fill="#fff"/><rect y="270" width="400" height="30" fill="#8A8A8A"/><path d="M0 270 H400" stroke="${S}" stroke-width="3"/>` +
+      put('store', 46, -18, 300) +
+      put('trumpet', 92, 157, 42, { choc: true }) + put('pencil', 118, 168, 30, { choc: true }) + put('coinBite', 100, 186, 24) +
+      put('fork', 228, 160, 36, { choc: true }) + put('spoon', 248, 160, 36, { choc: true }) + put('milk', 270, 166, 30, { choc: true })),
+  12: () => scene(sky('#FFE9B8', '#FAF4E8', 214) +
+      `<rect x="250" y="28" width="120" height="100" rx="4" fill="#CFE6F2" stroke="${S}" stroke-width="3"/><path d="M310 28 V128 M250 78 H370" stroke="${S}" stroke-width="2"/>` +
+      put('sold', 270, 60, 70) +
+      put('milk', 112, 56, 190) +
+      `<path d="M290 160 l10 -10 M300 176 h14 M86 150 l-12 -10 M80 172 h-14" stroke="#E0A15C" stroke-width="5" stroke-linecap="round"/>` +
+      put('hanky', 18, 210, 80, { rot: -10 }))
+};
+
+/* ================= story data ================= */
+const MAGIC = ['No magic yet.', 'One magic chocolate, eaten in bed.', 'Food turns to chocolate in his mouth.', 'Anything in his mouth turns, even gloves and money.',
+  'It spreads! A whole pencil changes.', 'Glasses, spoons and forks turn too.', 'A whole bucket of water turns.', 'A kiss turns Mom into chocolate.'];
+
+const CH = [
+ { n:1, short:'Candy Mad', name:'Candy Mad', magic:0,
+   one:'John Midas is a nice boy with one bad fault: he is a pig about candy, and he never shares.',
+   events:[
+    'We meet <b>John Midas</b>, his little sister <b>Mary</b>, his mom and dad, his teacher <b>Miss Plimsoll</b>, and his friend <b>Susan Buttercup</b>.',
+    'John spends all his money on candy, and he never shares any of it.',
+    'Mom spots little red spots on the end of John’s nose. <b>Dr. Cranium</b> says John eats “much too much candy.”',
+    'Dad asks if John would rather have chocolate all the time. John says yes: “Other things are just food. But chocolate’s chocolate.”'],
+   play:[{ type:'flip', title:'Who’s who?', prompt:'Tap a card to flip it and see who that person is.', cols:4, cards:[
+     ['JM','John Midas','#6B3E26','The main character. He’s a nice boy with one bad fault: he’s a pig about candy.'],
+     ['M','Mary','#C97B34','John’s younger sister.'],
+     ['Mom','Mrs. Midas','#2E6B5E','John’s mom. Gentle and practical. She worries about all that candy.'],
+     ['Dad','Mr. Midas','#4E3122','John’s dad. He tells John about baseball, beetles, boats and butterflies.'],
+     ['SB','Susan Buttercup','#B5462F','In John’s class. Yellow curls and one of the best marble collections around.'],
+     ['MP','Miss Plimsoll','#2E6B5E','John’s teacher. Easy to get along with, as long as you do careful work.'],
+     ['MQ','Mrs. Quaver','#C97B34','The music teacher. She lets John play trumpet with the school orchestra.'],
+     ['DC','Dr. Cranium','#6B3E26','The doctor. Tall, thin and bald. He says John eats too much candy.']]}],
+   quote:'All his money went on candy, and all his candy went to himself. He never shared it.',
+   qs:[['What is John’s one bad fault?','He is greedy about candy. He eats way too much of it and never shares.'],
+       ['Why are Mom and Dad worried?','So much candy is making him sick, and there’s no room left for real food that helps him grow.']] },
+
+ { n:2, short:'The Strange Coin', name:'The Strange Coin', magic:1,
+   one:'John finds a strange coin with his initials on it and trades it for a box of chocolates at a mystery candy store.',
+   events:[
+    'On the way to Susan’s house, John finds a coin. It has a fat boy on one side and the letters <b>J.M.</b> on the other. Those are his initials!',
+    'He turns left instead of right and finds a candy store he has never seen. The storekeeper already knows his name.',
+    'The storekeeper takes the coin and lets John pick a big box of chocolates. John doesn’t ask his mom first, and he hides the box under his bed.',
+    'That night he unwraps layer after layer and finds only <b>one tiny chocolate</b>. It’s the most chocolatey chocolate he has ever tasted.'],
+   play:[{ type:'unwrap', title:'Unwrap the box', prompt:'John had to take off a LOT of wrapping. Tap to unwrap it the way he did.' }],
+   quote:'“I’m sure she won’t,” he agreed. “Not in the long run, anyway.”', quoteBy:'The storekeeper, when John says his mom won’t mind',
+   qs:[['What clues tell us the candy store is magic?','It’s open on Sunday, John has never seen it before, the man knows his name, and the coin has John’s initials on it.'],
+       ['Why does John sneak in the back door?','He knows he isn’t supposed to have all that candy, and he doesn’t want to share it.']] },
+
+ { n:3, short:'Chocolate Breakfast', name:'Chocolate for Breakfast', magic:2,
+   one:'Everything John puts in his mouth turns to chocolate, and he thinks it’s wonderful.',
+   events:[
+    'John’s toothpaste tastes like chocolate, and the bristles on his toothbrush turn brown. He eats the <b>whole tube</b>.',
+    'Mary tells on him, but Mom thinks John is only joking.',
+    'His orange juice, egg, bacon, toast, marmalade and milk all turn to chocolate as soon as they’re in his mouth.',
+    'Mom is so proud he ate his breakfast that she offers him a dime for chocolates. John says he won’t need it.'],
+   play:[{ type:'tap', title:'John’s chocolate breakfast', prompt:'Tap each thing John put in his mouth.', items:[
+     ['toothpaste','Toothpaste'],['oj','Orange juice'],['egg','Fried egg'],['bacon','Bacon'],['toast','Toast and marmalade'],['milk','Milk']]}],
+   quote:'John had never before enjoyed his breakfast so much.',
+   qs:[['Why doesn’t anyone believe John?','He loves chocolate so much that Mom thinks he’s just wishing or joking.'],
+       ['Right now, does John think he’s lucky or unlucky?','Lucky! He thinks he has the best power in the world.']] },
+
+ { n:4, short:'Glove & Dollar', name:'The Glove and the Silver Dollar', magic:3,
+   one:'The chocolate touch spreads to things that aren’t food, and it costs John a friend.',
+   events:[
+    'John chews his glove while he thinks. It turns to chocolate, so he eats <b>both gloves</b>.',
+    '<b>Spider Wilson</b>, a mean older boy, grabs the second glove. It tastes like dirty old leather to him, so he spits it out.',
+    'Susan shows John the silver dollar she got for her birthday. She tells him to bite it to prove it’s real.',
+    'His teeth go right through. Susan gets back a crescent. “John Midas, <b>I hate you!</b>”'],
+   play:[{ type:'tap', title:'What turned to chocolate?', prompt:'Tap each thing John bit.', big:true, items:[
+     ['glove','John’s glove'],['coin','Susan’s silver dollar', 'inset(0 0 0 100%)', 'inset(0 0 0 62%)', 'A chocolate bite!']]}],
+   quote:'She had given John a complete circle of silver. He sadly handed back a crescent.',
+   qs:[['Why does the glove taste bad to Spider?','The magic only works for John. For anyone else it’s just a dirty old glove.'],
+       ['How does Susan feel? Why?','Hurt and angry. Her birthday present is ruined, and she thinks John did it on purpose.']] },
+
+ { n:5, short:'The Math Test', name:'The Math Test', magic:4,
+   one:'At school the magic gets stronger, and John can’t finish his math test.',
+   events:[
+    'Miss Plimsoll gives the class a math test with four problems.',
+    'John is thirsty. At <b>two different water fountains</b>, the water turns to chocolate in his mouth.',
+    'He nibbles the end of his pencil. The chocolate keeps <b>spreading down the whole pencil</b>, even after he takes it out of his mouth.',
+    'He can’t write his last answer, 72. All he makes is a chocolate smear.'],
+   play:[{ type:'tap', title:'The magic is spreading', prompt:'Tap each one and watch the chocolate spread.', big:true, items:[
+     ['fountain','Fountain water'],['pencil','John’s pencil','inset(0 0 0 0)','inset(0 0 0 0)','Chocolate pencil', 'inset(0 100% 0 0)']]}],
+   quote:'The magic, for John now knew that his power must be magic, was apparently getting stronger.',
+   qs:[['What’s different about the pencil?','Before, only the part in his mouth changed. Now the WHOLE pencil turns, even outside his mouth.'],
+       ['Is the chocolate touch still fun?','Not really. It made him fail his test, and he’s getting thirsty.']] },
+
+ { n:6, short:'Nobody Believes', name:'Nobody Believes John', magic:4, end:'Every drink of water turns to chocolate.',
+   one:'John tries to explain the chocolate touch, but Miss Plimsoll and Susan don’t believe him.',
+   events:[
+    'Miss Plimsoll thinks John is making up stories. She keeps the chocolate pencil and goes to talk to the nurse.',
+    'John offers to skip rope with Susan to make up. She sticks out her tongue, and the girls laugh at him.',
+    'John says, “Maybe I’ll turn to chocolate myself. Then you’ll be sorry.”',
+    'All morning, every drink of water turns to chocolate. His mouth gets stickier and drier.'],
+   play:[{ type:'flip', title:'What is John worried about?', prompt:'Tap each card to see what’s bothering John.', cols:4, cards:[
+     ['1','His gloves','#6B3E26','Mom might be cross. Will she believe he ate them?'],
+     ['2','His math test','#2E6B5E','He messed it up because of the chocolate pencil.'],
+     ['3','Susan','#B5462F','She’s angry at him and doesn’t believe a word.'],
+     ['4','His mouth','#C97B34','He’s so thirsty! Every drink turns to sweet, sticky chocolate.']]}],
+   quote:'Maybe I’ll get sick and die. Maybe I’ll turn to chocolate myself. Then you’ll be sorry.', quoteBy:'John, to Susan',
+   qs:[['Susan says if it were true, John would be glad. Is she right?','Maybe in Chapter 3! But now he’s thirsty, in trouble, and scared.'],
+       ['How has John changed since Chapter 3?','He used to love the magic. Now he feels sorry for himself and wishes it would stop.']] },
+
+ { n:7, short:'Lunch Disaster', name:'Lunch Disaster', magic:5,
+   one:'John finally wants healthy food, but he can’t eat any of it.',
+   events:[
+    'In the cafeteria, a boy hopes for chocolate cream pie. Just the thought makes John’s stomach feel like a roller coaster.',
+    'John picks a healthy lunch: chicken, ham, salad, chips, milk, ice water and fresh fruit.',
+    'He tries tricks, like keeping his lips off the fork and dropping a chip straight down his throat. It all still turns to chocolate.',
+    'Then his <b>glasses, spoon and fork</b> turn to solid chocolate too. John runs out, scared.'],
+   play:[{ type:'tap', title:'John’s lunch tray', prompt:'Tap each thing on the tray.', items:[
+     ['lettuce','Lettuce'],['chip','Potato chip'],['milk','Milk'],['water','Ice water'],['fruit','Fruit'],['fork','Fork'],['spoon','Spoon']]}],
+   quote:'The trouble was unquestionably growing worse.',
+   qs:[['Why does healthy food suddenly look so good to John?','He’s sick of chocolate and really thirsty. He wants what he can’t have.'],
+       ['What new thing happens to the magic?','It spreads to the glasses, spoon and fork, not just the food.']] },
+
+ { n:8, short:'The Trumpet', name:'The Chocolate Trumpet', magic:5, end:'A whole trumpet turns to chocolate.',
+   one:'John’s big trumpet solo turns into a disaster in front of the whole orchestra.',
+   events:[
+    'Miss Plimsoll hands out new words like <b>avarice</b> and <b>moderation</b>. They all seem to be about John.',
+    'At orchestra, Susan walks ahead without him.',
+    'John has practiced his first solo every night for two weeks. He knows every note.',
+    'His trumpet turns to chocolate and sounds like a soapy bubble pipe. Everyone laughs, and John runs out of school.'],
+   play:[
+     { type:'flip', title:'Miss Plimsoll’s word list', prompt:'Tap a word to see what it means.', cols:3, words:true, cards:[
+       ['','avarice','','<b>Greed.</b> Wanting more and more, and not wanting to share.'],
+       ['','moderation','','<b>Not too much and not too little.</b> Just the right amount.'],
+       ['','indigestion','','<b>A sore, upset stomach</b> from eating too much or the wrong things.']]},
+     { type:'tap', title:'The big solo', prompt:'Tap the trumpet when John starts his solo.', big:true, items:[
+       ['trumpet','John’s golden trumpet','inset(0 100% 0 0)','inset(0 0 0 0)','Chocolate trumpet!']]}],
+   quote:'It’s a chocolate trumpet! No wonder it sounded like that.', quoteBy:'The other trumpet player',
+   qs:[['Which new word fits John best? Why?','Avarice! John has been greedy about candy, and now it’s causing big problems.'],
+       ['How do you think John feels as he runs home?','Embarrassed, upset and scared. He practiced so hard for that solo.']] },
+
+ { n:9, short:'The Party', name:'The Birthday Party', magic:6,
+   one:'John gets a second chance with Susan at her party, and the chocolate touch ruins it again.',
+   events:[
+    'John runs home crying and blames everyone, even though none of it was their fault.',
+    'Mrs. Buttercup invites him to the party anyway. Susan smiles and says, “I’m glad you came.”',
+    'They bob for apples, boys against girls. John’s nose pushes his apple under, and his mouth follows it into the water.',
+    'The whole bucket turns to <b>chocolate syrup</b>, all over Susan’s pink dress. She runs away again.'],
+   play:[{ type:'tap', title:'Bobbing for apples', prompt:'Tap the bucket when John’s mouth touches the water.', big:true, items:[
+     ['bucket','The apple bucket','inset(0 0 100% 0)','inset(0 0 0 0)','Chocolate syrup!']]}],
+   quote:'For the second time that day, she turned her back on John and ran away from him.',
+   qs:[['John blames his teachers and Susan. Whose fault is it really?','His own. His greed about candy is what started all of this.'],
+       ['Why does this hurt more than the silver dollar?','Susan had just forgiven him, and now it happened all over again.']] },
+
+ { n:10, short:'The Missing Store', name:'The Missing Store', magic:6, end:'Even the doctor’s medicine turns.',
+   one:'John tells Dad everything, but the candy store has vanished and the doctor can’t help.',
+   events:[
+    'On the way home, John meets Dad and finally tells him the whole story.',
+    'They go to find the candy store. All that’s there is an <b>empty lot</b> with tin cans and a For Sale sign.',
+    'Dr. Cranium gives John his special medicine. The medicine and the spoon turn to chocolate, and the spoon snaps on the floor.',
+    'The doctor calls it “Cranium’s disease” and wants to study John.'],
+   play:[{ type:'tap', title:'Dr. Cranium’s medicine', prompt:'Tap the spoon when John tastes the medicine.', big:true, items:[
+     ['medspoon','Medicine on a spoon','inset(0 0 100% 0)','inset(0 0 0 0)','Chocolate again!']]}],
+   quote:'Mercy! I’ve never seen anything like it.', quoteBy:'Dr. Cranium',
+   qs:[['Why might the store be gone?','It’s a magic store. Maybe it only shows up for certain people.'],
+       ['Why can’t the doctor fix it?','It isn’t a normal sickness. Medicine can’t fix magic.']] },
+
+ { n:11, short:'The Big Choice', name:'The Big Choice', magic:7,
+   one:'John’s kiss turns his mother into chocolate, and he finally thinks about someone besides himself.',
+   events:[
+    'Mom cries about John’s sickness. John kisses her cheek to make her feel better, and she turns into a <b>chocolate statue</b>.',
+    'John runs for help and finds the candy store is back. In the windows: the trumpet, the pencil, the bitten dollar and the lunch tray.',
+    'The storekeeper says only greedy people can even see that kind of coin. The chocolate touch was a sign of <b>selfishness</b>.',
+    'He asks John to choose: get rid of the chocolate touch, or save his mother?'],
+   play:[{ type:'choice', title:'What would you choose?', prompt:'The storekeeper says John can only pick one.' }],
+   quote:'Part of your cure is to be concerned about other people.', quoteBy:'The storekeeper',
+   qs:[['What was the chocolate touch really a sign of?','Selfishness. John only cared about himself and his candy.'],
+       ['How is John different in this chapter?','For the first time, he forgets about himself and only cares about saving his mom.']] },
+
+ { n:12, short:'Plain Milk', name:'Plain Milk', magic:0, end:'The magic is gone!',
+   one:'Mom is back, the magic is gone, and John has learned his lesson.',
+   events:[
+    'John finds Mom’s wet handkerchief on the chair, then finds Mom in the kitchen, <b>alive and well</b>.',
+    'Mom and Dad don’t remember what happened, and John decides not to scare them by telling.',
+    'Mom pours him a glass of milk. It stays milk! It tastes of nothing but fresh, clean milk.',
+    'John runs back to thank the storekeeper, but the store is gone. The sign now says <b>SOLD</b>.'],
+   play:[{ type:'tap', title:'The glass of milk', prompt:'Tap the milk when John takes a sip.', big:true, items:[
+     ['milk','Mom’s glass of milk','','','Still milk! The magic is gone.', '', true]]}],
+   quote:'Deliciously milky. Tasting of nothing but fresh, clean milk.',
+   qs:[['The storekeeper is polishing a new coin “in case the need should arise.” What could that mean?','Someday another greedy kid might find a coin with their own initials on it.'],
+       ['After the whole story, was John lucky or unlucky?','Some of both. He lost a lot, but he got a second chance and learned to care about other people.']] }
+];
+
+/* everything that turned to chocolate, for the recap collection */
+const COLL = { 3:[['toothpaste','Toothpaste'],['oj','Orange juice'],['egg','Egg'],['bacon','Bacon'],['toast','Toast'],['milk','Milk']],
+  4:[['glove','Gloves'],['coinBite','Bite of a silver dollar']], 5:[['fountain','Fountain water'],['pencil','Pencil']], 6:[['water','More water']],
+  7:[['lettuce','Lettuce'],['chip','Chip'],['fruit','Fruit'],['fork','Fork'],['spoon','Spoon']], 8:[['trumpet','Trumpet']], 9:[['bucket','Apple water']],
+  10:[['medspoon','Medicine & spoon']], 11:[['heart','Mom']] };
+
+/* ================= state ================= */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+let gate = store.get('ct-gate', 4);
+let votes = store.get('ct-votes', {});
+let deck = null, idx = 0, step = 0;
+const stage = document.getElementById('stage');
+
+/* ================= slide builders ================= */
+function homeSlide() {
+  const pieces = CH.map(c => {
+    const open = c.n <= gate, next = c.n === gate + 1;
+    return `<button type="button" class="pc ${open ? '' : 'locked'} ${next ? 'next' : ''}" data-ch="${c.n}" aria-label="Chapter ${c.n}${open ? ', ' + c.short : ', still wrapped'}">
+      <span class="piece">${open ? c.n : '?'}</span><span class="nm">${open ? c.short : next ? 'Up next' : 'Ch ' + c.n}</span></button>`;
+  }).join('');
+  const last = CH[gate - 1];
+  return { html: `<div class="slide s-dark home">
+    <div class="left">
+      <div class="eyebrow">Story recap</div>
+      <h1 class="title-xl">The Chocolate Touch</h1>
+      <p class="by">by Patrick Skene Catling</p>
+      <div class="gatebox">
+        <span class="lbl">We’ve finished up to</span>
+        <div class="stepper"><button type="button" data-act="gm" aria-label="One chapter fewer">−</button><b>${gate ? 'Chapter ' + gate : 'Not started'}</b><button type="button" data-act="gp" aria-label="One chapter more">+</button></div>
+        <small>Chapters after that stay wrapped, so nothing gets spoiled.</small>
+      </div>
+      <div class="cta">
+        ${last ? `<button type="button" class="btn primary" data-act="last">Recap Chapter ${gate} →</button><button type="button" class="btn ghost" data-act="sofar">The story so far</button>`
+               : `<button type="button" class="btn primary" disabled>Finish Chapter 1 to start</button>`}
+      </div>
+    </div>
+    <div class="box"><div class="cap">Pick a chocolate, any chocolate</div><div class="grid">${pieces}</div></div>
+  </div>`, mount(el) {
+    el.querySelectorAll('.pc').forEach(b => b.onclick = () => {
+      const n = +b.dataset.ch;
+      if (n <= gate) return openChapter(n);
+      b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+      toast(`Chapter ${n} is still wrapped. Press + above when your group has read it.`);
+    });
+    el.querySelector('[data-act=gm]').onclick = () => setGate(gate - 1);
+    el.querySelector('[data-act=gp]').onclick = () => setGate(gate + 1);
+    const l = el.querySelector('[data-act=last]'); if (l) l.onclick = () => openChapter(gate);
+    const s = el.querySelector('[data-act=sofar]'); if (s) s.onclick = openSoFar;
+  }};
+}
+
+function titleSlide(c) {
+  const bar = Array.from({ length: 7 }, (_, i) => `<i class="${i < c.magic ? 'f' : ''}"></i>`).join('');
+  return { html: `<div class="slide s-dark t-title">
+    <div class="tl">
+      <div class="eyebrow">Chapter ${c.n}</div>
+      <h1 class="title-lg">${c.name}</h1>
+      <p class="lead">${c.one}</p>
+      <div class="meter"><span class="lbl">How strong is the magic?</span><div class="bar" aria-hidden="true">${bar}</div><span class="cap">${c.end || MAGIC[c.magic]}</span></div>
+    </div>
+    <figure class="art">${ART[c.n]()}</figure>
+  </div>` };
+}
+
+function eventsSlide(c) {
+  return { steps: c.events.length, html: `<div class="slide s-cream">
+    <div class="eyebrow">Chapter ${c.n} · ${c.name}</div>
+    <h2 class="title-md">What happened?</h2>
+    <ol class="events">${c.events.map((e, i) => `<li><span class="n">${i + 1}</span><span>${e}</span></li>`).join('')}</ol>
+    <div class="spacer"></div>
+    <p class="hint">Tap the list or press → to show the next part.</p>
+  </div>`, mount(el) { el.querySelector('.events').onclick = next; } };
+}
+
+function objHTML([k, label, from, to, after, chocFrom, stay]) {
+  const f = from || 'inset(0 0 100% 0)', t = to || 'inset(0 0 0 0)';
+  return `<button type="button" class="obj ${stay ? 'stay' : ''}" data-after="${after || 'Chocolate ' + label.toLowerCase()}" data-label="${label}">
+    <span class="ob"><svg viewBox="0 0 100 100" aria-hidden="true">${g(k)}</svg>${stay ? '' : `<svg viewBox="0 0 100 100" class="chocv over" style="--from:${chocFrom || f};--to:${t}" aria-hidden="true">${g(k)}</svg>`}</span>
+    <span class="ol">${label}</span></button>`;
+}
+
+function playSlide(c, p) {
+  const head = `<div class="eyebrow">Chapter ${c.n} · Try it</div><h2 class="title-md">${p.title}</h2><p class="lead" style="font-size:24px">${p.prompt}</p>`;
+  if (p.type === 'tap') return { html: `<div class="slide s-butter">${head}
+      <div class="objs ${p.big ? 'big' : ''}">${p.items.map(objHTML).join('')}</div><div class="tally" aria-live="polite"></div></div>`,
+    mount(el) {
+      const objs = [...el.querySelectorAll('.obj')], tally = el.querySelector('.tally');
+      objs.forEach(o => o.onclick = () => {
+        const on = o.classList.toggle('on');
+        o.querySelector('.ol').textContent = on ? o.dataset.after : o.dataset.label;
+        const n = objs.filter(x => x.classList.contains('on')).length;
+        if (o.classList.contains('stay')) tally.textContent = on ? 'Nothing turned to chocolate. Hooray!' : '';
+        else tally.textContent = n ? (n === objs.length ? (objs.length > 1 ? `All ${n} turned to chocolate!` : '') : `${n} of ${objs.length} turned to chocolate`) : '';
+      });
+    } };
+  if (p.type === 'flip') return { html: `<div class="slide s-butter">${head}
+      <div class="flips" style="grid-template-columns:repeat(${p.cols},1fr)">${p.cards.map(([m, nm, col, back]) => `<button type="button" class="flip" aria-label="${nm}"><span class="in">
+        <span class="fc front">${p.words ? `<span class="word">${nm}</span>` : `<span class="mono" style="background:${col}">${m}</span><span class="nm">${nm}</span>`}<span class="tap">Tap to flip</span></span>
+        <span class="fc back">${p.words ? '' : `<b>${nm}</b>`}<span>${back}</span></span></span></button>`).join('')}</div></div>`,
+    mount(el) { el.querySelectorAll('.flip').forEach(f => f.onclick = () => f.classList.toggle('on')); } };
+  if (p.type === 'unwrap') return unwrapSlide(c, head);
+  if (p.type === 'choice') return { html: `<div class="slide s-dark">
+      <div class="eyebrow">Chapter ${c.n} · Try it</div><h2 class="title-md">${p.title}</h2><p class="lead" style="font-size:24px">${p.prompt}</p>
+      <div class="choice"><div class="opts">
+        <button type="button" class="opt" data-o="a"><svg viewBox="0 0 100 100" aria-hidden="true">${g('chocbar')}</svg>Get rid of the chocolate touch</button>
+        <button type="button" class="opt" data-o="b"><svg viewBox="0 0 100 100" aria-hidden="true">${g('heart')}</svg>Help Mom</button>
+      </div><div class="reveal" hidden></div></div></div>`,
+    mount(el) {
+      const r = el.querySelector('.reveal');
+      el.querySelectorAll('.opt').forEach(b => b.onclick = () => {
+        el.querySelectorAll('.opt').forEach(x => x.classList.toggle('pick', x.dataset.o === 'b'));
+        r.hidden = false;
+        r.innerHTML = (b.dataset.o === 'a' ? 'That’s what the old John might have picked. ' : 'Same as John! ') +
+          'For one moment John pictured a life of chocolate meals. Then he thought of his mom, and said: <b>“Help my mother.”</b>';
+      });
+    } };
+}
+
+function unwrapSlide(c, head) {
+  const L = [
+    ['the cellophane', `<rect width="400" height="300" fill="#C0392B"/><rect x="0" y="0" width="400" height="300" fill="#DDF1F8" opacity=".45"/><path d="M-20 120 L140 -20 M60 320 L320 -20 M240 320 L420 140" stroke="#fff" stroke-width="14" opacity=".55"/><path d="M180 0 V300 M0 150 H400" stroke="#E0A15C" stroke-width="22"/><path d="M200 150 c-60 -70 -110 -10 0 0 c60 -70 110 -10 0 0" fill="#E0A15C" stroke="${S}" stroke-width="3"/>`],
+    ['the lid', `<rect width="400" height="300" fill="#C0392B"/><path d="M180 0 V300 M0 150 H400" stroke="#E0A15C" stroke-width="22"/><path d="M200 150 c-60 -70 -110 -10 0 0 c60 -70 110 -10 0 0" fill="#E0A15C" stroke="${S}" stroke-width="3"/>`],
+    ['a sheet of cardboard', `<rect width="400" height="300" fill="#C9A47A"/>` + Array.from({ length: 14 }, (_, i) => `<path d="M0 ${12 + i * 21} H400" stroke="#B48E62" stroke-width="2"/>`).join('')],
+    ['a square of heavy tin foil', `<rect width="400" height="300" fill="#C8CDD2"/><path d="M0 40 L90 90 L60 180 L150 230 L120 300 M90 90 L210 60 L260 150 L150 230 M210 60 L300 0 M260 150 L400 120 M260 150 L330 300 M60 180 L0 200" stroke="#A3AAB1" stroke-width="3" fill="none"/><path d="M40 30 L120 80 M230 70 L280 140" stroke="#F4F6F8" stroke-width="5"/>`],
+    ['a layer of shredded paper', `<rect width="400" height="300" fill="#F3D59A"/>` + Array.from({ length: 34 }, (_, i) => { const x = (i * 73) % 400, y = (i * 47) % 300; return `<path d="M${x} ${y} q12 -14 24 0 t24 0" fill="none" stroke="${['#E0A15C', '#E58FA0', '#fff'][i % 3]}" stroke-width="5" stroke-linecap="round"/>`; }).join('')],
+    ['the cotton', `<rect width="400" height="300" fill="#F7F3EA"/>` + Array.from({ length: 22 }, (_, i) => `<circle cx="${(i * 89) % 400}" cy="${(i * 53) % 300}" r="${28 + (i % 4) * 8}" fill="#fff" stroke="#E6DED0" stroke-width="2"/>`).join('') + `<circle cx="200" cy="150" r="20" fill="#E8B83A" stroke="${S}" stroke-width="3"/>`],
+    ['the gold paper', `<rect width="400" height="300" fill="#FAF4E8"/><circle cx="200" cy="150" r="20" fill="#E8B83A" stroke="${S}" stroke-width="3"/><path d="M190 142 q4 -6 10 -6" stroke="#FFF3C4" stroke-width="3" fill="none"/>`]
+  ];
+  const base = `<rect width="400" height="300" fill="#FAF4E8"/><circle cx="200" cy="150" r="9" fill="#6B3E26" stroke="${S}" stroke-width="2.5"/><path d="M196 147 q2 -3 5 -3" stroke="#A8693F" stroke-width="2" fill="none"/>`;
+  const layers = L.map((l, i) => `<g class="layer" data-i="${i}">${l[1]}</g>`).reverse().join('');
+  return { html: `<div class="slide s-butter">${head}
+    <div class="unwrap">
+      <div class="pic"><svg viewBox="0 0 400 300" role="img" aria-label="The candy box">${base}${layers}</svg></div>
+      <div class="side"><span class="cnt">Layers off: <span class="k">0</span> of ${L.length}</span><p class="msg">A giant box, as big as the ones Dad brings home at Christmas. What’s inside?</p>
+        <div class="row"><button type="button" class="btn dark" data-a="go">Unwrap</button><button type="button" class="btn small" data-a="re" style="background:transparent;color:var(--dust)">Wrap it back up</button></div></div>
+    </div></div>`,
+  mount(el) {
+    let k = 0; const msg = el.querySelector('.msg'), cnt = el.querySelector('.k'), go = el.querySelector('[data-a=go]');
+    go.onclick = () => {
+      if (k >= L.length) return;
+      el.querySelector(`.layer[data-i="${k}"]`).classList.add('gone');
+      msg.textContent = k === L.length - 1 ? 'One tiny piece of plain chocolate. That’s the only one in the whole box!' : `John took off ${L[k][0]}…`;
+      k++; cnt.textContent = k; if (k >= L.length) go.disabled = true;
+    };
+    el.querySelector('[data-a=re]').onclick = () => {
+      k = 0; cnt.textContent = 0; go.disabled = false;
+      el.querySelectorAll('.layer').forEach(x => x.classList.remove('gone'));
+      msg.textContent = 'A giant box, as big as the ones Dad brings home at Christmas. What’s inside?';
+    };
+  } };
+}
+
+function thinkSlide(c) {
+  const v = votes[c.n] || { l: 0, u: 0 };
+  return { html: `<div class="slide s-cream">
+    <div class="eyebrow">Chapter ${c.n} · Talk about it</div>
+    <div class="think">
+      <div class="qs">${c.qs.map(([q, a]) => `<div class="q"><span class="qt">${q}</span><button type="button" class="btn small dark" style="align-self:flex-start">Show an idea</button><span class="ans" hidden><em>One idea</em>${a}</span></div>`).join('')}</div>
+      <div class="side2">
+        <div class="quote"><span class="src">From the book</span><p>${c.quote.startsWith('“') ? c.quote : '“' + c.quote + '”'}</p>${c.quoteBy ? `<span class="src" style="color:var(--hud)">${c.quoteBy}</span>` : ''}</div>
+        <div class="vote"><span class="vt">After Chapter ${c.n}, is John lucky or unlucky?</span>
+          <div class="vb"><button type="button" data-v="l"><b>${v.l}</b>Lucky</button><button type="button" data-v="u"><b>${v.u}</b>Unlucky</button></div>
+          <button type="button" class="clr">Clear votes</button></div>
+      </div>
+    </div></div>`,
+  mount(el) {
+    el.querySelectorAll('.q').forEach(q => q.querySelector('button').onclick = e => { q.querySelector('.ans').hidden = false; e.currentTarget.remove(); });
+    const paint = () => { const v = votes[c.n] || { l: 0, u: 0 }; el.querySelector('[data-v=l] b').textContent = v.l; el.querySelector('[data-v=u] b').textContent = v.u; };
+    el.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { const v = votes[c.n] || { l: 0, u: 0 }; v[b.dataset.v]++; votes[c.n] = v; store.set('ct-votes', votes); paint(); });
+    el.querySelector('.clr').onclick = () => { delete votes[c.n]; store.set('ct-votes', votes); paint(); };
+  } };
+}
+
+function upNextSlide(c) {
+  if (c.n === 12) return { html: `<div class="slide s-dark" style="justify-content:center">
+    <div class="eyebrow">The end</div><h1 class="title-lg">You finished the book!</h1>
+    <div class="frames"><div>My favorite part was <span></span> because <span></span>.</div><div>The lesson John learned is <span></span>.</div></div></div>` };
+  return { html: `<div class="slide s-dark" style="justify-content:center">
+    <div class="eyebrow">Up next</div><h1 class="title-lg">Ready for Chapter ${c.n + 1}?</h1>
+    <p class="lead">Make a prediction before we read.</p>
+    <div class="frames"><div>I think John will <span></span>.</div><div>I think this because <span></span>.</div></div></div>` };
+}
+
+function soFarSlides() {
+  const done = CH.filter(c => c.n <= gate);
+  const list = { html: `<div class="slide s-cream">
+    <div class="eyebrow">Chapters 1 to ${gate}</div><h2 class="title-md">The story so far</h2>
+    <div class="sofar ${done.length <= 5 ? 'big' : ''}" style="grid-template-columns:${done.length > 6 ? '1fr 1fr' : '1fr'}">${done.map(c => {
+      const v = votes[c.n];
+      return `<div class="it"><span class="n">${c.n}</span><span class="tx"><b>${c.name}${v ? `<span class="chip">Lucky ${v.l} · Unlucky ${v.u}</span>` : ''}</b><span>${c.one}</span></span></div>`;
+    }).join('')}</div></div>` };
+  const items = done.flatMap(c => (COLL[c.n] || []).map(x => [...x, c.n]));
+  const coll = { html: `<div class="slide s-butter">
+    <div class="eyebrow">Chapters 1 to ${gate}</div><h2 class="title-md">${items.length ? `${items.length} things have turned to chocolate` : 'The chocolate collection'}</h2>
+    ${items.length ? `<div class="coll">${items.map(([k, l, n]) => `<div class="ci"><svg viewBox="0 0 100 100" class="chocv" aria-hidden="true">${g(k)}</svg><span>${l}</span><small>Ch ${n}</small></div>`).join('')}</div>`
+      : `<div class="empty">Nothing has turned to chocolate yet.<br>So far John has only eaten one magic chocolate…</div>`}
+  </div>` };
+  return [list, coll];
+}
+
+/* ================= decks + navigation ================= */
+function chapterSlides(c) {
+  const s = [titleSlide(c), eventsSlide(c), ...c.play.map(p => playSlide(c, p)), thinkSlide(c)];
+  if (c.n === gate) s.push(upNextSlide(c));
+  return s;
+}
+function openHome() { deck = { kind: 'home', slides: [homeSlide()] }; idx = 0; render(); }
+function openChapter(n, at = 0) { deck = { kind: 'ch', n, slides: chapterSlides(CH[n - 1]) }; idx = at < 0 ? deck.slides.length - 1 : at; step = 0; render(); }
+function openSoFar() { deck = { kind: 'sofar', slides: soFarSlides() }; idx = 0; render(); }
+function setGate(n) { gate = Math.max(0, Math.min(12, n)); store.set('ct-gate', gate); openHome(); }
+
+function render() {
+  const s = deck.slides[idx];
+  stage.innerHTML = s.html;
+  const el = stage.firstElementChild;
+  if (s.steps) paintSteps(el);
+  if (s.mount) s.mount(el);
+  const w = document.getElementById('where');
+  w.innerHTML = deck.kind === 'home' ? '<b>The chocolate box</b>' :
+    deck.kind === 'ch' ? `<b>Chapter ${deck.n}</b> · ${idx + 1} / ${deck.slides.length}` : `<b>Story so far</b> · ${idx + 1} / ${deck.slides.length}`;
+}
+function paintSteps(el) { el.querySelectorAll('.events li').forEach((li, i) => li.classList.toggle('on', i < step)); }
+
+function next() {
+  const s = deck.slides[idx];
+  if (s.steps && step < s.steps) { step++; paintSteps(stage.firstElementChild); return; }
+  if (idx < deck.slides.length - 1) { idx++; step = 0; render(); return; }
+  if (deck.kind === 'ch' && deck.n < gate) return openChapter(deck.n + 1);
+  openHome();
+}
+function prev() {
+  if (deck.kind === 'home') return;
+  if (idx > 0) { idx--; const s = deck.slides[idx]; step = s.steps || 0; render(); return; }
+  if (deck.kind === 'ch' && deck.n > 1) { openChapter(deck.n - 1, -1); return; }
+  openHome();
+}
+
+let tt;
+function toast(t) { const el = document.getElementById('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => el.classList.remove('on'), 2600); }
+
+function fit() {
+  const vp = document.getElementById('viewport'), W = vp.clientWidth, H = vp.clientHeight;
+  const s = Math.min(W / 1280, H / 720) * .98;
+  stage.style.transform = `translate(${(W - 1280 * s) / 2}px,${(H - 720 * s) / 2}px) scale(${s})`;
+}
+addEventListener('resize', fit);
+document.getElementById('bHome').onclick = openHome;
+document.getElementById('bPrev').onclick = prev;
+document.getElementById('bNext').onclick = next;
+addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key;
+  if (k === 'ArrowRight' || k === 'PageDown' || (k === ' ' && e.target === document.body)) { e.preventDefault(); next(); }
+  else if (k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); prev(); }
+  else if (k === 'h' || k === 'H' || k === 'Escape' || k === 'Home') openHome();
+  else if (k === 'f' || k === 'F') {
+    try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}); } catch (err) {}
+  }
+});
+fit(); openHome();
+</script>

@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Chocolate Touch Ch. 3 — lesson deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Nunito+Sans:wght@400;700;800&display=swap">
+<style>
+  :root{
+    --cocoa:#3B2318; --cocoa2:#4E3122; --cream:#FAF4E8; --amber:#E0A15C;
+    --orange:#C97B34; --green:#2E6B5E; --green-pale:#BFE0D6; --muted:#D8CBB8;
+    --dust:#7A6656; --butter:#FFE9B8;
+    --serif:Fraunces,Georgia,"Times New Roman",serif;
+    --sans:"Nunito Sans",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:#16110d;color:var(--cream);font-family:var(--sans);overflow:hidden}
+
+  /* ---------- stage ---------- */
+  #viewport{position:fixed;inset:0;overflow:hidden}
+  #stage{width:1280px;height:720px;position:absolute;left:0;top:0;transform-origin:0 0;
+         box-shadow:0 24px 70px rgba(0,0,0,.55);border-radius:6px;overflow:hidden;background:var(--cream)}
+
+  .slide{position:absolute;inset:0;display:none;flex-direction:column;padding:56px 72px 58px;gap:26px}
+  .slide.on{display:flex}
+  .slide:not(.center):not(.middle):not(.between){justify-content:center}
+  .slide h1,.slide h2{font-family:var(--serif);font-weight:600;line-height:1.05;margin:0;text-wrap:balance}
+  .slide h3{margin:0;font-weight:700}
+  .slide p{margin:0}
+
+  .s-dark{background:var(--cocoa);color:var(--cream)}
+  .s-cream{background:var(--cream);color:var(--cocoa)}
+  .s-orange{background:var(--orange);color:var(--cocoa)}
+  .s-green{background:var(--green);color:var(--cream)}
+  .center{justify-content:center;align-items:center;text-align:center}
+  .between{justify-content:space-between}
+  .middle{justify-content:center}
+
+  .eyebrow{font-size:21px;letter-spacing:4px;font-weight:700}
+  .title-xl{font-size:88px}
+  .title-lg{font-size:66px}
+  .title-md{font-size:50px}
+  .lead{font-size:27px;line-height:1.35}
+  .big{font-size:33px;font-weight:700}
+
+  .row{display:flex;gap:22px}
+  .row>*{flex:1}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  .card{background:#fff;color:var(--cocoa);border:2px solid var(--amber);border-radius:14px;padding:26px;display:flex;flex-direction:column;gap:8px}
+  .card-amber{background:var(--amber);color:var(--cocoa);border-radius:14px;padding:30px;display:flex;flex-direction:column;gap:10px;align-items:center}
+  .card-cocoa{background:var(--cocoa2);border-radius:14px;padding:28px;display:flex;flex-direction:column;gap:9px}
+  .band{border-radius:14px;padding:24px;text-align:center;font-size:29px;font-weight:700}
+  .band-amber{background:var(--amber);color:var(--cocoa)}
+  .band-green{background:var(--green);color:var(--cream)}
+  .emoji{font-size:62px;line-height:1}
+  .word{font-size:35px;font-weight:700;color:var(--green)}
+  .def{font-size:23px}
+  .move{font-size:20px;color:var(--dust);font-style:italic}
+  .num{font-size:40px;font-weight:800;color:var(--amber);line-height:1}
+  .foot{position:absolute;left:72px;bottom:24px;font-size:16px;letter-spacing:.5px}
+  .spacer{flex:1}
+  .slide aside{display:none}
+
+  /* ---------- chrome ---------- */
+  #hud{position:fixed;left:0;right:0;bottom:0;display:flex;gap:14px;align-items:center;
+       padding:8px 14px;font-size:12px;color:#8d7a68;pointer-events:none}
+  body.notes-open #hud{right:min(430px,38vw)}
+  #hud b{color:#c2ab93;font-weight:700}
+  #timer{font-variant-numeric:tabular-nums}
+  #timer.hidden{visibility:hidden}
+
+  #notes{position:fixed;top:0;right:0;bottom:0;width:min(430px,38vw);background:#221812;
+         border-left:1px solid #3d2c21;padding:22px 24px 40px;overflow-y:auto;transform:translateX(100%);
+         transition:transform .18s ease;color:#efe3d4}
+  body.notes-open #notes{transform:none}
+  #notes h4{margin:0 0 4px;font-family:var(--serif);font-size:20px;color:var(--amber);font-weight:600}
+  #notes .meta{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#8d7a68;margin-bottom:14px}
+  #notes .body{font-size:15px;line-height:1.55;white-space:pre-wrap}
+
+  .overlay{position:fixed;inset:0;background:rgba(12,8,5,.94);display:none;overflow-y:auto;padding:40px}
+  .overlay.on{display:block}
+  #overview .og{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;max-width:1000px;margin:0 auto}
+  #overview button{text-align:left;background:#241a13;border:1px solid #3d2c21;color:#efe3d4;border-radius:10px;
+                   padding:12px 14px;font:inherit;font-size:14px;cursor:pointer;display:flex;gap:10px}
+  #overview button:hover{border-color:var(--amber)}
+  #overview button .n{color:var(--amber);font-weight:800;min-width:20px}
+  #overview button .sec{display:block;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#8d7a68;margin-top:3px}
+  .overlay h3{font-family:var(--serif);color:var(--amber);font-weight:600;max-width:1000px;margin:0 auto 18px;font-size:22px}
+  #help dl{max-width:520px;margin:0 auto;font-size:15px;line-height:1.9;color:#efe3d4}
+  #help dt{float:left;clear:left;width:150px;color:var(--amber);font-weight:700}
+  #help dd{margin:0 0 0 160px}
+
+  body.casting #hud{display:none}
+  body.casting #notes{display:none}
+
+  #toast{position:fixed;left:50%;bottom:44px;transform:translateX(-50%) translateY(14px);opacity:0;
+         background:#241a13;border:1px solid var(--amber);color:#efe3d4;border-radius:10px;
+         padding:12px 18px;font-size:14px;max-width:70vw;text-align:center;
+         transition:opacity .2s ease,transform .2s ease;pointer-events:none}
+  #toast.on{opacity:1;transform:translateX(-50%)}
+
+  #handout{display:none}
+
+  @media print{
+    body{overflow:visible;background:#fff;color:#000}
+    #viewport,#hud,#notes,.overlay{display:none!important}
+    #handout{display:block}
+    .h-slide{break-inside:avoid;padding:0 0 7mm;margin-bottom:7mm;border-bottom:1px solid #d8d2c8}
+    .h-slide:last-child{border-bottom:none}
+    .h-slide .h-n{font:700 11pt/1 Helvetica,Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;color:#6B4226}
+    .h-slide h2{font:600 22pt/1.15 Georgia,serif;margin:6px 0 2px;color:#000}
+    .h-slide .h-sec{font:italic 11pt Georgia,serif;color:#444;margin-bottom:10px}
+    .h-slide .h-body{font:11.5pt/1.5 Helvetica,Arial,sans-serif;white-space:pre-wrap}
+    @page{margin:16mm}
+  }
+</style>
+</head>
+<body>
+
+<div id="viewport"><div id="stage">
+
+  <!-- 1 -->
+  <section class="slide s-dark between" data-title="Cover" data-sec="Open" data-time="before they walk in">
+    <p class="eyebrow" style="color:var(--amber)">CHAPTER THREE</p>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <h1 class="title-xl">The Chocolate Touch</h1>
+      <p style="font-size:29px;color:var(--amber)">The morning everything turned sweet</p>
+    </div>
+    <p style="font-size:19px;color:var(--muted)">Small group &middot; Grades 3&ndash;4 &middot; 50 minutes</p>
+    <aside>Have this up before they walk in. The three hook objects (pencil, water bottle, shoe) are already on the table, covered with a paper towel or just sitting there. Say nothing about them yet — let them wonder.
+
+Do not read the title slide aloud. Kids who see the word "chocolate" will start talking, and that is exactly the energy you want. Let them buzz for fifteen seconds, then move.
+
+Quick setup check before you start: menu paper folded and stacked, index cards out, the four vocabulary cards face down, the book at Chapter 3.
+
+Allergy reminder: if you are using real chocolate as the focus treat, confirm your list today, not in the moment.</aside>
+  </section>
+
+  <!-- 2 -->
+  <section class="slide s-orange center" data-title="Big question" data-sec="Open" data-time="0:00 · 1 min">
+    <p class="eyebrow">TODAY'S BIG QUESTION</p>
+    <h1 class="title-xl">Is John lucky<br>or unlucky?</h1>
+    <p style="font-size:27px;max-width:800px">Keep this question in your head the whole time we read.</p>
+    <aside>Say it out loud, then say it again. This question is the spine of the entire lesson and of the whole book.
+
+Tell them straight: "I am not going to tell you the answer today. You are going to decide, and at the end you are going to write your answer on a card. Then later this week we will find out who was right."
+
+That framing does two things. It gives every kid a reason to listen, and it makes the Chapter 4 reveal land like a plot twist instead of just more reading.
+
+Do not let anyone answer yet. If someone shouts "lucky!" say "Hold that. Write it in your brain. I want your reason, not just your guess."
+
+Timing: 1 minute. Move.</aside>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide s-cream" data-title="The Chocolate Touch Test" data-sec="Open" data-time="0:01 · 5 min">
+    <h2 class="title-lg">The Chocolate Touch Test</h2>
+    <p class="lead" style="font-size:29px">One of these is about to turn into chocolate. Which one is <b>best</b>? Which one is a <b>disaster</b>?</p>
+    <div class="row">
+      <div class="card-amber"><p class="emoji">&#9999;</p><h3 style="font-size:28px">A pencil</h3></div>
+      <div class="card-amber"><p class="emoji">&#128167;</p><h3 style="font-size:28px">A water bottle</h3></div>
+      <div class="card-amber"><p class="emoji">&#128095;</p><h3 style="font-size:28px">A shoe</h3></div>
+    </div>
+    <p class="foot" style="color:var(--green)">1 &middot; Hook &middot; 5 minutes</p>
+    <aside>Hold up the real objects, not just the slide. Physical objects beat pictures for this group every time.
+
+Run it fast. "Pencil. Chocolate. Good idea or bad idea?" Take a show of hands, then ask one kid why. Repeat for the bottle and the shoe.
+
+The argument you want to surface: the shoe sounds funny until you realize you cannot walk. The water bottle sounds great until you are thirsty. Do not say this yourself. Wait — someone will get there, and if they do not, ask "But what if you were really thirsty?" and let it land.
+
+This is the whole book in ninety seconds. You are planting the idea that a good thing can go wrong when there is too much of it, without ever using the word "theme."
+
+Do not resolve the argument. End with: "A boy named John Midas is about to find out. Let's go."
+
+If the group is chatty, cap it at three speakers and move on. Better to leave them wanting to argue than to burn eight minutes here.</aside>
+  </section>
+
+  <!-- 4 -->
+  <section class="slide s-cream" data-title="Four words, four moves" data-sec="Words" data-time="0:06 · 5 min">
+    <h2 class="title-lg">Four words, four moves</h2>
+    <div class="grid2">
+      <div class="card"><h3 class="word">transform</h3><p class="def">to change into something else</p><p class="move">Move: hands morph in the air</p></div>
+      <div class="card"><h3 class="word">indulge</h3><p class="def">to enjoy something way too much</p><p class="move">Move: rub your belly</p></div>
+      <div class="card"><h3 class="word">wasteful</h3><p class="def">using more than you need</p><p class="move">Move: toss it over your shoulder</p></div>
+      <div class="card"><h3 class="word">suspicious</h3><p class="def">thinking something is not right</p><p class="move">Move: narrow your eyes</p></div>
+    </div>
+    <p class="foot" style="color:var(--green)">2 &middot; Words &middot; 5 minutes</p>
+    <aside>Teach the move with the word, every time. The motion is not decoration — it gives kids who lose the word a way to hold onto the meaning, and it gives you a silent check for understanding later in the lesson.
+
+Run the round: you say a sentence, they throw the motion. No talking, just hands.
+"John squeezed out half the tube of toothpaste." (wasteful)
+"The toothbrush turned brown." (transform)
+"Mary looked at John like he was up to something." (suspicious)
+"John ate the whole tube." (indulge)
+"The eggs became chocolate eggs." (transform)
+
+Go fast, three or four rounds, and let it get a little silly. Silly is fine. You are building automaticity.
+
+One honest caveat: these are concept words chosen for the ideas in this chapter, not words pulled verbatim from the text. Glance at your copy this morning and swap in anything your students actually stumble on. If a student has a specific vocabulary goal on their IEP, front-load that word here instead of one of these.
+
+Callback later: when you get to the Reader's Theater, ask "Which word fits Mary right now?" They should throw the suspicious eyes.</aside>
+  </section>
+
+  <!-- 5 -->
+  <section class="slide s-dark" data-title="Read along — three stops" data-sec="Reading" data-time="0:11 · 12 min">
+    <h2 class="title-lg" style="color:var(--amber)">Read along &mdash; three stops</h2>
+    <p class="lead" style="font-size:28px">Your job: <b>follow the words</b> and <b>watch for my hand</b>. When I stop, you answer with your hands, not your mouth.</p>
+    <div class="row">
+      <div class="card-cocoa"><p class="num">1</p><h3 style="font-size:25px">The toothpaste</h3><p style="font-size:20px;color:var(--muted)">Thumb up or thumb down?</p></div>
+      <div class="card-cocoa"><p class="num">2</p><h3 style="font-size:25px">&ldquo;Chocolate juice.&rdquo;</h3><p style="font-size:20px;color:var(--muted)">What does John think?</p></div>
+      <div class="card-cocoa"><p class="num">3</p><h3 style="font-size:25px">Mom is pleased</h3><p style="font-size:20px;color:var(--muted)">Should she be?</p></div>
+    </div>
+    <p class="foot" style="color:var(--amber)">3 &middot; Read aloud &middot; 12 minutes</p>
+    <aside>You read, they follow. Do not round-robin this chapter — cold popcorn reading kills the pacing and humiliates the kids who are decoding slowly. They get their turn to read out loud in the Reader's Theater, which is rehearsed and safe.
+
+Read with real commitment. John is delighted. Mary is exasperated. Mrs. Midas is distracted and pleased. If you perform it, they will perform it back to you in twenty minutes.
+
+Hold up fingers for the stop number as you approach each one so the group can see it coming.
+
+The three stop slides are next — advance to each one when you get there, then come back to reading. Press O for the overview if you need to jump.
+
+If your group has a student who tracks poorly, give them a fingertip or an index card to slide down the page. If you have a student who needs the text in hand, make sure they have their own copy open, not a shared one.
+
+Watch the clock. Twelve minutes covers the read plus the three stops. If you are running long, cut stop 1 (it is the least loaded) and keep stops 2 and 3.</aside>
+  </section>
+
+  <!-- 6 -->
+  <section class="slide s-cream middle" data-title="Stop 1 — the toothpaste" data-sec="Reading" data-time="mid-read · 30–60 sec">
+    <p class="eyebrow" style="color:var(--green)">STOP 1 &mdash; THE TOOTHPASTE</p>
+    <h2 class="title-xl" style="font-size:72px">Is this good news<br>for John?</h2>
+    <div style="display:flex;gap:26px">
+      <div style="display:flex;align-items:center;gap:14px;background:var(--amber);padding:18px 30px;border-radius:14px">
+        <p class="emoji" style="font-size:42px">&#128077;</p><p style="font-size:28px;font-weight:700">Good news</p></div>
+      <div style="display:flex;align-items:center;gap:14px;background:var(--amber);padding:18px 30px;border-radius:14px">
+        <p class="emoji" style="font-size:42px">&#128078;</p><p style="font-size:28px;font-weight:700">Bad news</p></div>
+    </div>
+    <p class="foot" style="color:var(--green)">Hands only &middot; then one reason out loud</p>
+    <aside>Everyone votes with a thumb. Everyone. Scan the group and make sure no hand is missing — a kid who does not vote is usually a kid who is lost, and that is your cue to back up two sentences.
+
+Expect almost all thumbs up. That is fine and that is the point. This is the chapter where the chocolate touch looks like a pure win.
+
+Then take exactly one "why." Ask a kid who voted thumbs up: "What is good about it?"
+
+If anyone votes thumbs down, that is gold. Go to them second and ask why. Something like "toothpaste is not food" or "he is going to get a stomachache." Say back to the group: "Hold on. She thinks this might be a problem. Everybody remember that."
+
+Do not correct anyone. There is no right answer yet.
+
+Thirty to sixty seconds, then back to reading.</aside>
+  </section>
+
+  <!-- 7 -->
+  <section class="slide s-cream middle" data-title="Stop 2 — the orange juice" data-sec="Reading" data-time="mid-read · 90 sec">
+    <p class="eyebrow" style="color:var(--green)">STOP 2 &mdash; THE ORANGE JUICE</p>
+    <h2 class="title-lg" style="color:var(--green)">&ldquo;Boy, that's good.<br>Chocolate juice.&rdquo;</h2>
+    <div class="row">
+      <div class="card"><h3 style="font-size:26px">What does <u>John</u> think is happening?</h3></div>
+      <div class="card"><h3 style="font-size:26px">What do <u>we</u> think is happening?</h3></div>
+    </div>
+    <p class="foot" style="color:var(--green)">The gap between those two answers is the whole book</p>
+    <aside>This is the most important sixty seconds in the lesson. Slow down here.
+
+John thinks: this is amazing, this is lucky, breakfast is delicious. He has no idea anything is wrong.
+
+We think: wait, that is orange juice. Orange juice is not supposed to be chocolate. Something is happening to him.
+
+Name it for them in plain words: "We know something John does not know. That is a feeling authors do on purpose, and it is why this book is funny." You do not have to say "dramatic irony" — but if you have a student who loves a big word, give it to them, they will hoard it.
+
+Sentence frames if they stall:
+"John thinks ______, but I think ______."
+"John is happy because ______. I am worried because ______."
+
+If a kid says "he is being tricked" or "it is magic" — push once: "Who is doing it? Where did it come from?" They will not know. Good. That is Chapter 2's candy store coming back, and it is the question that carries them forward.
+
+Ninety seconds max, then keep reading.</aside>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide s-green middle" data-title="Stop 3 — Mrs. Midas" data-sec="Reading" data-time="mid-read · 45 sec + 2 shares">
+    <p class="eyebrow" style="color:var(--green-pale)">STOP 3 &mdash; MRS. MIDAS</p>
+    <h2 class="title-lg">&ldquo;I'm very pleased with you this morning.&rdquo;</h2>
+    <p style="font-size:33px;font-weight:700;color:var(--butter)">She is happy with him. Should she be?</p>
+    <p class="foot" style="color:var(--green-pale)">Turn and talk &middot; 45 seconds &middot; then two shares</p>
+    <aside>Turn and talk for this one. Partners, forty-five seconds, then two pairs share.
+
+The trap to walk them into: John finished his breakfast and cleaned his plate, so from his mom's side he looks like a model kid. But he only ate it because it turned to chocolate. He is not being good. He is being lucky.
+
+Ask: "Did John do the right thing, or did he just get what he wanted?" That distinction is hard and worth the time.
+
+Connect back to the word wall: which of our four words fits Mrs. Midas right now? Not suspicious — she should be, and she is not. That is the joke.
+
+Optional push for a strong group: "Whose job is it to notice something is wrong? Mary noticed. Why doesn't anyone listen to Mary?" Kids with older siblings will have opinions.
+
+Then finish the chapter. Do not stop again — let the ending run clean into the activity.</aside>
+  </section>
+
+  <!-- 9 -->
+  <section class="slide s-cream" data-title="Which one makes you hungry?" data-sec="Write" data-time="0:23 · 3 min">
+    <h2 class="title-lg">Which one makes you hungry?</h2>
+    <div class="row">
+      <div class="card" style="border-color:#C9C2B4">
+        <p class="eyebrow" style="color:var(--dust)">VERSION A</p>
+        <p style="font-size:28px;line-height:1.3">Chocolate eggs.<br>They are good.</p>
+      </div>
+      <div class="card" style="border-color:var(--green)">
+        <p class="eyebrow" style="color:var(--green)">VERSION B</p>
+        <p style="font-size:28px;line-height:1.3">Chocolate eggs &mdash; so <b>warm and gooey</b> that they <b>melt before your fork gets there</b>.</p>
+      </div>
+    </div>
+    <div class="band band-amber">Chocolate ______ &mdash; so ______ that it ______ in your mouth.</div>
+    <p class="foot" style="color:var(--green)">4 &middot; Model &middot; 3 minutes</p>
+    <aside>Read Version A out loud in the most bored voice you own. Then ask: "Does that make you want to eat it?" They will say no. Ask why not, and let THEM tell you it does not say anything.
+
+Then read Version B like you mean it. The difference will be obvious without you explaining a rubric.
+
+The point to name, once, in plain language: "Good writing makes a picture in someone else's head. Version A does not make a picture. Version B does."
+
+Then build one together on the board using the frame, with the whole group feeding you words. Take their worst suggestion seriously and make it work — that is what tells the reluctant kid it is safe to try.
+
+Do not build more than one together. If you model three, they will copy your three.
+
+The frame stays visible during the activity. Leave this slide up, or write the frame on the board before you advance.</aside>
+  </section>
+
+  <!-- 10 -->
+  <section class="slide s-dark" data-title="The Midas Breakfast Menu" data-sec="Write" data-time="0:26 · 15 min">
+    <h2 class="title-lg" style="color:var(--amber)">The Midas Breakfast Menu</h2>
+    <p class="lead" style="font-size:28px">Design the breakfast John ate. Three items. Make them sound <b>impossible to resist</b>.</p>
+    <div class="row">
+      <div class="card-cocoa"><p class="num">1</p><p style="font-size:22px">Fold your paper like a menu</p></div>
+      <div class="card-cocoa"><p class="num">2</p><p style="font-size:22px">Write 3 breakfast foods, chocolate-ified</p></div>
+      <div class="card-cocoa"><p class="num">3</p><p style="font-size:22px">Use the frame for each one</p></div>
+    </div>
+    <div class="band band-amber">Done early? Illustrate it, or add a <i>Warning</i> line at the bottom.</div>
+    <p class="foot" style="color:var(--amber)">5 &middot; Menu &middot; 15 minutes</p>
+    <aside>This is the longest work block. Circulate, do not sit.
+
+What you are looking for as you move: a kid with a blank page after two minutes. That is not defiance, it is idea-generation load. Hand them the pre-filled menu from the packet (chocolate toast, chocolate eggs, chocolate juice already written in) so they only have to write the description. That single swap is the difference between finishing and shutting down.
+
+For a student who needs scribing: let them say the whole menu to you, you write item one, they copy it, you write items two and three. They still did the thinking.
+
+Conferencing line that works better than praise: "Read me your favorite one." Then, "What does it taste like when it is in your mouth?" and write down the exact words they say. Hand it back: "Put that in. Those were your words."
+
+The Warning line is quiet foreshadowing. Kids who write "Warning: you might never eat real food again" are doing genuine prediction work. Point that out loud so the others hear it.
+
+At twelve minutes give a two-minute warning. At fifteen, stop them mid-sentence if you have to. Unfinished is fine — the menus go home or in the folder.
+
+If the energy is high and they are producing, you can steal three minutes from the Reader's Theater. Do not steal from the exit ticket.</aside>
+  </section>
+
+  <!-- 11 -->
+  <section class="slide s-cream" data-title="Reader's Theater: the breakfast table" data-sec="Perform" data-time="0:41 · 8 min">
+    <h2 class="title-lg">Reader's Theater: the breakfast table</h2>
+    <div class="row">
+      <div class="card"><h3 style="font-size:30px;color:var(--green)">John</h3><p style="font-size:22px">Delighted. Cannot believe his luck.</p></div>
+      <div class="card"><h3 style="font-size:30px;color:var(--green)">Mary</h3><p style="font-size:22px">Annoyed. Telling on him. Big-sister energy.</p></div>
+      <div class="card"><h3 style="font-size:30px;color:var(--green)">Mrs. Midas</h3><p style="font-size:22px">Busy. Pleased. Not really looking.</p></div>
+    </div>
+    <div class="band band-green">Perform it once. Swap roles. Perform it again.</div>
+    <p class="foot" style="color:var(--green)">6 &middot; Perform &middot; 8 minutes</p>
+    <aside>The swap is not optional. Reading the same lines twice is the fluency work, and the role change is what keeps it from feeling like a drill. Nobody notices they are rereading.
+
+Coach exactly one thing: tone. Do not correct decoding errors during a performance, ever. If a word breaks, supply it instantly and keep going. Fluency practice dies the second it turns into a correction session.
+
+The coaching line that gets results: "Mary, you are TELLING ON HIM. Make me believe you are the big sister." Then let them redo just that line. Kids will ham it up, and the hamming is the comprehension — you cannot perform a tone you do not understand.
+
+Group of four or five? Add a Narrator role, or double-cast John so two kids read his lines in unison. Unison reading is a soft landing for your most hesitant reader and it does not single anyone out.
+
+Group of two? You take Mrs. Midas.
+
+Tie it back to the words: after the performance ask, "Which of our four words fits Mary?" You want the suspicious eyes thrown back at you.
+
+If you are short on time, cut the second round, not the first. But try not to — the second round is where it actually gets good.</aside>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide s-orange middle" data-title="Exit ticket — make your call" data-sec="Perform" data-time="0:45 · 5 min">
+    <h2 class="title-lg">Exit ticket &mdash; make your call</h2>
+    <div style="background:var(--cream);padding:34px;border-radius:18px;display:flex;flex-direction:column;gap:16px">
+      <p style="font-size:30px"><b>1.</b> Is John <b>LUCKY</b> or <b>UNLUCKY</b>? Circle one.</p>
+      <p style="font-size:30px"><b>2.</b> One reason from the chapter.</p>
+      <p style="font-size:24px;color:var(--green)"><i>Because ______________________________</i></p>
+    </div>
+    <p class="foot">7 &middot; Exit ticket &middot; 5 minutes &middot; I am keeping these</p>
+    <aside>Say the magic words: "I am keeping these. You will see this card again."
+
+That sentence is what makes the exit ticket feel like a bet instead of a worksheet. Kids write more carefully when they think they are going to be held to it.
+
+Circling is the whole first answer, so there is no writing barrier on the part that matters most. Everyone can do question one. Question two is where you differentiate — a single word is an acceptable reason for a student who is drained by now.
+
+Accept oral answers and scribe them. Write exactly what they say and read it back.
+
+Do not coach toward "unlucky." Most of them will say lucky, because in this chapter he IS lucky. A room full of "lucky" cards is a correctly-calibrated group, not a failure.
+
+Put the cards somewhere you will actually find them. Chapter 4 is where the glove turns to chocolate and Spider Wilson takes a bite, and handing these back right before you read it is the single best five seconds of the unit. The kids who wrote "lucky" will physically react.
+
+Note who wrote a reason tied to the text versus a reason tied to their own feelings about chocolate. That is your quick formative read on inferencing, and it costs you nothing extra.</aside>
+  </section>
+
+  <!-- 13 -->
+  <section class="slide s-dark center" data-title="Next time: John puts on his gloves" data-sec="Perform" data-time="0:50 · close">
+    <p class="eyebrow" style="color:var(--amber)">NEXT TIME</p>
+    <h1 class="title-xl" style="color:var(--amber);font-size:74px">John puts on his gloves.</h1>
+    <p style="font-size:30px;max-width:880px">Everything is still going great for him.<br>It is about to stop going great for him.</p>
+    <aside>Leave them on the cliff. Do not explain it.
+
+"Tomorrow John puts his gloves on. That is all I am telling you." Then close the book. The kid who groans is the kid who is hooked.
+
+Your own to-do before the next session:
+Keep the exit tickets somewhere you will find them — they are the opener for Chapter 4.
+Menus go home, in folders, or on the wall. If you post them, post every single one.
+Note anyone who could not get started on the menu without the pre-filled version, and start them on the pre-filled version next time without making it a thing.
+
+If you want a bridge activity between sessions, the one-sentence prediction on the back of the exit card does it: "What is the first thing that will go wrong?"</aside>
+  </section>
+
+</div></div>
+
+<div id="hud">
+  <span><b id="pos">1</b> / <b id="total">13</b></span>
+  <span id="sec"></span>
+  <span id="timer" class="hidden">00:00</span>
+  <span class="spacer" style="flex:1"></span>
+  <span>&larr; &rarr; move &middot; <b>S presenter screen</b> &middot; N notes &middot; O overview &middot; T timer &middot; F full &middot; ? help</span>
+</div>
+
+<div id="notes">
+  <h4 id="n-title"></h4>
+  <div class="meta" id="n-meta"></div>
+  <div class="body" id="n-body"></div>
+</div>
+
+<div class="overlay" id="overview"><h3>Jump to a slide</h3><div class="og" id="og"></div></div>
+
+<div class="overlay" id="help"><h3>Keys</h3><dl>
+  <dt>&rarr; &darr; space</dt><dd>next slide</dd>
+  <dt>&larr; &uarr;</dt><dd>previous slide</dd>
+  <dt>1&ndash;9 / Home / End</dt><dd>jump</dd>
+  <dt>S</dt><dd>open the presenter screen in a second window (notes, now + next)</dd>
+  <dt>N</dt><dd>speaker notes panel on/off</dd>
+  <dt>O</dt><dd>overview &mdash; click any slide to jump</dd>
+  <dt>T</dt><dd>lesson timer on/off (Shift+T resets)</dd>
+  <dt>F</dt><dd>full screen</dd>
+  <dt>P</dt><dd>print the speaker notes as a handout</dd>
+  <dt>Esc</dt><dd>close this / overview / notes</dd>
+</dl></div>
+
+<div id="toast"></div>
+
+<div id="handout"></div>
+
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var stage = document.getElementById("stage");
+  var viewport = document.getElementById("viewport");
+  var i = 0, timerOn = false, t0 = null, tick = null;
+
+  var presenterCSS = [
+    "body.pbody{background:#16110d;color:#efe3d4;margin:0;display:flex;flex-direction:column;height:100vh;overflow:hidden;font-family:var(--sans)}",
+    "#p-head{display:flex;align-items:center;gap:18px;padding:12px 20px;border-bottom:1px solid #3d2c21;font-size:15px;color:#c2ab93}",
+    "#p-head b{color:var(--amber);font-size:19px}",
+    "#p-head .sp{flex:1}",
+    "#p-clock{color:#8d7a68}",
+    "#p-elapsed{font-variant-numeric:tabular-nums;font-size:22px;font-weight:800;color:var(--amber);min-width:76px;text-align:right}",
+    "#p-reset{font:inherit;font-size:12px;background:#241a13;color:#c2ab93;border:1px solid #3d2c21;border-radius:6px;padding:5px 10px;cursor:pointer}",
+    "#p-reset:hover{border-color:var(--amber)}",
+    "#p-main{flex:1;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:22px;padding:18px 20px;overflow:hidden}",
+    "#p-left{display:flex;flex-direction:column;gap:8px;min-width:0;overflow:hidden}",
+    "#p-right{display:flex;flex-direction:column;min-width:0;overflow:hidden}",
+    ".p-label{margin:0;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:#8d7a68;font-weight:700}",
+    ".p-next-label{margin-top:10px}",
+    ".p-host{position:relative;width:100%;overflow:hidden;border-radius:6px;background:#241a13;cursor:pointer}",
+    ".p-host.p-small{width:62%}",
+    ".p-mini{width:1280px;height:720px;transform-origin:0 0;position:relative}",
+    ".p-mini .slide{box-shadow:none}",
+    ".p-end{padding:26px;color:#8d7a68;font-size:15px;font-style:italic}",
+    "#p-title{font-family:var(--serif);font-size:26px;font-weight:600;color:var(--amber);margin:6px 0 12px;line-height:1.15}",
+    "#p-notes{flex:1;overflow-y:auto;white-space:pre-wrap;font-size:17px;line-height:1.6;padding-right:8px}",
+    "#p-foot{padding:9px 20px;border-top:1px solid #3d2c21;font-size:12px;color:#8d7a68}"
+  ].join("\n");
+
+  document.getElementById("total").textContent = slides.length;
+
+  function notesOf(s) {
+    var a = s.querySelector("aside");
+    return a ? a.textContent.trim() : "";
+  }
+
+  function fit() {
+    var pad = 24, hud = 24;
+    var notesW = document.body.classList.contains("notes-open")
+      ? document.getElementById("notes").offsetWidth : 0;
+    var availW = window.innerWidth - notesW - pad * 2;
+    var availH = window.innerHeight - hud - pad * 2;
+    var k = Math.min(availW / 1280, availH / 720);
+    stage.style.transform = "translate(" + (pad + (availW - 1280 * k) / 2) + "px," +
+                            (pad + (availH - 720 * k) / 2) + "px) scale(" + k + ")";
+  }
+
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach(function (s, k) { s.classList.toggle("on", k === i); });
+    var s = slides[i];
+    document.getElementById("pos").textContent = i + 1;
+    document.getElementById("sec").textContent = s.dataset.sec + " · " + s.dataset.time;
+    document.getElementById("n-title").textContent = s.dataset.title;
+    document.getElementById("n-meta").textContent = s.dataset.sec + " — " + s.dataset.time;
+    document.getElementById("n-body").textContent = notesOf(s);
+    document.getElementById("notes").scrollTop = 0;
+    try { location.hash = "s" + (i + 1); } catch (e) {}
+    paintPresenter();
+  }
+
+  function fmt(ms) {
+    var t = Math.floor(ms / 1000);
+    return ("0" + Math.floor(t / 60)).slice(-2) + ":" + ("0" + (t % 60)).slice(-2);
+  }
+  function timerPaint() {
+    document.getElementById("timer").textContent = t0 ? fmt(Date.now() - t0) : "00:00";
+  }
+  function toggleTimer(reset) {
+    var el = document.getElementById("timer");
+    if (reset) { t0 = Date.now(); timerPaint(); return; }
+    timerOn = !timerOn;
+    el.classList.toggle("hidden", !timerOn);
+    if (timerOn) {
+      if (!t0) t0 = Date.now();
+      timerPaint();
+      tick = setInterval(timerPaint, 1000);
+    } else if (tick) { clearInterval(tick); tick = null; }
+  }
+
+  // overview
+  var og = document.getElementById("og");
+  slides.forEach(function (s, k) {
+    var b = document.createElement("button");
+    b.innerHTML = '<span class="n">' + (k + 1) + '</span><span>' + s.dataset.title +
+                  '<span class="sec">' + s.dataset.sec + " · " + s.dataset.time + '</span></span>';
+    b.addEventListener("click", function () {
+      document.getElementById("overview").classList.remove("on");
+      show(k);
+    });
+    og.appendChild(b);
+  });
+
+  // print handout
+  var handout = document.getElementById("handout");
+  slides.forEach(function (s, k) {
+    var d = document.createElement("div");
+    d.className = "h-slide";
+    var n = document.createElement("p"); n.className = "h-n";
+    n.textContent = "Slide " + (k + 1) + " of " + slides.length;
+    var h = document.createElement("h2"); h.textContent = s.dataset.title;
+    var m = document.createElement("p"); m.className = "h-sec";
+    m.textContent = s.dataset.sec + " — " + s.dataset.time;
+    var b = document.createElement("div"); b.className = "h-body";
+    b.textContent = notesOf(s);
+    d.appendChild(n); d.appendChild(h); d.appendChild(m); d.appendChild(b);
+    handout.appendChild(d);
+  });
+
+  // ---------- presenter screen (second window) ----------
+  var pwin = null, pclock = null;
+
+  function presenterAlive() { return !!(pwin && !pwin.closed && pwin.document && pwin.document.getElementById("p-cur")); }
+
+  function openPresenter() {
+    if (presenterAlive()) { pwin.focus(); return; }
+    pwin = window.open("", "ct-presenter", "width=1200,height=820");
+    if (!pwin) {
+      toast("Your browser blocked the presenter window. Allow pop-ups for this page, then press S again.");
+      return;
+    }
+    var deckCSS = document.querySelector("style").textContent;
+    var d = pwin.document;
+    d.open();
+    d.write('<!doctype html><html><head><meta charset="utf-8"><title>Presenter \u2014 Chocolate Touch Ch. 3</title>' +
+      '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Nunito+Sans:wght@400;700;800&display=swap">' +
+      '<style>' + deckCSS + '</style><style>' + presenterCSS + '</style></head><body class="pbody">' +
+      '<header id="p-head">' +
+        '<span id="p-pos"></span><span id="p-sec"></span>' +
+        '<span class="sp"></span>' +
+        '<span id="p-clock"></span><span id="p-elapsed">00:00</span>' +
+        '<button id="p-reset" type="button">reset timer</button>' +
+      '</header>' +
+      '<main id="p-main">' +
+        '<div id="p-left">' +
+          '<p class="p-label">On the cast screen now</p><div id="p-cur" class="p-host"></div>' +
+          '<p class="p-label p-next-label">Coming next</p><div id="p-nxt" class="p-host p-small"></div>' +
+        '</div>' +
+        '<div id="p-right"><p class="p-label">Speaker notes</p><h2 id="p-title"></h2><div id="p-notes"></div></div>' +
+      '</main>' +
+      '<footer id="p-foot">&larr; &rarr; move &middot; click a preview to move &middot; T reset timer &middot; closing this window puts the controls back on the main screen</footer>' +
+      '</body></html>');
+    d.close();
+
+    d.addEventListener("keydown", presenterKeys);
+    d.getElementById("p-cur").addEventListener("click", function () { show(i + 1); });
+    d.getElementById("p-nxt").addEventListener("click", function () { show(i + 1); });
+    d.getElementById("p-reset").addEventListener("click", function () { t0 = Date.now(); paintPresenter(); });
+    pwin.addEventListener("resize", paintPresenter);
+    pwin.addEventListener("pagehide", function () { document.body.classList.remove("casting"); fit(); });
+
+    document.body.classList.add("casting");
+    document.body.classList.remove("notes-open");
+    if (!t0) { t0 = Date.now(); }
+    fit();
+    paintPresenter();
+    if (pclock) { clearInterval(pclock); }
+    pclock = setInterval(function () { if (presenterAlive()) { paintClocks(); } }, 1000);
+  }
+
+  window.addEventListener("pagehide", function () { if (presenterAlive()) { pwin.close(); } });
+
+  function presenterKeys(e) {
+    var k = e.key;
+    if (k === "ArrowRight" || k === "ArrowDown" || k === " " || k === "PageDown") { e.preventDefault(); show(i + 1); }
+    else if (k === "ArrowLeft" || k === "ArrowUp" || k === "PageUp") { e.preventDefault(); show(i - 1); }
+    else if (k === "Home") { show(0); }
+    else if (k === "End") { show(slides.length - 1); }
+    else if (k >= "1" && k <= "9") { show(parseInt(k, 10) - 1); }
+    else if (k === "t" || k === "T") { t0 = Date.now(); paintPresenter(); }
+  }
+
+  function preview(hostId, idx) {
+    var d = pwin.document;
+    var host = d.getElementById(hostId);
+    host.innerHTML = "";
+    if (idx < 0 || idx >= slides.length) {
+      var end = d.createElement("div");
+      end.className = "p-end";
+      end.textContent = idx >= slides.length ? "End of the deck" : "Start of the deck";
+      host.appendChild(end);
+      host.style.height = "";
+      return;
+    }
+    var k = host.clientWidth / 1280;
+    var box = d.createElement("div");
+    box.className = "p-mini";
+    box.style.transform = "scale(" + k + ")";
+    var clone = d.importNode(slides[idx], true);
+    clone.classList.add("on");
+    box.appendChild(clone);
+    host.appendChild(box);
+    host.style.height = (720 * k) + "px";
+  }
+
+  function paintClocks() {
+    var d = pwin.document;
+    var now = new Date();
+    d.getElementById("p-clock").textContent =
+      ((now.getHours() % 12) || 12) + ":" + ("0" + now.getMinutes()).slice(-2) + (now.getHours() < 12 ? " am" : " pm");
+    d.getElementById("p-elapsed").textContent = t0 ? fmt(Date.now() - t0) : "00:00";
+  }
+
+  function paintPresenter() {
+    if (!presenterAlive()) { return; }
+    var d = pwin.document;
+    var s = slides[i];
+    d.getElementById("p-pos").innerHTML = "<b>" + (i + 1) + "</b> / " + slides.length;
+    d.getElementById("p-sec").textContent = s.dataset.sec + " \u00b7 " + s.dataset.time;
+    d.getElementById("p-title").textContent = s.dataset.title;
+    d.getElementById("p-notes").textContent = notesOf(s);
+    d.getElementById("p-notes").scrollTop = 0;
+    preview("p-cur", i);
+    preview("p-nxt", i + 1);
+    paintClocks();
+  }
+
+  function toast(msg) {
+    var el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("on");
+    setTimeout(function () { el.classList.remove("on"); }, 6000);
+  }
+
+  function closeOverlays() {
+    document.getElementById("overview").classList.remove("on");
+    document.getElementById("help").classList.remove("on");
+  }
+
+  document.addEventListener("keydown", function (e) {
+    var k = e.key;
+    if (k === "ArrowRight" || k === "ArrowDown" || k === " " || k === "PageDown") { e.preventDefault(); closeOverlays(); show(i + 1); }
+    else if (k === "ArrowLeft" || k === "ArrowUp" || k === "PageUp") { e.preventDefault(); closeOverlays(); show(i - 1); }
+    else if (k === "Home") { show(0); }
+    else if (k === "End") { show(slides.length - 1); }
+    else if (k >= "1" && k <= "9") { show(parseInt(k, 10) - 1); }
+    else if (k === "s" || k === "S") { e.preventDefault(); openPresenter(); }
+    else if (k === "n" || k === "N") { document.body.classList.toggle("notes-open"); fit(); }
+    else if (k === "o" || k === "O") { document.getElementById("help").classList.remove("on"); document.getElementById("overview").classList.toggle("on"); }
+    else if (k === "t") { toggleTimer(false); }
+    else if (k === "T") { toggleTimer(true); }
+    else if (k === "f" || k === "F") {
+      if (document.fullscreenElement) { document.exitFullscreen(); }
+      else if (document.documentElement.requestFullscreen) { document.documentElement.requestFullscreen(); }
+    }
+    else if (k === "p" || k === "P") { e.preventDefault(); window.print(); }
+    else if (k === "?" || k === "/") { document.getElementById("overview").classList.remove("on"); document.getElementById("help").classList.toggle("on"); }
+    else if (k === "Escape") { closeOverlays(); document.body.classList.remove("notes-open"); fit(); }
+  });
+
+  viewport.addEventListener("click", function (e) {
+    if (e.clientX < window.innerWidth * 0.25) { show(i - 1); } else { show(i + 1); }
+  });
+  document.getElementById("overview").addEventListener("click", function (e) {
+    if (e.target === this) { this.classList.remove("on"); }
+  });
+  document.getElementById("help").addEventListener("click", function () { this.classList.remove("on"); });
+
+  if (/(\?|&)notes\b/.test(location.search)) { document.body.classList.add("notes-open"); }
+  window.addEventListener("resize", fit);
+  fit();
+  var start = 0;
+  if (location.hash && /^#s\d+$/.test(location.hash)) { start = parseInt(location.hash.slice(2), 10) - 1; }
+  show(start);
+  fit();
+  if (document.fonts && document.fonts.ready) { document.fonts.ready.then(fit); }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chocolate Touch Test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..800&family=Nunito+Sans:wght@400;700;800;900&display=swap">
+<style>
+  /* One Makey Makey coin at the front of the room. Each person walks up, holds the earth wire, touches the coin,
+     and finds out if they have the chocolate touch. The teacher secretly decides: it works unless T was pressed.
+     Same fixed 1280x720 projected stage and palette as ch6-makey-makey.html. */
+  :root{
+    --cocoa:#2A1810; --cocoa2:#3B2318; --cocoa3:#4E3122; --milk:#7A4A2E; --choc:#5A3420;
+    --cream:#FAF4E8; --muted:#D8CBB8; --dust:#A08B78; --amber:#E0A15C; --butter:#FFE9B8;
+    --foil:#E8C66A; --grey:#6E6A66;
+    --serif:Fraunces,Georgia,"Times New Roman",serif;
+    --sans:"Nunito Sans",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{height:100%}
+  body{margin:0;background:#120b07;color:var(--cream);font-family:var(--sans);overflow:hidden}
+
+  #viewport{position:fixed;inset:0;overflow:hidden}
+  #stage{width:1280px;height:720px;position:absolute;left:0;top:0;transform-origin:0 0;overflow:hidden;
+         background:radial-gradient(ellipse at 50% 0%, var(--cocoa3) 0%, var(--cocoa) 60%, #1E110A 100%);
+         border-radius:6px;box-shadow:0 24px 70px rgba(0,0,0,.6);transition:background .6s}
+  #stage.win{background:radial-gradient(ellipse at 50% 30%, #A0643C 0%, var(--milk) 45%, var(--choc) 100%)}
+  #stage.lose{background:radial-gradient(ellipse at 50% 30%, #4A4643 0%, #34302D 60%, #221F1D 100%)}
+
+  .screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 70px}
+  .screen.on{display:flex}
+  .kicker{font-weight:900;font-size:16px;letter-spacing:2.4px;text-transform:uppercase;color:var(--amber);margin-bottom:14px}
+  h1{font-family:var(--serif);font-weight:800;margin:0;line-height:1.02;text-wrap:balance}
+  .sub{font-size:26px;color:var(--muted);line-height:1.4;margin:18px 0 0;max-width:900px;text-wrap:balance}
+
+  /* the coin */
+  .coin{width:190px;height:190px;border-radius:50%;margin:34px auto 0;position:relative;
+        background:radial-gradient(circle at 35% 30%, #FFF3C4 0%, var(--foil) 35%, #B8913A 75%, #8A6A25 100%);
+        box-shadow:inset 0 -8px 0 rgba(0,0,0,.25), 0 0 0 10px rgba(232,198,106,.12), 0 18px 40px rgba(0,0,0,.5);
+        display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:800;font-size:30px;color:#6B4E14}
+  #ready .coin{animation:bob 2.4s ease-in-out infinite}
+  @keyframes bob{50%{transform:translateY(-10px);box-shadow:inset 0 -8px 0 rgba(0,0,0,.25), 0 0 0 22px rgba(232,198,106,.08), 0 26px 50px rgba(0,0,0,.45)}}
+
+  /* ready */
+  #ready h1{font-size:70px}
+  #ready h1 em{font-style:italic;color:var(--foil)}
+  .steps{display:flex;gap:26px;margin-top:34px}
+  .step{background:rgba(250,244,232,.06);border:1px solid rgba(250,244,232,.12);border-radius:14px;padding:14px 22px;font-size:22px;font-weight:800;color:var(--butter)}
+  .step span{color:var(--amber);margin-right:8px}
+
+  /* testing */
+  #testing h1{font-size:62px}
+  #testing .coin{animation:pulse .5s ease-in-out infinite}
+  @keyframes pulse{50%{transform:scale(1.06);box-shadow:inset 0 -8px 0 rgba(0,0,0,.25), 0 0 0 30px rgba(232,198,106,.18), 0 0 80px rgba(232,198,106,.5)}}
+  .meter{width:620px;height:30px;border-radius:15px;background:rgba(250,244,232,.08);border:2px solid rgba(232,198,106,.4);margin-top:40px;overflow:hidden}
+  .meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--milk),var(--amber),var(--foil));border-radius:15px}
+  #testMsg{font-size:28px;font-weight:800;color:var(--butter);margin-top:20px;min-height:40px}
+
+  /* results */
+  #win h1{font-size:92px;color:var(--butter);text-shadow:0 6px 0 var(--choc),0 10px 40px rgba(0,0,0,.4);animation:pop .6s cubic-bezier(.2,1.6,.4,1) both}
+  #win .sub{color:#FFF1D6;font-size:30px}
+  #lose h1{font-size:84px;color:#E9E4DE;animation:sag .8s ease-out both}
+  #lose .sub{color:#C9C2BA;font-size:30px}
+  @keyframes pop{from{transform:scale(.3);opacity:0}}
+  @keyframes sag{from{transform:translateY(-40px);opacity:0}}
+  .bigicon{font-size:120px;line-height:1;margin-bottom:10px}
+  .question{margin-top:30px;font-family:var(--serif);font-style:italic;font-size:32px;color:var(--foil)}
+  #lose .question{color:#D9D0C5}
+  .nextwait{position:absolute;bottom:58px;left:0;right:0;font-size:18px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:rgba(250,244,232,.45)}
+
+  /* chocolate drips for the win screen */
+  #drips{position:absolute;top:0;left:0;right:0;height:0;pointer-events:none}
+  .drip{position:absolute;top:-10px;width:46px;background:var(--choc);border-radius:0 0 23px 23px;height:0;
+        box-shadow:inset -6px 0 0 rgba(0,0,0,.15);animation:drip 1.4s ease-in forwards}
+  @keyframes drip{to{height:var(--h)}}
+  .dripbar{position:absolute;top:0;left:0;right:0;height:0;background:var(--choc);animation:bar .5s ease-out forwards}
+  @keyframes bar{to{height:28px}}
+
+  /* tally (visible to the class, it's part of the fun) */
+  #tally{position:absolute;bottom:16px;left:24px;font-size:16px;font-weight:800;color:rgba(250,244,232,.5);letter-spacing:.4px}
+  #tally b{color:var(--butter)}
+
+  /* the teacher's secret tell: a tiny dot bottom-right. solid = will work, hollow ring = next touch fizzles */
+  #tell{position:absolute;bottom:20px;right:22px;width:10px;height:10px;border-radius:50%;background:rgba(250,244,232,.22)}
+  #tell.armed{background:transparent;box-shadow:inset 0 0 0 2px rgba(250,244,232,.32)}
+
+  /* start + help cards */
+  .card{background:linear-gradient(170deg,var(--cocoa3),var(--cocoa2));border:1px solid rgba(232,198,106,.3);border-radius:18px;padding:30px 40px;max-width:900px;text-align:left}
+  .card h2{font-family:var(--serif);font-size:38px;margin:0 0 14px}
+  .card p{font-size:19px;color:var(--muted);line-height:1.5;margin:0 0 12px}
+  .card table{border-collapse:collapse;font-size:19px;margin:6px 0 14px}
+  .card td{padding:6px 18px 6px 0;color:var(--muted);vertical-align:top}
+  .card td:first-child{white-space:nowrap}
+  kbd{font:900 17px var(--sans);color:var(--cocoa);background:var(--butter);border-radius:6px;padding:2px 9px}
+  .go{display:inline-block;margin-top:8px;background:var(--foil);color:var(--cocoa);font:900 22px var(--sans);border:0;border-radius:12px;padding:14px 28px;cursor:pointer}
+  #help{position:absolute;inset:0;background:rgba(18,11,7,.92);display:flex;align-items:center;justify-content:center;z-index:5}
+
+  #focusNag{position:fixed;inset:0;z-index:10;background:rgba(18,11,7,.82);display:flex;align-items:center;justify-content:center;cursor:pointer}
+  #focusNag div{background:var(--foil);color:var(--cocoa);font:900 28px var(--sans);padding:22px 34px;border-radius:16px;text-align:center;max-width:80vw}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+
+  <section class="screen on" id="start">
+    <div class="card">
+      <h2>Do You Have the Chocolate Touch?</h2>
+      <p>Wire it up: one foil coin on the <b>Space</b> clip (Up, Down, or Right also work), and the <b>Earth</b> clip under the foil <b>magic star</b> on the table. Each person rests one hand flat on the star, then touches the coin with the other hand. Tape the earth wire down so it disappears under the star.</p>
+      <table>
+        <tr><td><kbd>T</kbd> or <kbd>Left</kbd></td><td>Secret: the <b>next</b> touch fizzles (press again to cancel). Resets after every turn.</td></tr>
+        <tr><td><kbd>Enter</kbd> or <kbd>Click</kbd></td><td>Let the next person come up</td></tr>
+        <tr><td></td><td>Your Left and Click pads need their own Earth wire (a foil strip you rest a finger on).</td></tr>
+        <tr><td><kbd>H</kbd></td><td>Show or hide this card</td></tr>
+        <tr><td><kbd>M</kbd> / <kbd>F</kbd></td><td>Sound on/off · Fullscreen</td></tr>
+      </table>
+      <p>Your secret signal is the tiny dot in the bottom-right corner. <b>Solid dot</b> = it will work. <b>Hollow ring</b> = it will fizzle.</p>
+      <button class="go" id="btnStart">Start (or press Enter)</button>
+    </div>
+  </section>
+
+  <section class="screen" id="ready">
+    <div class="kicker">Chapter 6 · The Chocolate Touch</div>
+    <h1>Do <em>you</em> have the chocolate touch?</h1>
+    <div class="coin">?</div>
+    <div class="steps">
+      <div class="step"><span>1</span>Hand on the magic star</div>
+      <div class="step"><span>2</span>Touch the coin with your other hand</div>
+      <div class="step"><span>3</span>Find out!</div>
+    </div>
+  </section>
+
+  <section class="screen" id="testing">
+    <div class="kicker">Hold still...</div>
+    <h1>Testing your touch</h1>
+    <div class="coin">?</div>
+    <div class="meter"><i id="meterFill"></i></div>
+    <div id="testMsg"></div>
+  </section>
+
+  <section class="screen" id="win">
+    <div id="drips"></div>
+    <div class="bigicon" aria-hidden="true">🍫</div>
+    <h1>You have the<br>chocolate touch!</h1>
+    <p class="sub" id="winLine"></p>
+    <div class="question">Lucky or unlucky?</div>
+    <div class="nextwait">Waiting for the next person</div>
+  </section>
+
+  <section class="screen" id="lose">
+    <div class="bigicon" aria-hidden="true">✋</div>
+    <h1>Nope! Just a<br>normal touch.</h1>
+    <p class="sub" id="loseLine"></p>
+    <div class="question">Lucky or unlucky?</div>
+    <div class="nextwait">Waiting for the next person</div>
+  </section>
+
+  <div id="tally"></div>
+  <div id="tell"></div>
+
+  <div id="help" hidden><div class="card" id="helpCard"></div></div>
+</div></div>
+<div id="focusNag" hidden><div>Click anywhere so the coin works</div></div>
+
+<script>
+(() => {
+  /* ---------- stage scaling ---------- */
+  const stage = document.getElementById('stage');
+  function fit(){
+    const s = Math.min(innerWidth/1280, innerHeight/720);
+    stage.style.transform = `translate(${(innerWidth-1280*s)/2}px,${(innerHeight-720*s)/2}px) scale(${s})`;
+  }
+  addEventListener('resize', fit); fit();
+
+  /* ---------- sound ---------- */
+  let ctx = null, muted = false;
+  function audio(){
+    if (!ctx) { try { ctx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){ return null; } }
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+  function tone(freq, dur, type='sine', vol=.2, when=0, slideTo=null){
+    if (muted) return; const a = audio(); if (!a) return;
+    const t = a.currentTime + when, o = a.createOscillator(), g = a.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t+dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t+.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    o.connect(g).connect(a.destination); o.start(t); o.stop(t+dur+.05);
+  }
+  const sfx = {
+    touch: () => { tone(660, .12, 'square', .08); tone(1320, .1, 'sine', .07, .04); },
+    tick:  k  => tone(300 + k*45, .07, 'triangle', .1),
+    win:   () => { [523,659,784,1047,1319].forEach((f,k) => tone(f, .35, 'triangle', .17, k*.1));
+                   tone(1568, .9, 'sine', .1, .55); tone(660, 1.4, 'sine', .12, .6, 220); },
+    lose:  () => { [392,370,349].forEach((f,k) => tone(f, .32, 'sawtooth', .09, k*.36));
+                   tone(330, 1.0, 'sawtooth', .09, 1.08, 250); },
+  };
+
+  /* ---------- lines (kept to things that happen by Chapter 6) ---------- */
+  const WIN_LINES = [
+    'Everything you touch turns to chocolate. Just like John!',
+    'Hope you weren\'t planning to eat anything else today.',
+    'Your pencil, your toothbrush, your breakfast: all chocolate.',
+    'Careful what you pick up. Chocolate everything, forever.',
+    'Sweet! But how long until you get really, really thirsty?',
+    'Congratulations... we think?',
+  ];
+  const LOSE_LINES = [
+    'Your toothpaste stays toothpaste. Your water stays water.',
+    'Your touch is 100% regular. No chocolate for you!',
+    'Not a single crumb of chocolate. You can still eat lunch!',
+    'The coin checked twice. Totally normal hands.',
+  ];
+  const TEST_MSGS = ['Checking fingertips...', 'Measuring sweetness...', 'Asking the magic coin...', 'Almost there...'];
+  let winBag = [], loseBag = [];
+  function pick(bag, src){ if (!bag.length) bag.push(...src.map((_, i) => i).sort(() => Math.random() - .5)); return src[bag.pop()]; }
+
+  /* ---------- state ---------- */
+  // start -> ready -> testing -> win|lose -> (Enter) -> ready
+  let state = 'start', armed = false, wins = 0, losses = 0, timers = [];
+  const $ = id => document.getElementById(id);
+  const tell = $('tell'), tally = $('tally');
+
+  function show(id){
+    document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
+    stage.classList.toggle('win', id === 'win');
+    stage.classList.toggle('lose', id === 'lose');
+  }
+  function renderTally(){
+    tally.innerHTML = (wins + losses) ? `Chocolate touches: <b>${wins}</b> &nbsp;·&nbsp; Normal touches: <b>${losses}</b>` : '';
+  }
+  function setArmed(v){ armed = v; tell.classList.toggle('armed', armed); }
+  function clearTimers(){ timers.forEach(clearTimeout); timers = []; }
+  const later = (ms, fn) => timers.push(setTimeout(fn, ms));
+
+  function toReady(){
+    clearTimers(); state = 'ready'; show('ready'); renderTally();
+  }
+
+  const TEST_MS = 3600;
+  function touch(){
+    if (state !== 'ready') return;   // ignore touches while testing or showing a result
+    state = 'testing';
+    const willWork = !armed;
+    sfx.touch(); show('testing');
+    const fill = $('meterFill'), msg = $('testMsg');
+    fill.style.transition = 'none'; fill.style.width = '0';
+    void fill.offsetWidth;
+    fill.style.transition = `width ${TEST_MS}ms cubic-bezier(.4,.1,.6,1)`; fill.style.width = '100%';
+    TEST_MSGS.forEach((m, k) => later(k * TEST_MS / TEST_MSGS.length, () => { msg.textContent = m; }));
+    for (let k = 0; k < 12; k++) later(k * TEST_MS / 12, () => sfx.tick(k));
+    later(TEST_MS + 250, () => reveal(willWork));
+  }
+
+  function reveal(works){
+    state = 'result';
+    setArmed(false);   // the fizzle only ever applies to one turn
+    if (works) {
+      wins++; $('winLine').textContent = pick(winBag, WIN_LINES);
+      show('win'); makeDrips(); sfx.win();
+    } else {
+      losses++; $('loseLine').textContent = pick(loseBag, LOSE_LINES);
+      show('lose'); sfx.lose();
+    }
+    renderTally();
+  }
+
+  function makeDrips(){
+    const d = $('drips'); d.innerHTML = '<div class="dripbar"></div>';
+    for (let x = 10; x < 1280; x += 60 + Math.random() * 70) {
+      const el = document.createElement('div');
+      el.className = 'drip';
+      el.style.left = x + 'px';
+      el.style.width = (30 + Math.random() * 30) + 'px';
+      el.style.setProperty('--h', (60 + Math.random() * 150) + 'px');
+      el.style.animationDelay = (.2 + Math.random() * .7) + 's';
+      d.appendChild(el);
+    }
+  }
+
+  /* ---------- help card (same text as the start card, opened with H) ---------- */
+  const help = $('help');
+  $('helpCard').innerHTML = document.querySelector('#start .card').innerHTML.replace(/<button[\s\S]*<\/button>/, '<p><kbd>H</kbd> to close.</p>');
+  function toggleHelp(){ help.hidden = !help.hidden; }
+
+  function begin(){ audio(); help.hidden = true; toReady(); }
+  // Click (the Makey Makey Click pad, a mouse click, or a tap on a smart screen) = next person, same as Enter
+  document.addEventListener('click', e => {
+    if (e.target.closest && e.target.closest('#focusNag')) return;
+    if (e.target.blur) e.target.blur();
+    if (!help.hidden) return;
+    if (state === 'start' || state === 'result') begin();
+  });
+
+  /* ---------- keys ---------- */
+  const TOUCH_KEYS = ['Space', 'ArrowUp', 'ArrowDown', 'ArrowRight'];   // Left is the teacher's secret fizzle pad
+  let lastTouch = 0;
+  addEventListener('keydown', e => {
+    audio();
+    if (TOUCH_KEYS.includes(e.code)) {
+      e.preventDefault();
+      if (e.repeat) return;
+      const now = performance.now();
+      if (now - lastTouch < 300) return;   // foil coins can "chatter"
+      lastTouch = now;
+      if (help.hidden) touch();
+      return;
+    }
+    if (e.code === 'ArrowLeft') { e.preventDefault(); if (!e.repeat && state !== 'start') setArmed(!armed); return; }
+    const k = e.key.toLowerCase();
+    if (k === 'enter') { e.preventDefault(); if (state === 'start' || state === 'result') begin(); return; }
+    if (k === 't' && state !== 'start') { setArmed(!armed); return; }
+    if (k === 'h') return toggleHelp();
+    if (k === 'm') { muted = !muted; return; }
+    if (k === 'f') {
+      if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+      else document.documentElement.requestFullscreen?.().catch(()=>{});
+    }
+  });
+
+  // test hook for automated checks
+  window.__ctt = { touch, setArmed, begin, state: () => ({ state, armed, wins, losses }) };
+
+  const nag = $('focusNag');
+  const checkFocus = () => { nag.hidden = document.hasFocus(); };
+  addEventListener('blur', checkFocus); addEventListener('focus', checkFocus);
+  nag.addEventListener('click', () => { nag.hidden = true; audio(); });
+  setTimeout(checkFocus, 300);
+})();
+</script>
+</body>
+</html>

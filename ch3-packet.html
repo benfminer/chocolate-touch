@@ -1,0 +1,899 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Chocolate Touch Packet</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@400;500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=Patrick+Hand&display=swap">
+<style>
+  :root {
+    --paper: #FCFBF7;
+    --panel: #FFFFFF;
+    --ink: #221E2E;
+    --ink-soft: #5E5870;
+    --mimeo: #5B4AA8;
+    --mimeo-pale: #EDE9F8;
+    --rule: #CFC9E2;
+    --cocoa: #6B4226;
+    --cocoa-pale: #F2E7DE;
+    --shadow: rgba(34, 30, 46, 0.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #16141E;
+      --panel: #1E1B29;
+      --ink: #EDEAF5;
+      --ink-soft: #A9A2C0;
+      --mimeo: #A99BE8;
+      --mimeo-pale: #2A2440;
+      --rule: #3B3552;
+      --cocoa: #D2A182;
+      --cocoa-pale: #2E2419;
+      --shadow: rgba(0, 0, 0, 0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #16141E;
+    --panel: #1E1B29;
+    --ink: #EDEAF5;
+    --ink-soft: #A9A2C0;
+    --mimeo: #A99BE8;
+    --mimeo-pale: #2A2440;
+    --rule: #3B3552;
+    --cocoa: #D2A182;
+    --cocoa-pale: #2E2419;
+    --shadow: rgba(0, 0, 0, 0.5);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Source Sans 3", system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    padding: 0 20px 80px;
+  }
+
+  .wrap { max-width: 820px; margin: 0 auto; }
+
+  h1, h2, h3, h4 {
+    font-family: "Zilla Slab", Georgia, serif;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--mimeo);
+    font-weight: 700;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    padding-block: 56px 32px;
+    border-bottom: 3px double var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .masthead h1 {
+    font-size: clamp(34px, 6vw, 52px);
+    font-weight: 700;
+    line-height: 1.05;
+  }
+  .masthead p {
+    margin: 0;
+    max-width: 60ch;
+    color: var(--ink-soft);
+    font-size: 17px;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .tag {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 11px;
+    border-radius: 999px;
+    background: var(--mimeo-pale);
+    color: var(--mimeo);
+  }
+
+  .printbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+    margin-top: 10px;
+  }
+  button.print {
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--paper);
+    background: var(--mimeo);
+    border: none;
+    border-radius: 7px;
+    padding: 10px 20px;
+    cursor: pointer;
+  }
+  button.print:hover { filter: brightness(1.08); }
+  button.print:focus-visible { outline: 3px solid var(--cocoa); outline-offset: 2px; }
+  .printbar span { font-size: 14px; color: var(--ink-soft); }
+
+  /* ---------- contents ---------- */
+
+  .contents { margin-block: 36px; }
+  .contents ol {
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .contents li {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 16px;
+  }
+  .contents .num {
+    font-family: "Zilla Slab", Georgia, serif;
+    font-weight: 700;
+    color: var(--mimeo);
+    min-width: 26px;
+    font-variant-numeric: tabular-nums;
+  }
+  .contents .what { flex: 1; font-weight: 600; }
+  .contents .copies { color: var(--ink-soft); font-size: 14px; text-align: right; }
+
+  /* ---------- sheets ---------- */
+
+  .sheet {
+    margin-top: 48px;
+    padding-top: 30px;
+    border-top: 3px double var(--rule);
+  }
+  .sheet-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .sheet-head h2 {
+    font-size: 28px;
+    font-weight: 600;
+  }
+  .sheet-head .for {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .lede {
+    color: var(--ink-soft);
+    max-width: 62ch;
+    margin: 0 0 22px;
+  }
+
+  /* ---------- run sheet table ---------- */
+
+  .table-scroll { overflow-x: auto; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 15px;
+  }
+  th {
+    text-align: left;
+    font-family: "Zilla Slab", Georgia, serif;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--mimeo);
+    border-bottom: 2px solid var(--mimeo);
+    padding: 8px 12px 8px 0;
+    white-space: nowrap;
+  }
+  td {
+    padding: 11px 12px 11px 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  td.clock {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    color: var(--mimeo);
+    white-space: nowrap;
+  }
+  td.beat { font-weight: 600; white-space: nowrap; }
+  td.say { color: var(--ink-soft); }
+  td.say q { font-style: italic; color: var(--ink); }
+
+  /* ---------- cut-out grids ---------- */
+
+  .cut-note {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--mimeo);
+    margin: 0 0 12px;
+  }
+  .cutgrid {
+    display: grid;
+    gap: 0;
+    border-top: 2px dashed var(--rule);
+    border-left: 2px dashed var(--rule);
+  }
+  .cutgrid.two { grid-template-columns: 1fr 1fr; }
+  .cutgrid.three { grid-template-columns: repeat(3, 1fr); }
+  .cutgrid > * {
+    border-right: 2px dashed var(--rule);
+    border-bottom: 2px dashed var(--rule);
+    padding: 22px;
+  }
+
+  .vcard { display: flex; flex-direction: column; gap: 7px; min-height: 150px; }
+  .vcard .word {
+    font-family: "Zilla Slab", Georgia, serif;
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--cocoa);
+  }
+  .vcard .def { font-size: 16px; }
+  .vcard .move {
+    font-family: "Patrick Hand", "Source Sans 3", cursive;
+    font-size: 18px;
+    color: var(--mimeo);
+    margin-top: auto;
+  }
+
+  .ticket { display: flex; flex-direction: column; gap: 12px; min-height: 190px; }
+  .ticket .tname { font-size: 13px; color: var(--ink-soft); }
+  .ticket .q { font-weight: 700; font-size: 16px; }
+  .choice {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-family: "Zilla Slab", Georgia, serif;
+    font-weight: 700;
+    font-size: 20px;
+  }
+  .choice span {
+    border: 2px solid var(--cocoa);
+    border-radius: 999px;
+    padding: 2px 16px;
+    color: var(--cocoa);
+  }
+  .writeline {
+    border-bottom: 1.5px solid var(--rule);
+    height: 26px;
+  }
+  .writeline + .writeline { margin-top: 2px; }
+
+  /* ---------- menu templates ---------- */
+
+  .menu-sheet {
+    border: 3px solid var(--cocoa);
+    border-radius: 4px;
+    padding: 28px 30px 34px;
+    background: var(--panel);
+  }
+  .menu-sheet .menu-title {
+    font-family: "Zilla Slab", Georgia, serif;
+    font-size: 30px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--cocoa);
+    line-height: 1.15;
+  }
+  .menu-sheet .menu-sub {
+    text-align: center;
+    font-size: 14px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-top: 4px;
+    padding-bottom: 18px;
+    border-bottom: 2px solid var(--cocoa);
+  }
+  .item { padding-block: 20px; border-bottom: 1px dotted var(--rule); }
+  .item:last-of-type { border-bottom: none; }
+  .item .n {
+    font-family: "Zilla Slab", Georgia, serif;
+    font-weight: 700;
+    color: var(--mimeo);
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .frame-line {
+    font-size: 18px;
+    margin-top: 8px;
+    line-height: 2.3;
+  }
+  .frame-line u {
+    text-decoration: none;
+    border-bottom: 1.5px solid var(--ink);
+    padding: 0 30px;
+  }
+  .frame-line u.long { padding: 0 90px; }
+  .frame-line b.filled {
+    font-family: "Patrick Hand", cursive;
+    font-weight: 400;
+    font-size: 21px;
+    color: var(--cocoa);
+    border-bottom: 1.5px solid var(--rule);
+    padding: 0 8px;
+  }
+  .warnbox {
+    margin-top: 20px;
+    border: 2px dashed var(--cocoa);
+    padding: 14px 16px;
+  }
+  .warnbox .wl {
+    font-family: "Zilla Slab", Georgia, serif;
+    font-weight: 700;
+    color: var(--cocoa);
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* ---------- role cards ---------- */
+
+  .role { display: flex; flex-direction: column; gap: 10px; min-height: 230px; }
+  .role .rname {
+    font-family: "Zilla Slab", Georgia, serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--cocoa);
+  }
+  .role .plays { font-size: 14px; color: var(--ink-soft); }
+  .role .feel {
+    background: var(--mimeo-pale);
+    color: var(--mimeo);
+    font-weight: 700;
+    font-size: 15px;
+    padding: 8px 12px;
+  }
+  .role ul { margin: 0; padding-left: 18px; font-size: 15px; }
+  .role li { margin-bottom: 5px; }
+
+  /* ---------- teacher reference ---------- */
+
+  .qlist { display: flex; flex-direction: column; gap: 0; }
+  .qrow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .qrow .ask { font-weight: 600; }
+  .qrow .look {
+    color: var(--ink-soft);
+    font-size: 15px;
+  }
+  .qrow .look::before {
+    content: "Listening for";
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--mimeo);
+    font-weight: 700;
+    margin-bottom: 3px;
+  }
+
+  .framebox {
+    background: var(--mimeo-pale);
+    padding: 26px 28px;
+    margin-top: 8px;
+  }
+  .framebox h3 { font-size: 18px; margin-bottom: 12px; }
+  .framebox p {
+    font-size: 19px;
+    margin: 0 0 10px;
+    line-height: 1.8;
+  }
+  .framebox p:last-child { margin-bottom: 0; }
+  .framebox u { text-decoration: none; border-bottom: 1.5px solid var(--mimeo); padding: 0 34px; }
+
+  .poster {
+    border: 4px solid var(--cocoa);
+    padding: 46px 40px;
+    text-align: center;
+    background: var(--panel);
+  }
+  .poster .pk {
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--mimeo);
+    font-weight: 700;
+  }
+  .poster .pbig {
+    font-family: "Zilla Slab", Georgia, serif;
+    font-size: clamp(38px, 8vw, 68px);
+    font-weight: 700;
+    color: var(--cocoa);
+    line-height: 1.08;
+    margin-top: 14px;
+  }
+  .poster .psub {
+    margin-top: 20px;
+    font-size: 20px;
+    color: var(--ink-soft);
+  }
+
+  .callout {
+    border-left: 4px solid var(--cocoa);
+    background: var(--cocoa-pale);
+    padding: 16px 20px;
+    margin-top: 20px;
+    font-size: 15px;
+  }
+  .callout strong { color: var(--cocoa); }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 22px;
+    border-top: 1px solid var(--rule);
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 620px) {
+    .cutgrid.two, .cutgrid.three { grid-template-columns: 1fr; }
+    .qrow { grid-template-columns: 1fr; gap: 8px; }
+  }
+
+  @media print {
+    :root {
+      --paper: #ffffff;
+      --panel: #ffffff;
+      --ink: #000000;
+      --ink-soft: #444444;
+      --mimeo: #4a3b92;
+      --mimeo-pale: #f0edfa;
+      --rule: #9a93b5;
+      --cocoa: #5a3520;
+      --cocoa-pale: #f5eee8;
+    }
+    body { padding: 0; font-size: 11.5pt; }
+    .no-print { display: none !important; }
+    .sheet { break-before: page; border-top: none; margin-top: 0; padding-top: 0; }
+    .cutgrid > *, .menu-sheet, .poster, .role, .vcard, .ticket { break-inside: avoid; }
+    .masthead { padding-block: 0 18px; }
+    @page { margin: 14mm; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Reading group &middot; teacher packet</p>
+    <h1>The Chocolate Touch, Chapter&nbsp;3</h1>
+    <p>Everything you need to print for tomorrow's 50-minute session. Built for a small group of 3rd and 4th graders, with the reading load kept light and the thinking load high.</p>
+    <div class="meta-row">
+      <span class="tag">Big question: lucky or unlucky?</span>
+      <span class="tag">50 minutes</span>
+      <span class="tag">Small group</span>
+    </div>
+    <div class="printbar no-print">
+      <button class="print" id="printbtn" type="button">Print the packet</button>
+      <span>Or press &#8984;P. Each resource starts on its own page. Print single-sided so the cut-outs work.</span>
+    </div>
+  </header>
+
+  <section class="contents no-print">
+    <p class="eyebrow">What's inside</p>
+    <ol>
+      <li><span class="num">1</span><span class="what">Run sheet &mdash; your minute-by-minute</span><span class="copies">1 copy, for you</span></li>
+      <li><span class="num">2</span><span class="what">Vocabulary cards &mdash; cut into 4</span><span class="copies">1 set, for you</span></li>
+      <li><span class="num">3</span><span class="what">Midas Breakfast Menu &mdash; standard</span><span class="copies">1 per student</span></li>
+      <li><span class="num">4</span><span class="what">Midas Breakfast Menu &mdash; scaffolded</span><span class="copies">2&ndash;3 spares</span></li>
+      <li><span class="num">5</span><span class="what">Reader's Theater role cards &mdash; cut into 4</span><span class="copies">1 set, for you</span></li>
+      <li><span class="num">6</span><span class="what">Exit tickets &mdash; cut into 6</span><span class="copies">1 per student</span></li>
+      <li><span class="num">7</span><span class="what">Question bank &amp; sentence frames</span><span class="copies">1 copy, for you</span></li>
+      <li><span class="num">8</span><span class="what">Big question poster</span><span class="copies">1, for the wall</span></li>
+    </ol>
+  </section>
+
+  <!-- 1. RUN SHEET -->
+  <section class="sheet">
+    <div class="sheet-head">
+      <h2>1 &middot; Run sheet</h2>
+      <span class="for">Teacher copy</span>
+    </div>
+    <p class="lede">The clock column assumes a 50-minute block. If you lose time, cut the second Reader's Theater round &mdash; never the exit ticket.</p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Clock</th><th>Beat</th><th>What you do</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="clock">0:00</td>
+            <td class="beat">Big question</td>
+            <td class="say">Post it, say it twice. <q>I am not telling you the answer today. You are going to decide.</q></td>
+          </tr>
+          <tr>
+            <td class="clock">0:01</td>
+            <td class="beat">Hook</td>
+            <td class="say">Pencil, water bottle, shoe on the table. <q>One of these is about to turn into chocolate. Which is best? Which is a disaster?</q> Three speakers max. Do not resolve it.</td>
+          </tr>
+          <tr>
+            <td class="clock">0:06</td>
+            <td class="beat">Four words</td>
+            <td class="say">Teach each word with its motion. Then sentences, they answer with hands only. Go fast, let it get silly.</td>
+          </tr>
+          <tr>
+            <td class="clock">0:11</td>
+            <td class="beat">Read aloud</td>
+            <td class="say">You read, they follow. No round-robin. Perform the voices.</td>
+          </tr>
+          <tr>
+            <td class="clock">&mdash;</td>
+            <td class="beat">Stop 1</td>
+            <td class="say">After the toothpaste. Thumbs up or down: good news for John? One <q>why.</q></td>
+          </tr>
+          <tr>
+            <td class="clock">&mdash;</td>
+            <td class="beat">Stop 2</td>
+            <td class="say">At <q>Chocolate juice.</q> What does John think is happening? What do we think? Slow down here.</td>
+          </tr>
+          <tr>
+            <td class="clock">&mdash;</td>
+            <td class="beat">Stop 3</td>
+            <td class="say">At <q>I'm very pleased with you this morning.</q> Turn and talk, 45 seconds: should she be?</td>
+          </tr>
+          <tr>
+            <td class="clock">0:23</td>
+            <td class="beat">Model</td>
+            <td class="say">Read the boring version, then the good one. Build one together. Only one.</td>
+          </tr>
+          <tr>
+            <td class="clock">0:26</td>
+            <td class="beat">Menus</td>
+            <td class="say">Circulate. Blank page after 2 minutes means hand over the scaffolded sheet. Two-minute warning at 0:38.</td>
+          </tr>
+          <tr>
+            <td class="clock">0:41</td>
+            <td class="beat">Reader's Theater</td>
+            <td class="say">Perform, swap roles, perform again. Coach tone only. Never correct decoding mid-scene.</td>
+          </tr>
+          <tr>
+            <td class="clock">0:45</td>
+            <td class="beat">Exit ticket</td>
+            <td class="say"><q>I am keeping these. You will see this card again.</q> Scribe for anyone who needs it.</td>
+          </tr>
+          <tr>
+            <td class="clock">0:50</td>
+            <td class="beat">Cliffhanger</td>
+            <td class="say"><q>Tomorrow John puts his gloves on. That is all I am telling you.</q> Close the book.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout">
+      <strong>Before they walk in:</strong> menus folded and stacked, index cards out, vocabulary cards face down, the three hook objects on the table, book open to Chapter 3. If you are using real chocolate as a focus treat, check your allergy list today rather than in the moment.
+    </div>
+  </section>
+
+  <!-- 2. VOCAB CARDS -->
+  <section class="sheet">
+    <div class="sheet-head">
+      <h2>2 &middot; Vocabulary cards</h2>
+      <span class="for">Cut into 4</span>
+    </div>
+    <p class="cut-note">Cut on the dashed lines. Teach the motion with the word every time &mdash; the motion is how a kid who loses the word gets back to the meaning.</p>
+    <div class="cutgrid two">
+      <div class="vcard">
+        <span class="word">transform</span>
+        <span class="def">to change into something else</span>
+        <span class="move">Move: hands morph in the air</span>
+      </div>
+      <div class="vcard">
+        <span class="word">indulge</span>
+        <span class="def">to enjoy something way too much</span>
+        <span class="move">Move: rub your belly</span>
+      </div>
+      <div class="vcard">
+        <span class="word">wasteful</span>
+        <span class="def">using more than you need</span>
+        <span class="move">Move: toss it over your shoulder</span>
+      </div>
+      <div class="vcard">
+        <span class="word">suspicious</span>
+        <span class="def">thinking something is not right</span>
+        <span class="move">Move: narrow your eyes</span>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>Sentences for the hands-only round:</strong> John squeezed out half the tube. &middot; The toothbrush turned brown. &middot; Mary looked at John like he was up to something. &middot; John ate the whole tube. &middot; The eggs became chocolate eggs.
+      <br><br>
+      <strong>Honest caveat:</strong> these are concept words chosen for the ideas in this chapter, not words pulled verbatim from the text. Glance at your copy and swap in anything your students actually stumble on, or a word from someone's IEP goal.
+    </div>
+  </section>
+
+  <!-- 3. MENU STANDARD -->
+  <section class="sheet">
+    <div class="sheet-head">
+      <h2>3 &middot; The Midas Breakfast Menu</h2>
+      <span class="for">1 per student</span>
+    </div>
+    <p class="lede">Fold in half like a restaurant menu. Three items. Make them sound impossible to resist.</p>
+    <div class="menu-sheet">
+      <div class="menu-title">The Midas Breakfast</div>
+      <div class="menu-sub">Served hot &middot; 33 Chestnut Street</div>
+
+      <div class="item">
+        <span class="n">First item</span>
+        <p class="frame-line">Chocolate <u class="long"></u> &mdash; so <u class="long"></u><br>that it <u class="long"></u> in your mouth.</p>
+      </div>
+      <div class="item">
+        <span class="n">Second item</span>
+        <p class="frame-line">Chocolate <u class="long"></u> &mdash; so <u class="long"></u><br>that it <u class="long"></u> in your mouth.</p>
+      </div>
+      <div class="item">
+        <span class="n">Third item</span>
+        <p class="frame-line">Chocolate <u class="long"></u> &mdash; so <u class="long"></u><br>that it <u class="long"></u> in your mouth.</p>
+      </div>
+
+      <div class="warnbox">
+        <span class="wl">Warning</span>
+        <div class="writeline"></div>
+        <div class="writeline"></div>
+      </div>
+    </div>
+    <div class="callout">
+      The <strong>Warning</strong> line is quiet foreshadowing. A student who writes <q>you might never eat real food again</q> is doing genuine prediction work &mdash; say that out loud so the others hear it.
+    </div>
+  </section>
+
+  <!-- 4. MENU SCAFFOLDED -->
+  <section class="sheet">
+    <div class="sheet-head">
+      <h2>4 &middot; Menu &mdash; scaffolded</h2>
+      <span class="for">Print 2&ndash;3 spares</span>
+    </div>
+    <p class="lede">Same task, no idea-generation load. The foods are filled in, so the student only writes the description. Hand this over quietly to anyone with a blank page after two minutes.</p>
+    <div class="menu-sheet">
+      <div class="menu-title">The Midas Breakfast</div>
+      <div class="menu-sub">Served hot &middot; 33 Chestnut Street</div>
+
+      <div class="item">
+        <span class="n">First item</span>
+        <p class="frame-line">Chocolate <b class="filled">toast</b> &mdash; so <u class="long"></u><br>that it <u class="long"></u> in your mouth.</p>
+      </div>
+      <div class="item">
+        <span class="n">Second item</span>
+        <p class="frame-line">Chocolate <b class="filled">eggs</b> &mdash; so <u class="long"></u><br>that it <u class="long"></u> in your mouth.</p>
+      </div>
+      <div class="item">
+        <span class="n">Third item</span>
+        <p class="frame-line">Chocolate <b class="filled">juice</b> &mdash; so <u class="long"></u><br>that it <u class="long"></u> in your mouth.</p>
+      </div>
+
+      <div class="warnbox">
+        <span class="wl">Warning</span>
+        <div class="writeline"></div>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>Word bank if they need one:</strong> warm, gooey, melty, sticky, thick, creamy, rich, crunchy, smooth, sweet &middot; melts, drips, oozes, disappears, spreads, sinks.
+    </div>
+  </section>
+
+  <!-- 5. ROLE CARDS -->
+  <section class="sheet">
+    <div class="sheet-head">
+      <h2>5 &middot; Reader's Theater role cards</h2>
+      <span class="for">Cut into 4</span>
+    </div>
+    <p class="cut-note">Students read their lines from the book &mdash; these cards carry the tone, not the script. Perform once, swap cards, perform again. The swap is the fluency work.</p>
+    <div class="cutgrid two">
+      <div class="role">
+        <span class="rname">John</span>
+        <span class="plays">The breakfast table scene</span>
+        <span class="feel">Delighted. Cannot believe his luck.</span>
+        <ul>
+          <li>You think this is the best morning of your life.</li>
+          <li>You are not hiding anything &mdash; you genuinely think nothing is wrong.</li>
+          <li>Say <q>Chocolate juice</q> like you just won something.</li>
+        </ul>
+      </div>
+      <div class="role">
+        <span class="rname">Mary</span>
+        <span class="plays">The breakfast table scene</span>
+        <span class="feel">Annoyed. Telling on him. Big-sister energy.</span>
+        <ul>
+          <li>You are the only one who notices something is off.</li>
+          <li>You are not being mean. You are being <i>correct</i>, and nobody is listening.</li>
+          <li>Lean on the tattling lines. Make us believe you are the big sister.</li>
+        </ul>
+      </div>
+      <div class="role">
+        <span class="rname">Mrs. Midas</span>
+        <span class="plays">The breakfast table scene</span>
+        <span class="feel">Busy. Pleased. Not really looking.</span>
+        <ul>
+          <li>You are doing three things at once.</li>
+          <li>John cleaned his plate, so as far as you know he is being wonderful.</li>
+          <li>Say <q>I'm very pleased with you</q> warmly &mdash; and slightly distracted.</li>
+        </ul>
+      </div>
+      <div class="role">
+        <span class="rname">Narrator</span>
+        <span class="plays">Use for a 4th or 5th reader</span>
+        <span class="feel">Steady. You set the scene.</span>
+        <ul>
+          <li>You read the parts that are not someone talking.</li>
+          <li>Slow and clear. You are the camera.</li>
+          <li>Two students may read this together, in unison.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>Group size:</strong> three students, use John, Mary and Mrs. Midas. Four or five, add the Narrator or double-cast John in unison &mdash; unison reading is a soft landing for a hesitant reader without singling anyone out. Two students, you take Mrs. Midas.
+      <br><br>
+      <strong>Never</strong> correct decoding during a performance. Supply the word instantly and keep going.
+    </div>
+  </section>
+
+  <!-- 6. EXIT TICKETS -->
+  <section class="sheet">
+    <div class="sheet-head">
+      <h2>6 &middot; Exit tickets</h2>
+      <span class="for">Cut into 6</span>
+    </div>
+    <p class="cut-note">Circling handles the answer that matters, so there is no writing barrier on question one. Keep these &mdash; they are the opener for Chapter 4.</p>
+    <div class="cutgrid two">
+      <div class="ticket">
+        <span class="tname">Name ________________</span>
+        <span class="q">Is John lucky or unlucky?</span>
+        <div class="choice"><span>LUCKY</span><span>UNLUCKY</span></div>
+        <span class="q">Because&hellip;</span>
+        <div class="writeline"></div>
+        <div class="writeline"></div>
+      </div>
+      <div class="ticket">
+        <span class="tname">Name ________________</span>
+        <span class="q">Is John lucky or unlucky?</span>
+        <div class="choice"><span>LUCKY</span><span>UNLUCKY</span></div>
+        <span class="q">Because&hellip;</span>
+        <div class="writeline"></div>
+        <div class="writeline"></div>
+      </div>
+      <div class="ticket">
+        <span class="tname">Name ________________</span>
+        <span class="q">Is John lucky or unlucky?</span>
+        <div class="choice"><span>LUCKY</span><span>UNLUCKY</span></div>
+        <span class="q">Because&hellip;</span>
+        <div class="writeline"></div>
+        <div class="writeline"></div>
+      </div>
+      <div class="ticket">
+        <span class="tname">Name ________________</span>
+        <span class="q">Is John lucky or unlucky?</span>
+        <div class="choice"><span>LUCKY</span><span>UNLUCKY</span></div>
+        <span class="q">Because&hellip;</span>
+        <div class="writeline"></div>
+        <div class="writeline"></div>
+      </div>
+      <div class="ticket">
+        <span class="tname">Name ________________</span>
+        <span class="q">Is John lucky or unlucky?</span>
+        <div class="choice"><span>LUCKY</span><span>UNLUCKY</span></div>
+        <span class="q">Because&hellip;</span>
+        <div class="writeline"></div>
+        <div class="writeline"></div>
+      </div>
+      <div class="ticket">
+        <span class="tname">Name ________________</span>
+        <span class="q">Is John lucky or unlucky?</span>
+        <div class="choice"><span>LUCKY</span><span>UNLUCKY</span></div>
+        <span class="q">Because&hellip;</span>
+        <div class="writeline"></div>
+        <div class="writeline"></div>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>Do not coach toward <q>unlucky.</q></strong> In this chapter John genuinely is lucky. A stack of <q>lucky</q> cards is a correctly-calibrated group, not a failure &mdash; and it is what makes handing them back before Chapter 4 land.
+      <br><br>
+      <strong>Quick formative read:</strong> note who gave a reason from the text versus a reason from their own feelings about chocolate. That is your inferencing check, and it costs you nothing extra.
+    </div>
+  </section>
+
+  <!-- 7. QUESTION BANK -->
+  <section class="sheet">
+    <div class="sheet-head">
+      <h2>7 &middot; Question bank &amp; frames</h2>
+      <span class="for">Teacher copy</span>
+    </div>
+    <p class="lede">Spares for when a stop falls flat, a student finishes early, or the group wants to keep going. You will not use all of these.</p>
+    <div class="qlist">
+      <div class="qrow">
+        <div class="ask">What does the chocolate toothpaste tell us about John?</div>
+        <div class="look">That he finds fun in ordinary things. He turns a boring morning routine into an event.</div>
+      </div>
+      <div class="qrow">
+        <div class="ask">Why does John call the orange juice <q>chocolate juice</q>?</div>
+        <div class="look">He is seeing everything through what he wants. He is not asking why it is happening.</div>
+      </div>
+      <div class="qrow">
+        <div class="ask">Mary tells him he is wasting toothpaste. Is she right?</div>
+        <div class="look">Yes &mdash; and nobody listens to her. Sets up the pattern for the whole book.</div>
+      </div>
+      <div class="qrow">
+        <div class="ask">Why isn't Mrs. Midas worried?</div>
+        <div class="look">She thinks he is joking around. Grown-ups miss it because it looks like normal kid silliness.</div>
+      </div>
+      <div class="qrow">
+        <div class="ask">John finished his juice without being told. Is that good behavior?</div>
+        <div class="look">He only did it because it turned to chocolate. He got what he wanted &mdash; he did not make a choice.</div>
+      </div>
+      <div class="qrow">
+        <div class="ask">Where do you think the chocolate touch came from?</div>
+        <div class="look">Back to the candy store. Let them stay unsure &mdash; that question carries them into Chapter 4.</div>
+      </div>
+      <div class="qrow">
+        <div class="ask">What is the first thing you would turn into chocolate? What is the first thing you'd regret?</div>
+        <div class="look">The second half is the real question. Push past the first answer.</div>
+      </div>
+      <div class="qrow">
+        <div class="ask">If this keeps happening, what goes wrong first?</div>
+        <div class="look">Any concrete prediction. Write the good ones down and check them next session.</div>
+      </div>
+    </div>
+
+    <div class="framebox">
+      <h3>Sentence frames &mdash; put these where everyone can see them</h3>
+      <p>John thinks <u></u>, but I think <u></u>.</p>
+      <p>John is happy because <u></u>. I am worried because <u></u>.</p>
+      <p>Chocolate <u></u> &mdash; so <u></u> that it <u></u> in your mouth.</p>
+      <p>I think John is <u></u> because in the chapter <u></u>.</p>
+    </div>
+  </section>
+
+  <!-- 8. POSTER -->
+  <section class="sheet">
+    <div class="sheet-head">
+      <h2>8 &middot; Big question poster</h2>
+      <span class="for">For the wall</span>
+    </div>
+    <p class="lede">Print it, put it up before they come in, and leave it up through Chapter 4.</p>
+    <div class="poster">
+      <span class="pk">Today's big question</span>
+      <div class="pbig">Is John lucky<br>or unlucky?</div>
+      <p class="psub">Keep this in your head the whole time we read.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>Built from Chapter 3 of <i>The Chocolate Touch</i> by Patrick Skene Catling. Page and quote references come from a chapter summary rather than the full text &mdash; check the wording against your copy before you read aloud.</p>
+  </footer>
+
+</div>
+
+<script>
+  document.getElementById("printbtn").addEventListener("click", function () {
+    window.print();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "p" && !e.metaKey && !e.ctrlKey) { window.print(); }
+  });
+</script>
+
+</body></html>
