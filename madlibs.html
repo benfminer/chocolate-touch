@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chocolate Mad Libs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..800;1,9..144,600..800&family=Nunito+Sans:wght@400;700;800;900&display=swap">
+<style>
+  /* Whole-group mad libs for the smart screen. The class calls out words, one blank at a time, then the story
+     is revealed line by line with their words in gold. Stories only cover Chapters 1-7 (no spoilers). */
+  :root{
+    --cocoa:#2A1810; --cocoa2:#3B2318; --cocoa3:#4E3122; --milk:#7A4A2E; --choc:#5A3420;
+    --cream:#FAF4E8; --muted:#D8CBB8; --dust:#A08B78; --amber:#E0A15C; --butter:#FFE9B8; --foil:#E8C66A;
+    --serif:Fraunces,Georgia,"Times New Roman",serif;
+    --sans:"Nunito Sans",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html{background:#1E110A}
+  body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,var(--cocoa3),var(--cocoa) 60%,#1E110A) fixed;
+       color:var(--cream);font-family:var(--sans)}
+  button{font-family:var(--sans);cursor:pointer}
+
+  .screen{display:none;min-height:100vh;flex-direction:column;align-items:center;padding:4vh 16px 6vh;text-align:center}
+  .screen.on{display:flex}
+  .kicker{font-weight:900;font-size:clamp(14px,1.3vw,20px);letter-spacing:2.4px;text-transform:uppercase;color:var(--amber);margin-bottom:10px}
+  h1{font-family:var(--serif);font-weight:800;margin:0;line-height:1.05;text-wrap:balance}
+  .sub{font-size:clamp(18px,1.9vw,28px);color:var(--muted);margin:14px 0 0;line-height:1.4;text-wrap:balance}
+
+  .btn{border:0;border-radius:14px;padding:16px 30px;font-weight:900;font-size:clamp(18px,1.6vw,24px)}
+  .btn.gold{background:var(--foil);color:var(--cocoa)}
+  .btn.plain{background:rgba(250,244,232,.08);color:var(--cream);border:2px solid rgba(232,198,106,.35)}
+  .btn:hover,.btn:focus-visible{filter:brightness(1.1);outline:3px solid var(--butter);outline-offset:3px}
+  .link{background:none;border:0;color:var(--dust);font-weight:800;font-size:18px;padding:8px 4px}
+  .link:hover,.link:focus-visible{color:var(--butter);outline:none;text-decoration:underline}
+
+  /* ---------- pick a story ---------- */
+  #pick h1{font-size:clamp(40px,6vw,84px)}
+  #pick h1 em{color:var(--foil)}
+  .stories{list-style:none;margin:4vh 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;width:100%;max-width:1300px}
+  .story{width:100%;height:100%;text-align:left;background:linear-gradient(170deg,var(--cocoa3),var(--cocoa2));color:var(--cream);
+         border:2px solid rgba(232,198,106,.25);border-radius:18px;padding:20px 22px 22px}
+  .story:hover,.story:focus-visible{border-color:var(--foil);outline:none;transform:translateY(-3px)}
+  .story .ch{font-weight:900;font-size:15px;letter-spacing:1.8px;text-transform:uppercase;color:var(--amber)}
+  .story .t{display:block;font-family:var(--serif);font-weight:800;font-size:clamp(24px,2.2vw,32px);line-height:1.1;margin:6px 0 8px}
+  .story .d{display:block;font-weight:700;font-size:17px;color:var(--muted);line-height:1.35}
+  #surprise{margin-top:28px}
+
+  /* ---------- fill in the blanks ---------- */
+  .topbar{width:100%;max-width:1200px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .topbar .title{font-family:var(--serif);font-weight:700;font-size:clamp(18px,1.6vw,24px);color:var(--muted)}
+  .dots{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:3vh 0 4vh}
+  .dots i{width:18px;height:18px;border-radius:50%;background:rgba(250,244,232,.12);border:2px solid rgba(232,198,106,.35)}
+  .dots i.done{background:var(--foil);border-color:var(--foil)}
+  .dots i.now{background:transparent;border-color:var(--butter);box-shadow:0 0 0 4px rgba(255,233,184,.18)}
+  #askLabel{font-size:clamp(48px,7vw,104px);color:var(--butter)}
+  #askHint{font-size:clamp(22px,2.6vw,38px);color:var(--muted);margin-top:12px}
+  #askHint b{color:var(--cream)}
+  .grammar{display:inline-block;margin-bottom:14px;background:rgba(224,161,92,.16);color:var(--amber);border-radius:999px;
+           padding:6px 16px;font-weight:900;font-size:clamp(14px,1.2vw,18px);letter-spacing:1.4px;text-transform:uppercase}
+  #word{margin-top:4vh;width:min(900px,100%);font:800 clamp(34px,4.4vw,64px) var(--sans);text-align:center;color:var(--cocoa);
+        background:var(--cream);border:5px solid var(--foil);border-radius:20px;padding:14px 24px}
+  #word:focus{outline:none;box-shadow:0 0 0 8px rgba(232,198,106,.3)}
+  #word.shake{animation:shake .4s}
+  @keyframes shake{25%{transform:translateX(-12px)}50%{transform:translateX(12px)}75%{transform:translateX(-6px)}}
+  #nudge{min-height:34px;margin-top:12px;font-weight:800;font-size:22px;color:var(--amber)}
+  .row{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+
+  /* ---------- the reveal ---------- */
+  #reveal{padding-top:7vh}
+  #reveal h1{font-size:clamp(34px,3.8vw,58px);color:var(--butter)}
+  #lines{width:100%;max-width:1250px;margin-top:3vh;text-align:left}
+  .line{font-family:var(--serif);font-weight:500;font-size:clamp(22px,2.2vw,34px);line-height:1.35;margin:0 0 .5em;
+        opacity:0;transform:translateY(14px);transition:opacity .45s,transform .45s}
+  .line.show{opacity:1;transform:none}
+  .line.reading{color:var(--butter)}
+  .line mark{background:none;color:var(--foil);font-weight:800;font-style:italic;border-bottom:4px solid rgba(232,198,106,.5);padding:0 2px;display:inline-block}
+  .line.show mark{animation:pop .5s .15s cubic-bezier(.2,1.6,.4,1) both}
+  @keyframes pop{from{transform:scale(.4)}}
+  #tapHint{margin-top:2vh;font-weight:800;font-size:clamp(16px,1.5vw,22px);letter-spacing:1.6px;text-transform:uppercase;color:rgba(250,244,232,.45)}
+  #endRow{margin-top:3vh}
+
+  /* chocolate drip across the top of the finished story */
+  #drips{position:fixed;top:0;left:0;right:0;height:0;pointer-events:none;z-index:2}
+  .dripbar{position:absolute;top:0;left:0;right:0;height:0;background:var(--choc);animation:bar .5s ease-out forwards}
+  .drip{position:absolute;top:-10px;width:42px;background:var(--choc);border-radius:0 0 21px 21px;height:0;animation:drip 1.4s ease-in forwards}
+  @keyframes bar{to{height:16px}}
+  @keyframes drip{to{height:var(--h)}}
+</style>
+</head>
+<body>
+
+<section class="screen on" id="pick">
+  <div class="kicker">The Chocolate Touch &middot; Chapters 1-7</div>
+  <h1>Chocolate <em>Mad Libs</em></h1>
+  <p class="sub">Pick a story. We'll fill in the blanks together, then read the silly story!</p>
+  <ul class="stories" id="storyList"></ul>
+  <button class="btn plain" id="surprise">Surprise me!</button>
+</section>
+
+<section class="screen" id="fill">
+  <div class="topbar">
+    <button class="link" id="toStories">&larr; All stories</button>
+    <span class="title" id="fillTitle"></span>
+  </div>
+  <div class="dots" id="dots"></div>
+  <div class="kicker" id="askCount"></div>
+  <div><span class="grammar" id="grammar" hidden>Grammar word</span></div>
+  <h1 id="askLabel"></h1>
+  <p id="askHint"></p>
+  <input id="word" maxlength="30" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type a word">
+  <div id="nudge" aria-live="polite"></div>
+  <div class="row">
+    <button class="btn plain" id="prevBtn">&larr; Back</button>
+    <button class="btn plain" id="ideaBtn">Need an idea?</button>
+    <button class="btn gold" id="nextBtn">Next &rarr;</button>
+  </div>
+</section>
+
+<section class="screen" id="reveal">
+  <div class="kicker" id="revealCh"></div>
+  <h1 id="revealTitle"></h1>
+  <div id="lines"></div>
+  <div id="tapHint">Click or press Space for the next line</div>
+  <div class="row" id="endRow" hidden>
+    <button class="btn gold" id="readBtn">Read it to me</button>
+    <button class="btn plain" id="againBtn">Same story, new words</button>
+    <button class="btn plain" id="newBtn">Pick another story</button>
+  </div>
+</section>
+<div id="drips"></div>
+
+<script>
+// Word types. "grammar: true" ones get the Grammar word tag and a kid-friendly definition.
+const CATS = {
+  adjective: {label:'An adjective', hint:'a describing word, like <b>slimy</b> or <b>sparkly</b>', grammar:true,
+    ideas:['slimy','sparkly','stinky','fluffy','gigantic','crunchy','wobbly','sticky','grumpy','squishy','teeny-tiny','glittery']},
+  noun: {label:'A noun', hint:'a thing, like a <b>shoe</b> or a <b>rock</b>', grammar:true,
+    ideas:['sock','trombone','pickle','backpack','toaster','rubber duck','pillow','crayon','umbrella','bathtub','pumpkin']},
+  pluralNoun: {label:'A plural noun', hint:'more than one thing, like <b>socks</b> or <b>rocks</b>', grammar:true,
+    ideas:['socks','pickles','crayons','marbles','sneakers','pinecones','spoons','bubbles','meatballs','buttons']},
+  verbIng: {label:'A verb ending in -ing', hint:'an action word, like <b>dancing</b> or <b>sneezing</b>', grammar:true,
+    ideas:['dancing','sneezing','hopping','wiggling','snoring','cartwheeling','giggling','moonwalking','skipping','tiptoeing']},
+  food: {label:'A food', hint:'like <b>pizza</b> or <b>broccoli</b>',
+    ideas:['pizza','broccoli','meatballs','pancakes','tacos','spaghetti','carrots','mac and cheese','pickles','popcorn']},
+  animal: {label:'An animal', hint:'like a <b>hippo</b> or a <b>penguin</b>',
+    ideas:['hippo','penguin','giraffe','octopus','llama','goldfish','kangaroo','gorilla','chicken','walrus']},
+  body: {label:'A body part', hint:'like your <b>elbow</b> or your <b>nose</b>',
+    ideas:['elbow','nose','big toe','ear','knee','belly button','eyebrow','pinky finger','chin']},
+  sound: {label:'A silly sound', hint:'like <b>BOING</b> or <b>SPLAT</b>',
+    ideas:['BOING','SPLAT','KABOOM','SQUEAK','HONK','BLOOP','ZOINK','PFFFT','WHOOSH']},
+  number: {label:'A number', hint:'any number, like <b>7</b> or <b>a million</b>',
+    ideas:['7','100','3','42','a million','12','999','a zillion']},
+  place: {label:'A place', hint:'like <b>the zoo</b> or <b>the moon</b>',
+    ideas:['the zoo','the moon','a volcano','the library','the bathtub','Antarctica','the North Pole','a castle']},
+  color: {label:'A color', hint:'like <b>purple</b> or <b>neon green</b>',
+    ideas:['purple','neon green','hot pink','rainbow','glow-in-the-dark','orange','sparkly gold']},
+  clothing: {label:'Something you wear', hint:'like <b>rain boots</b> or <b>a tutu</b>',
+    ideas:['rain boots','a tutu','a cowboy hat','mittens','pajamas','a crown','flippers','a superhero cape']},
+  feeling: {label:'A feeling', hint:'like <b>grumpy</b> or <b>nervous</b>',
+    ideas:['grumpy','nervous','silly','sleepy','embarrassed','worried','sad','confused']},
+  exclaim: {label:'Something you shout', hint:'like <b>Yikes!</b> or <b>Holy guacamole!</b>',
+    ideas:['Yikes','Woo-hoo','Holy guacamole','Oh no','Yippee','Great googly moogly','Cowabunga']},
+};
+
+// {id} drops in a word. {a:id} drops in "a word" or "an word" to match.
+const STORIES = [
+  {ch:'Chapter 1', title:'Candy Mad', desc:'John gets spots and visits Dr. Cranium.',
+   blanks:[['adj1','adjective'],['pl1','pluralNoun'],['body1','body'],['num1','number'],['sound1','sound'],['animal1','animal'],['food1','food']],
+   lines:[
+     'John Midas was a nice boy, but he had one {adj1} problem. He was a pig about candy!',
+     'He ate jelly beans, fudge, lollipops, and chocolate-covered {pl1}.',
+     'One Saturday, his mom saw little red spots on the end of his {body1}.',
+     'John admitted he ate {num1} pieces of candy before lunch. So off they went to see Dr. Cranium.',
+     'The doctor looked in John\'s mouth and shouted, "{sound1}! This boy is full of candy!"',
+     'Then he tapped John\'s knee, and John kicked like {a:animal1}.',
+     '"Eat less candy and more {food1}," said Dr. Cranium.',
+     'John just said, "Chocolate is best!"']},
+  {ch:'Chapter 2', title:'The Strange Coin', desc:'A mystery coin and a candy store.',
+   blanks:[['adj1','adjective'],['pl1','pluralNoun'],['noun1','noun'],['noun2','noun'],['adj2','adjective'],['ing1','verbIng']],
+   lines:[
+     'On Sunday, John found a {adj1} coin on the sidewalk. It had his initials on it: J.M.',
+     'He walked a new way and found a candy store full of {pl1}.',
+     '"Come in, John!" called the storekeeper. How did he know John\'s name?',
+     'John traded his coin for a box as big as {a:noun1}.',
+     'At bedtime he ripped it open. Paper, foil, more paper, {a:noun2}... and ONE tiny chocolate.',
+     'It was the most {adj2} chocolate he had ever tasted.',
+     'John fell asleep {ing1} and dreaming of chocolate.']},
+  {ch:'Chapter 3', title:'Chocolate Breakfast', desc:'Toothpaste, juice, and eggs all change.',
+   blanks:[['color1','color'],['adj1','adjective'],['food1','food'],['animal1','animal'],['num1','number'],['ex1','exclaim']],
+   lines:[
+     'On Monday morning, John brushed his teeth with {color1} toothpaste.',
+     'It tasted like chocolate! So he squeezed the whole tube into his mouth.',
+     'His sister Mary said, "That is so {adj1}, John! I\'m telling Mom!"',
+     'At breakfast, his orange juice turned into chocolate juice.',
+     'His eggs turned to chocolate. His bacon turned to chocolate. Even his {food1} turned to chocolate!',
+     'John gobbled it all up like a hungry {animal1}.',
+     'Mom was so proud, she gave him {num1} hugs.',
+     '"{ex1}!" said John. "Best breakfast ever!"']},
+  {ch:'Chapter 4', title:'Spider and the Gloves', desc:'John\'s gloves get chewed. Spider wants some.',
+   blanks:[['adj1','adjective'],['adj2','adjective'],['animal1','animal'],['pl1','pluralNoun'],['ex1','exclaim'],['body1','body']],
+   lines:[
+     'On the way to school, John chewed on his {adj1} gloves. They turned into chocolate!',
+     'Then Spider Wilson showed up. Spider was as mean as {a:adj2} {animal1}.',
+     '"Give me a piece!" Spider said. "That\'s the club rule!"',
+     'Spider grabbed the glove and took a giant bite.',
+     'Yuck! To Spider, it tasted like old leather and {pl1}.',
+     'Spider spit it out and yelled, "{ex1}!"',
+     'John laughed so hard his {body1} hurt.']},
+  {ch:'Chapter 4', title:'Susan\'s Silver Dollar', desc:'A birthday present gets bitten.',
+   blanks:[['adj1','adjective'],['sound1','sound'],['noun1','noun'],['pl1','pluralNoun'],['place1','place'],['feel1','feeling']],
+   lines:[
+     'At school, Susan Buttercup ran up waving a {adj1} silver dollar.',
+     '"It\'s a birthday present!" she said. "Bite it to see if it\'s real!"',
+     'John bit it. {sound1}! The part in his mouth turned to chocolate!',
+     'Now Susan only had part of a dollar. It was shaped like {a:noun1}.',
+     'Susan cried tears as big as {pl1}.',
+     '"John Midas, I hate you!" she yelled, and she ran all the way to {place1}.',
+     'John felt very, very {feel1}.']},
+  {ch:'Chapter 5', title:'The Big Test', desc:'Chocolate water and a chocolate pencil.',
+   blanks:[['adj1','adjective'],['pl1','pluralNoun'],['ex1','exclaim'],['noun1','noun'],['adj2','adjective'],['num1','number']],
+   lines:[
+     'Miss Plimsoll said, "Today we have a {adj1} math test!"',
+     'The whole class groaned like a bunch of {pl1}.',
+     'John was thirsty, so he went to the water fountain. But the water turned to chocolate! "{ex1}!"',
+     'Back in class, John chewed his pencil and thought about {a:noun1}.',
+     'Uh-oh! The WHOLE pencil turned into chocolate, all the way down to the {adj2} eraser.',
+     'He tried to write the answer, {num1}, but he only made a chocolate smear.',
+     '"Shh!" said Miss Plimsoll. "I\'ll talk to you after the bell, John."']},
+  {ch:'Chapter 6', title:'Recess Trouble', desc:'Nobody believes John. Not even Susan.',
+   blanks:[['animal1','animal'],['cloth1','clothing'],['adj1','adjective'],['noun1','noun'],['adj2','adjective'],['animal2','animal'],['feel1','feeling']],
+   lines:[
+     'Miss Plimsoll did not believe John\'s story about the chocolate pencil.',
+     'She thought he was as silly as {a:animal1} wearing {cloth1}.',
+     'At recess, John found Susan jumping rope. John thinks jump rope is {adj1}, but he wanted to say sorry.',
+     'Susan just stuck out her tongue at him.',
+     '"There\'s something magic about me!" said John. "Everything I put in my mouth turns to chocolate! Even my {noun1}!"',
+     'The girls laughed so hard they sounded like {a:adj2} {animal2}.',
+     'John felt {feel1}. And he was getting so, SO thirsty.']},
+  {ch:'Chapter 7', title:'Chocolate Lunch', desc:'Even the fork turns to chocolate.',
+   blanks:[['noun1','noun'],['food1','food'],['body1','body'],['sound1','sound'],['adj1','adjective'],['body2','body'],['place1','place']],
+   lines:[
+     'At lunch, John was so thirsty he could drink water out of {a:noun1}.',
+     'He filled his tray with healthy food: chicken, salad, milk, and {food1}.',
+     'Then he tried a sneaky trick. He tipped back his head and dropped a chip right down past his {body1}.',
+     '{sound1}! It turned to chocolate anyway.',
+     'His fork turned to chocolate. His spoon turned to chocolate. Even his {adj1} glass turned to chocolate!',
+     'John was so scared, his {body2} started to shake.',
+     '"What is going to happen to me?" he cried, and he ran out to {place1}.']},
+];
+
+const $ = id => document.getElementById(id);
+let story = null, step = 0, words = {}, shown = 0;
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
+  window.speechSynthesis?.cancel();
+  $('drips').innerHTML = '';
+  window.scrollTo(0, 0);
+}
+
+// ---------- pick ----------
+STORIES.forEach((s, i) => {
+  const li = document.createElement('li');
+  const b = document.createElement('button');
+  b.className = 'story';
+  b.innerHTML = `<span class="ch">${s.ch}</span><span class="t">${s.title}</span><span class="d">${s.desc}</span>`;
+  b.onclick = () => start(i);
+  li.append(b);
+  $('storyList').append(li);
+});
+$('surprise').onclick = () => start(Math.floor(Math.random() * STORIES.length));
+$('toStories').onclick = $('newBtn').onclick = () => show('pick');
+
+function start(i){
+  story = STORIES[i]; step = 0; words = {};
+  $('fillTitle').textContent = `${story.ch}: ${story.title}`;
+  show('fill');
+  ask();
+}
+
+// ---------- fill ----------
+function ask(){
+  const [id, catKey] = story.blanks[step], cat = CATS[catKey];
+  $('askCount').textContent = `Word ${step + 1} of ${story.blanks.length}`;
+  $('askLabel').textContent = cat.label;
+  $('askHint').innerHTML = cat.hint;
+  $('grammar').hidden = !cat.grammar;
+  $('dots').innerHTML = story.blanks.map((_, n) => `<i class="${n < step ? 'done' : n === step ? 'now' : ''}"></i>`).join('');
+  $('word').value = words[id] || '';
+  $('nudge').textContent = '';
+  $('prevBtn').hidden = !step;
+  $('nextBtn').innerHTML = step === story.blanks.length - 1 ? 'Show the story!' : 'Next &rarr;';
+  $('word').focus();
+}
+
+function next(){
+  const [id, catKey] = story.blanks[step];
+  let w = $('word').value.trim();
+  if (catKey === 'exclaim') w = w.replace(/[!.?]+$/, '');
+  if (!w){
+    $('nudge').textContent = 'Type a word first, or tap "Need an idea?"';
+    $('word').classList.remove('shake'); void $('word').offsetWidth; $('word').classList.add('shake');
+    $('word').focus();
+    return;
+  }
+  words[id] = w;
+  if (++step < story.blanks.length) ask(); else reveal();
+}
+
+$('nextBtn').onclick = next;
+$('word').addEventListener('keydown', e => { if (e.key === 'Enter') next(); });
+$('prevBtn').onclick = () => { words[story.blanks[step][0]] = $('word').value.trim(); step--; ask(); };
+$('ideaBtn').onclick = () => {
+  const ideas = CATS[story.blanks[step][1]].ideas.filter(x => x !== $('word').value);
+  $('word').value = ideas[Math.floor(Math.random() * ideas.length)];
+  $('nudge').textContent = 'Like it? Press Next. Or type your own!';
+  $('word').focus();
+};
+
+// ---------- reveal ----------
+const TOKEN = /\{(a:)?(\w+)\}/g;
+const article = w => /^[aeiou]/i.test(w) ? 'an' : 'a';
+
+function buildLine(text){
+  const p = document.createElement('p');
+  p.className = 'line';
+  let last = 0;
+  for (const m of text.matchAll(TOKEN)){
+    p.append(text.slice(last, m.index));
+    const w = words[m[2]];
+    if (m[1]) p.append(article(w) + ' ');
+    const mark = document.createElement('mark');
+    mark.textContent = w;
+    p.append(mark);
+    last = m.index + m[0].length;
+  }
+  p.append(text.slice(last));
+  return p;
+}
+
+function reveal(){
+  show('reveal');
+  $('revealCh').textContent = story.ch;
+  $('revealTitle').textContent = story.title;
+  $('lines').replaceChildren(...story.lines.map(buildLine));
+  shown = 0;
+  $('tapHint').hidden = false;
+  $('endRow').hidden = true;
+  showNext();
+}
+
+function showNext(){
+  const lines = $('lines').children;
+  if (shown >= lines.length) return;
+  lines[shown++].classList.add('show');
+  lines[shown - 1].scrollIntoView({behavior:'smooth', block:'nearest'});
+  if (shown === lines.length){
+    $('tapHint').hidden = true;
+    $('endRow').hidden = false;
+    drip();
+  }
+}
+
+$('reveal').addEventListener('click', e => { if (!e.target.closest('button')) showNext(); });
+document.addEventListener('keydown', e => {
+  if (!$('reveal').classList.contains('on') || e.target.closest('button')) return;
+  if (e.key === ' ' || e.key === 'ArrowRight' || e.key === 'Enter'){ e.preventDefault(); showNext(); }
+});
+
+function drip(){
+  const d = $('drips');
+  d.innerHTML = '<div class="dripbar"></div>';
+  for (let x = 2; x < 100; x += 6 + Math.random() * 8){
+    const drop = document.createElement('div');
+    drop.className = 'drip';
+    drop.style.left = x + '%';
+    drop.style.setProperty('--h', (20 + Math.random() * 30) + 'px');
+    drop.style.animationDelay = (Math.random() * .6) + 's';
+    d.append(drop);
+  }
+}
+
+// Reads each line out loud and lights it up while it's being read.
+$('readBtn').onclick = () => {
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const lines = [...$('lines').children];
+  lines.forEach((p, n) => {
+    const u = new SpeechSynthesisUtterance(p.textContent);
+    u.rate = 0.9;
+    u.onstart = () => { lines.forEach(l => l.classList.remove('reading')); p.classList.add('reading'); };
+    if (n === lines.length - 1) u.onend = () => p.classList.remove('reading');
+    speechSynthesis.speak(u);
+  });
+};
+$('againBtn').onclick = () => start(STORIES.indexOf(story));
+</script>
+</body>
+</html>
