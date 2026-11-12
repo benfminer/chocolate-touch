@@ -78,8 +78,13 @@
                   transition:background .2s,opacity .2s}
   #letters button.used{opacity:.22;cursor:default}
   #letters button.hit{background:var(--milk)}
-  #legend{position:absolute;left:510px;right:24px;top:640px;text-align:center;font-size:17px;font-weight:800;color:rgba(250,244,232,.42);letter-spacing:.3px}
-  #legend kbd{font-size:14px;padding:1px 7px}
+  /* teacher controls for touch screens; kept small and quiet so they read as grown-up buttons */
+  #wheelWrap{cursor:pointer}
+  #legend{position:absolute;left:510px;right:24px;top:640px;display:flex;justify-content:center;gap:14px}
+  #legend button{height:46px;padding:0 20px;border-radius:12px;border:1px solid rgba(232,198,106,.3);background:rgba(250,244,232,.06);
+                 color:var(--muted);font:800 17px var(--sans);cursor:pointer;transition:opacity .2s}
+  #legend button:disabled{opacity:.25;cursor:default}
+  #legend kbd{font-size:13px;padding:1px 6px;margin-left:6px}
 
   /* overlays: start card, puzzle picker, help, final */
   .over{position:absolute;inset:0;background:rgba(18,11,7,.93);display:flex;align-items:center;justify-content:center;z-index:5}
@@ -143,7 +148,7 @@
   <div id="board"></div>
   <div id="msg"></div>
   <div id="letters"></div>
-  <div id="legend"><kbd>Enter</kbd> they solved it &nbsp;·&nbsp; <kbd>Backspace</kbd> wrong guess / pass</div>
+  <div id="legend"><button id="btnSolved">They solved it <kbd>Enter</kbd></button><button id="btnPass">Wrong guess / pass <kbd>Backspace</kbd></button></div>
 
   <div id="drips"></div>
 
@@ -152,9 +157,9 @@
       <h2>Chocolate Wheel</h2>
       <p>Wire it like the Chocolate Touch Test: the <b>Hershey's Kiss</b> on <b>Space</b>, <b>Earth</b> under the foil star. A student puts a hand on the star and touches the Kiss to spin. Their team calls out a letter and you type it (or tap it on the screen).</p>
       <table>
-        <tr><td><kbd>Space</kbd> / the Kiss</td><td>Spin (only works when it's time to spin)</td></tr>
+        <tr><td><kbd>Space</kbd> / the Kiss</td><td>Spin (only works when it's time to spin). On a touch screen, tap the wheel.</td></tr>
         <tr><td><kbd>A</kbd> to <kbd>Z</kbd></td><td>Guess a letter. Each one in the puzzle scores the wedge. Vowels are free.</td></tr>
-        <tr><td><kbd>Enter</kbd></td><td>They solved it! (+500) / Next puzzle</td></tr>
+        <tr><td><kbd>Enter</kbd></td><td>They solved it! (+500) / Next puzzle. Same as the buttons under the letters.</td></tr>
         <tr><td><kbd>Backspace</kbd></td><td>Wrong solve, or pass to the next team</td></tr>
         <tr><td><b>Yuck! Tonic!</b></td><td>Lose the turn. <b>Chocolate Touch!</b> is worth 1000 a letter.</td></tr>
       </table>
@@ -333,13 +338,20 @@
   const later = (ms, fn) => timers.push(setTimeout(fn, ms));
   function clearTimers(){ timers.forEach(clearTimeout); timers = []; }
 
-  function setHint(text, pulse){ const h = $('spinHint'); h.textContent = text; h.classList.toggle('pulse', !!pulse); }
+  function setHint(text, pulse){ const h = $('spinHint'); h.textContent = text; h.classList.toggle('pulse', !!pulse); syncButtons(); }
   function setLanded(text){ const l = $('landed'); l.textContent = text; l.classList.remove('pop'); void l.offsetWidth; if (text) l.classList.add('pop'); }
-  function setMsg(text){ $('msg').textContent = text; }
+  function setMsg(text){ $('msg').textContent = text; syncButtons(); }
+  // every state change also sets the hint or message, so the touch buttons are refreshed from there
+  function syncButtons(){
+    const playing = state === 'spin' || state === 'guess';
+    $('btnSolved').disabled = !playing && state !== 'solved';
+    $('btnSolved').innerHTML = state === 'solved' ? 'Next puzzle <kbd>Enter</kbd>' : 'They solved it <kbd>Enter</kbd>';
+    $('btnPass').disabled = !playing;
+  }
 
   function toSpin(){
     state = 'spin'; wedge = null;
-    setHint(`${teams[turn].name}: touch the Kiss to spin!`, true);
+    setHint(`${teams[turn].name}: spin the wheel!`, true);
     renderTeams();
   }
 
@@ -438,6 +450,14 @@
     setTimeout(() => say(phrase), 1100);
   }
 
+  function solvedOrNext(){
+    if (state === 'spin' || state === 'guess') solved(500);
+    else if (state === 'solved') showPick();
+  }
+  $('btnSolved').onclick = solvedOrNext;
+  $('btnPass').onclick = () => pass();
+  $('wheelWrap').onclick = () => spin();   // tap the wheel to spin, for a touch screen with no Makey Makey
+
   function pass(){
     if (state !== 'spin' && state !== 'guess') return;
     sfx.buzz(); setMsg(`Next team!`); setLanded('');
@@ -530,8 +550,7 @@
       e.preventDefault(); if (e.repeat) return;
       if (state === 'start') begin();
       else if (state === 'pick') { const nx = nextUnplayed(); if (nx >= 0) loadPuzzle(nx); else showFinal(); }
-      else if (state === 'spin' || state === 'guess') solved(500);
-      else if (state === 'solved') showPick();
+      else solvedOrNext();
       return;
     }
     if (e.key === 'Backspace') { e.preventDefault(); pass(); return; }

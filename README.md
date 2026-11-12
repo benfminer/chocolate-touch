@@ -27,6 +27,8 @@ Wiring is the same as the test station: the Hershey's Kiss on **Space**, Earth u
 | Enter | They solved it (+500) / next puzzle |
 | Backspace | Wrong solve, or pass to the next team |
 
+**On a touch screen with no keyboard:** tap the wheel to spin, tap letters on the letter board, and use the **They solved it** and **Wrong guess / pass** buttons under the letters. The Makey Makey still works too if the screen has a USB port for it.
+
 Help, sound, and fullscreen are the buttons in the top-right corner. There's no Bankrupt. Landing on "Yuck!" (the tonic) loses the turn.
 
 ## Chocolate Feud
