@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chocolate Wheel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..800&family=Nunito+Sans:wght@400;700;800;900&display=swap">
+<style>
+  /* Whole-group word puzzle game for the smart screen. A student touches the Makey Makey Kiss (Space) to spin,
+     their team calls a letter, the teacher types it. Same fixed 1280x720 stage and palette as chocolate-touch-test.html. */
+  :root{
+    --cocoa:#2A1810; --cocoa2:#3B2318; --cocoa3:#4E3122; --milk:#7A4A2E; --choc:#5A3420;
+    --cream:#FAF4E8; --muted:#D8CBB8; --dust:#A08B78; --amber:#E0A15C; --butter:#FFE9B8;
+    --foil:#E8C66A; --grey:#6E6A66;
+    --serif:Fraunces,Georgia,"Times New Roman",serif;
+    --sans:"Nunito Sans",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{height:100%}
+  body{margin:0;background:#120b07;color:var(--cream);font-family:var(--sans);overflow:hidden}
+
+  #viewport{position:fixed;inset:0;overflow:hidden}
+  #stage{width:1280px;height:720px;position:absolute;left:0;top:0;transform-origin:0 0;overflow:hidden;
+         background:radial-gradient(ellipse at 50% 0%, var(--cocoa3) 0%, var(--cocoa) 60%, #1E110A 100%);
+         border-radius:6px;box-shadow:0 24px 70px rgba(0,0,0,.6)}
+
+  /* team scores across the top */
+  #teams{position:absolute;top:18px;left:24px;right:200px;display:flex;gap:14px}
+  .team{flex:1;border-radius:14px;padding:8px 16px;background:rgba(250,244,232,.06);border:3px solid transparent;
+        display:flex;align-items:center;justify-content:space-between;transition:transform .25s,border-color .25s,background .25s}
+  .team .nm{font-weight:900;font-size:21px;color:var(--muted)}
+  .team .pts{font-family:var(--serif);font-weight:800;font-size:34px;color:var(--cream)}
+  .team.on{border-color:var(--c);background:color-mix(in srgb, var(--c) 22%, transparent);transform:scale(1.04)}
+  .team.on .nm{color:var(--cream)}
+  .team .sw{display:inline-block;width:16px;height:16px;border-radius:50%;background:var(--c);margin-right:9px;vertical-align:-1px}
+  .team.bump .pts{animation:bump .5s}
+  @keyframes bump{40%{transform:scale(1.35);color:var(--butter)}}
+
+  /* corner buttons */
+  #corner{position:absolute;top:22px;right:22px;display:flex;gap:8px;z-index:4}
+  #corner button{width:48px;height:48px;border-radius:12px;border:1px solid rgba(232,198,106,.3);background:rgba(250,244,232,.06);
+                 color:var(--butter);font:900 20px var(--sans);cursor:pointer}
+
+  /* the wheel */
+  #wheelWrap{position:absolute;left:22px;top:112px;width:460px;height:460px}
+  #wheel{width:460px;height:460px;filter:drop-shadow(0 18px 30px rgba(0,0,0,.5))}
+  #pointer{position:absolute;left:50%;top:-14px;width:44px;height:52px;margin-left:-22px;z-index:2;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
+  #spinHint{position:absolute;left:22px;width:460px;top:590px;text-align:center;font-weight:900;font-size:24px;color:var(--butter);min-height:34px}
+  #spinHint.pulse{animation:hint 1.2s ease-in-out infinite}
+  @keyframes hint{50%{opacity:.45}}
+  #landed{position:absolute;left:22px;width:460px;top:630px;text-align:center;font-family:var(--serif);font-weight:800;font-size:40px;color:var(--foil);min-height:50px}
+  #landed.pop{animation:pop .45s cubic-bezier(.2,1.6,.4,1) both}
+  @keyframes pop{from{transform:scale(.4);opacity:0}}
+
+  /* puzzle board */
+  #cat{position:absolute;left:510px;right:24px;top:108px;text-align:center;font-weight:900;font-size:22px;letter-spacing:2.4px;text-transform:uppercase;color:var(--amber)}
+  #board{position:absolute;left:510px;right:24px;top:146px;display:grid;grid-template-rows:repeat(4,64px);gap:7px;justify-items:center}
+  .row{display:flex;gap:6px}
+  .tile{width:47px;height:64px;border-radius:7px;perspective:400px}
+  .tile.gap{background:rgba(250,244,232,.04)}
+  .tile .in{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .5s}
+  .tile .f,.tile .b{position:absolute;inset:0;border-radius:7px;backface-visibility:hidden;display:flex;align-items:center;justify-content:center}
+  .tile .f{background:linear-gradient(170deg,#FFF8EA,#EBDCC2);box-shadow:inset 0 -4px 0 rgba(90,52,32,.18)}
+  .tile .b{background:linear-gradient(170deg,var(--butter),var(--foil));color:var(--cocoa);font:900 40px var(--sans);transform:rotateY(180deg);
+           box-shadow:inset 0 -4px 0 rgba(90,52,32,.25)}
+  .tile.show .in{transform:rotateY(180deg)}
+  .tile.lit .f{background:linear-gradient(170deg,#9FD9FF,#5CB6F2)}
+
+  #msg{position:absolute;left:510px;right:24px;top:446px;text-align:center;font-weight:900;font-size:27px;color:var(--butter);min-height:40px}
+
+  /* letter board */
+  #letters{position:absolute;left:510px;right:24px;top:500px;display:grid;grid-template-columns:repeat(13,1fr);gap:8px}
+  #letters button{height:58px;border-radius:10px;border:0;background:rgba(250,244,232,.12);color:var(--cream);font:900 28px var(--sans);cursor:pointer;
+                  transition:background .2s,opacity .2s}
+  #letters button.used{opacity:.22;cursor:default}
+  #letters button.hit{background:var(--milk)}
+  #legend{position:absolute;left:510px;right:24px;top:640px;text-align:center;font-size:17px;font-weight:800;color:rgba(250,244,232,.42);letter-spacing:.3px}
+  #legend kbd{font-size:14px;padding:1px 7px}
+
+  /* overlays: start card, puzzle picker, help, final */
+  .over{position:absolute;inset:0;background:rgba(18,11,7,.93);display:flex;align-items:center;justify-content:center;z-index:5}
+  .card{background:linear-gradient(170deg,var(--cocoa3),var(--cocoa2));border:1px solid rgba(232,198,106,.3);border-radius:18px;padding:28px 40px;max-width:960px;text-align:left}
+  .card h2{font-family:var(--serif);font-size:38px;margin:0 0 12px}
+  .card p{font-size:19px;color:var(--muted);line-height:1.5;margin:0 0 12px}
+  .card table{border-collapse:collapse;font-size:19px;margin:6px 0 14px}
+  .card td{padding:5px 18px 5px 0;color:var(--muted);vertical-align:top}
+  .card td:first-child{white-space:nowrap}
+  kbd{font:900 17px var(--sans);color:var(--cocoa);background:var(--butter);border-radius:6px;padding:2px 9px}
+  .go{display:inline-block;margin-top:6px;background:var(--foil);color:var(--cocoa);font:900 22px var(--sans);border:0;border-radius:12px;padding:14px 28px;cursor:pointer}
+  .count{display:inline-flex;gap:8px;margin-left:10px;vertical-align:middle}
+  .count button{width:54px;height:46px;border-radius:10px;border:2px solid rgba(232,198,106,.35);background:transparent;color:var(--cream);font:900 22px var(--sans);cursor:pointer}
+  .count button.sel{background:var(--foil);color:var(--cocoa);border-color:var(--foil)}
+
+  #pick .card{max-width:1120px;text-align:center}
+  #pickGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin:16px 0 8px}
+  #pickGrid button{border-radius:12px;border:1px solid rgba(232,198,106,.3);background:rgba(250,244,232,.07);color:var(--cream);cursor:pointer;padding:10px 6px;font:800 13px var(--sans);
+                   text-transform:uppercase;letter-spacing:.6px;line-height:1.25}
+  #pickGrid button b{display:block;font:800 32px var(--serif);text-transform:none;letter-spacing:0;color:var(--butter)}
+  #pickGrid button.done{opacity:.25}
+  #pickGrid button.next{border-color:var(--foil);box-shadow:0 0 0 2px var(--foil)}
+
+  #final h2{font-size:56px;text-align:center}
+  #finalList{font-size:28px;font-weight:900;margin:10px 0 18px}
+  #finalList div{display:flex;justify-content:space-between;gap:60px;padding:6px 0;border-bottom:1px solid rgba(250,244,232,.1)}
+
+  /* chocolate drips for a solve */
+  #drips{position:absolute;top:0;left:0;right:0;height:0;pointer-events:none;z-index:3}
+  .drip{position:absolute;top:-10px;width:46px;background:var(--choc);border-radius:0 0 23px 23px;height:0;
+        box-shadow:inset -6px 0 0 rgba(0,0,0,.15);animation:drip 1.4s ease-in forwards}
+  @keyframes drip{to{height:var(--h)}}
+  .dripbar{position:absolute;top:0;left:0;right:0;height:0;background:var(--choc);animation:bar .5s ease-out forwards}
+  @keyframes bar{to{height:14px}}
+
+  #focusNag{position:fixed;inset:0;z-index:10;background:rgba(18,11,7,.82);display:flex;align-items:center;justify-content:center;cursor:pointer}
+  #focusNag div{background:var(--foil);color:var(--cocoa);font:900 28px var(--sans);padding:22px 34px;border-radius:16px;text-align:center;max-width:80vw}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+
+  <div id="teams"></div>
+  <div id="corner">
+    <button id="btnHelp" title="Help">?</button>
+    <button id="btnSound" title="Sound on/off">♪</button>
+    <button id="btnFull" title="Fullscreen">⛶</button>
+  </div>
+
+  <div id="wheelWrap">
+    <svg id="pointer" viewBox="0 0 44 52" aria-hidden="true"><path d="M4 4 H40 L22 48 Z" fill="#FFE9B8" stroke="#2A1810" stroke-width="3" stroke-linejoin="round"/></svg>
+    <svg id="wheel" viewBox="-230 -230 460 460" aria-hidden="true"><g id="spinner"></g>
+      <circle r="44" fill="#3B2318" stroke="#E8C66A" stroke-width="5"/>
+      <text text-anchor="middle" dy="9" font-family="Fraunces,Georgia,serif" font-weight="800" font-size="26" fill="#E8C66A">spin</text>
+    </svg>
+  </div>
+  <div id="spinHint"></div>
+  <div id="landed"></div>
+
+  <div id="cat"></div>
+  <div id="board"></div>
+  <div id="msg"></div>
+  <div id="letters"></div>
+  <div id="legend"><kbd>Enter</kbd> they solved it &nbsp;·&nbsp; <kbd>Backspace</kbd> wrong guess / pass</div>
+
+  <div id="drips"></div>
+
+  <div class="over" id="start">
+    <div class="card">
+      <h2>Chocolate Wheel</h2>
+      <p>Wire it like the Chocolate Touch Test: the <b>Hershey's Kiss</b> on <b>Space</b>, <b>Earth</b> under the foil star. A student puts a hand on the star and touches the Kiss to spin. Their team calls out a letter and you type it (or tap it on the screen).</p>
+      <table>
+        <tr><td><kbd>Space</kbd> / the Kiss</td><td>Spin (only works when it's time to spin)</td></tr>
+        <tr><td><kbd>A</kbd> to <kbd>Z</kbd></td><td>Guess a letter. Each one in the puzzle scores the wedge. Vowels are free.</td></tr>
+        <tr><td><kbd>Enter</kbd></td><td>They solved it! (+500) / Next puzzle</td></tr>
+        <tr><td><kbd>Backspace</kbd></td><td>Wrong solve, or pass to the next team</td></tr>
+        <tr><td><b>Yuck! Tonic!</b></td><td>Lose the turn. <b>Chocolate Touch!</b> is worth 1000 a letter.</td></tr>
+      </table>
+      <p>How many teams? <span class="count" id="teamCount"></span></p>
+      <button class="go" id="btnGo">Start (or press Enter)</button>
+    </div>
+  </div>
+
+  <div class="over" id="pick" hidden>
+    <div class="card">
+      <h2>Pick a puzzle</h2>
+      <div id="pickGrid"></div>
+      <p>Tap a puzzle, or press <kbd>Enter</kbd> for the highlighted one. Faded ones were already played. &nbsp;<button class="go" id="btnEnd" style="font-size:17px;padding:9px 18px">Final scores</button></p>
+    </div>
+  </div>
+
+  <div class="over" id="help" hidden><div class="card" id="helpCard"></div></div>
+
+  <div class="over" id="final" hidden>
+    <div class="card">
+      <h2>Final Scores</h2>
+      <div id="finalList"></div>
+      <button class="go" id="btnBack">Back to the puzzles</button>
+    </div>
+  </div>
+</div></div>
+<div id="focusNag" hidden><div>Click anywhere so the Kiss works</div></div>
+
+<script>
+(() => {
+  /* ---------- stage scaling ---------- */
+  const stage = document.getElementById('stage');
+  function fit(){
+    const s = Math.min(innerWidth/1280, innerHeight/720);
+    stage.style.transform = `translate(${(innerWidth-1280*s)/2}px,${(innerHeight-720*s)/2}px) scale(${s})`;
+  }
+  addEventListener('resize', fit); fit();
+  const $ = id => document.getElementById(id);
+
+  /* ---------- sound ---------- */
+  let ctx = null, muted = false;
+  function audio(){
+    if (!ctx) { try { ctx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){ return null; } }
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+  function tone(freq, dur, type='sine', vol=.2, when=0, slideTo=null){
+    if (muted) return; const a = audio(); if (!a) return;
+    const t = a.currentTime + when, o = a.createOscillator(), g = a.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t+dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t+.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    o.connect(g).connect(a.destination); o.start(t); o.stop(t+dur+.05);
+  }
+  const sfx = {
+    tick:  () => tone(1400, .03, 'square', .05),
+    ding:  k  => tone(1047, .5, 'sine', .16, k*.28),
+    buzz:  () => { tone(140, .55, 'sawtooth', .12); tone(147, .55, 'square', .06); },
+    yuck:  () => { [392,330,262].forEach((f,k) => tone(f, .3, 'sawtooth', .09, k*.22)); tone(200, .7, 'sawtooth', .09, .66, 120); },
+    big:   () => [784,988,1175,1568].forEach((f,k) => tone(f, .25, 'triangle', .15, k*.08)),
+    solve: () => { [523,659,784,1047,1319].forEach((f,k) => tone(f, .35, 'triangle', .17, k*.1));
+                   tone(1568, .9, 'sine', .1, .55); },
+  };
+  function say(text){
+    if (muted || !window.speechSynthesis) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text.toLowerCase());
+    u.rate = 0.9;
+    speechSynthesis.speak(u);
+  }
+
+  /* ---------- puzzles (only things that happen by the end of Chapter 8) ---------- */
+  const PUZZLES = [
+    ['Who is it?', 'JOHN MIDAS'],
+    ['It turned to chocolate', 'ORANGE JUICE'],
+    ['Place', 'THE CANDY STORE'],
+    ['What happened?', 'TOO MUCH CANDY'],
+    ['It turned to chocolate', 'CHOCOLATE TOOTHPASTE'],
+    ['Who is it?', 'SUSAN BUTTERCUP'],
+    ['Big idea', 'THE CHOCOLATE TOUCH'],
+    ['It turned to chocolate', 'LEATHER GLOVES'],
+    ['What happened?', 'A SPOONFUL OF TONIC'],
+    ['Who is it?', 'SPIDER WILSON'],
+    ['It turned to chocolate', 'SILVER DOLLAR'],
+    ['Place', 'THE SCHOOL ORCHESTRA'],
+    ['Who is it?', 'DOCTOR CRANIUM'],
+    ['It turned to chocolate', 'THE WATER FOUNTAIN'],
+    ['What happened?', 'JOHN IS SO THIRSTY'],
+    ['Who is it?', 'MISS PLIMSOLL'],
+    ['It turned to chocolate', 'BACON AND EGGS'],
+    ['Big idea', 'LUCKY OR UNLUCKY'],
+    ['Who is it?', 'MRS. QUAVER'],
+    ['What happened?', 'NOBODY BELIEVES JOHN'],
+    ['It turned to chocolate', 'CHOCOLATE PENCIL'],
+    ['Who is it?', 'THE STOREKEEPER'],
+    ['Place', 'THE SCHOOL CAFETERIA'],
+    ['What happened?', 'THE ARITHMETIC TEST'],
+    ['It turned to chocolate', 'LETTUCE AND POTATO CHIPS'],
+    ['Who is it?', "JOHN'S SISTER MARY"],
+    ['It turned to chocolate', 'CHOCOLATE TRUMPET'],
+    ['What happened?', 'EVERYTHING TURNS TO CHOCOLATE'],
+  ];
+  const COLS = 14, ROWS = 4;
+  function layout(phrase){   // greedy word wrap into at most 4 rows of 14
+    const rows = [];
+    for (const w of phrase.split(' ')) {
+      const last = rows[rows.length - 1];
+      if (last !== undefined && last.length + 1 + w.length <= COLS) rows[rows.length - 1] = last + ' ' + w;
+      else rows.push(w);
+    }
+    return rows;
+  }
+
+  /* ---------- wheel ---------- */
+  // value: points per letter. TONIC loses the turn. No Bankrupt on purpose.
+  const WEDGES = [
+    {v:300, c:'#7A4A2E'}, {v:500, c:'#B5523B'}, {v:150, c:'#3E6B4F'}, {v:250, c:'#C98A3D'},
+    {v:'TONIC', c:'#5E7A2E', label:'Yuck!'}, {v:400, c:'#2F5E7E'}, {v:200, c:'#8A3B5C'}, {v:350, c:'#7A4A2E'},
+    {v:100, c:'#C98A3D'}, {v:'CHOC', c:'#E8C66A', label:'1000', ink:'#2A1810'}, {v:250, c:'#3E6B4F'}, {v:450, c:'#B5523B'},
+    {v:200, c:'#2F5E7E'}, {v:300, c:'#8A3B5C'},
+  ];
+  const SEG = 360 / WEDGES.length, R = 220;
+  (function drawWheel(){
+    const g = $('spinner'), pt = (deg, r) => [Math.sin(deg*Math.PI/180)*r, -Math.cos(deg*Math.PI/180)*r];
+    let svg = '';
+    WEDGES.forEach((w, i) => {   // wedge i is centered at i*SEG degrees clockwise from the top
+      const [x1,y1] = pt(i*SEG - SEG/2, R), [x2,y2] = pt(i*SEG + SEG/2, R);
+      svg += `<path d="M0 0 L${x1} ${y1} A${R} ${R} 0 0 1 ${x2} ${y2} Z" fill="${w.c}" stroke="#2A1810" stroke-width="3"/>`;
+      const label = w.label || w.v, ink = w.ink || '#FAF4E8';
+      svg += `<g transform="rotate(${i*SEG})"><text x="0" y="${-R+20}" transform="rotate(90 0 ${-R+20})" text-anchor="start" dominant-baseline="central"
+                font-family="Nunito Sans,sans-serif" font-weight="900" font-size="${String(label).length > 4 ? 24 : 30}" fill="${ink}">${label}</text></g>`;
+    });
+    svg += `<circle r="${R}" fill="none" stroke="#E8C66A" stroke-width="8"/>`;
+    for (let i = 0; i < WEDGES.length; i++) { const [x,y] = pt(i*SEG - SEG/2, R); svg += `<circle cx="${x}" cy="${y}" r="5" fill="#FFE9B8"/>`; }
+    g.innerHTML = svg;
+  })();
+
+  let rot = 0;   // current wheel rotation in degrees (only ever grows)
+  function spinTo(i, done){
+    // land wedge i under the top pointer, a little off-center so it looks natural
+    const jitter = (Math.random() - .5) * SEG * .6;
+    const target = ((360 - i*SEG + jitter) % 360 + 360) % 360;
+    const from = rot, to = from + 360*4 + ((target - from % 360) + 360) % 360;
+    const dur = 4200 + Math.random()*800, t0 = performance.now(), g = $('spinner');
+    let lastSeg = Math.floor((from + SEG/2) / SEG);
+    (function frame(now){
+      const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3.2);
+      rot = from + (to - from) * e;
+      g.setAttribute('transform', `rotate(${rot})`);
+      const s = Math.floor((rot + SEG/2) / SEG);
+      if (s !== lastSeg) { lastSeg = s; sfx.tick(); }
+      if (p < 1) requestAnimationFrame(frame); else done();
+    })(t0);
+  }
+
+  /* ---------- teams ---------- */
+  const TEAM_DEFS = [
+    {name:'Team Milk', c:'#C98A3D'}, {name:'Team Dark', c:'#B5523B'},
+    {name:'Team Mint', c:'#4FA477'}, {name:'Team Blueberry', c:'#4A8FC4'},
+  ];
+  let nTeams = 2, teams = [], turn = 0;
+  function renderTeams(){
+    $('teams').innerHTML = teams.map((t, i) =>
+      `<div class="team${i === turn && state !== 'start' ? ' on' : ''}" style="--c:${t.c}" id="team${i}"><span class="nm"><span class="sw"></span>${t.name}</span><span class="pts">${t.score}</span></div>`).join('');
+  }
+  function addPoints(n){
+    teams[turn].score += n; renderTeams();
+    const el = $('team' + turn); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+  }
+  function nextTeam(){ turn = (turn + 1) % teams.length; renderTeams(); }
+
+  /* ---------- state ---------- */
+  // start -> pick -> spin <-> spinning -> guess -> spin ... -> solved -> pick
+  let state = 'start', puzzleIdx = -1, phrase = '', used = new Set(), wedge = null, played = new Set(), timers = [];
+  const later = (ms, fn) => timers.push(setTimeout(fn, ms));
+  function clearTimers(){ timers.forEach(clearTimeout); timers = []; }
+
+  function setHint(text, pulse){ const h = $('spinHint'); h.textContent = text; h.classList.toggle('pulse', !!pulse); }
+  function setLanded(text){ const l = $('landed'); l.textContent = text; l.classList.remove('pop'); void l.offsetWidth; if (text) l.classList.add('pop'); }
+  function setMsg(text){ $('msg').textContent = text; }
+
+  function toSpin(){
+    state = 'spin'; wedge = null;
+    setHint(`${teams[turn].name}: touch the Kiss to spin!`, true);
+    renderTeams();
+  }
+
+  function renderBoard(){
+    const rows = layout(phrase), b = $('board');
+    const top = Math.floor((ROWS - rows.length) / 2);
+    let html = '';
+    for (let r = 0; r < ROWS; r++) {
+      const text = rows[r - top] || '';
+      html += '<div class="row">';
+      if (!text) html += '';
+      for (const ch of text) {
+        if (ch === ' ') html += '<div class="tile gap"></div>';
+        else {
+          const isLetter = /[A-Z]/.test(ch);
+          html += `<div class="tile${isLetter ? '' : ' show'}" data-ch="${ch}"><div class="in"><div class="f"></div><div class="b">${ch}</div></div></div>`;
+        }
+      }
+      html += '</div>';
+    }
+    b.innerHTML = html;
+  }
+
+  function renderLetters(){
+    $('letters').innerHTML = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(L =>
+      `<button data-l="${L}" class="${used.has(L) ? 'used' + (phrase.includes(L) ? ' hit' : '') : ''}">${L}</button>`).join('');
+  }
+
+  function loadPuzzle(i){
+    clearTimers();
+    puzzleIdx = i; played.add(i);
+    phrase = PUZZLES[i][1]; used = new Set();
+    $('cat').textContent = PUZZLES[i][0];
+    renderBoard(); renderLetters(); setMsg(''); setLanded(''); $('drips').innerHTML = '';
+    $('pick').hidden = true;
+    toSpin();
+  }
+
+  function spin(){
+    if (state !== 'spin') return;
+    state = 'spinning'; setHint(''); setLanded(''); setMsg('');
+    const i = Math.floor(Math.random() * WEDGES.length);
+    spinTo(i, () => landed(WEDGES[i]));
+  }
+
+  function landed(w){
+    wedge = w;
+    if (w.v === 'TONIC') {
+      setLanded('Yuck! Tonic!'); sfx.yuck();
+      setMsg(`${teams[turn].name} loses the turn.`);
+      state = 'wait';
+      later(2200, () => { nextTeam(); setLanded(''); setMsg(''); toSpin(); });
+      return;
+    }
+    const val = w.v === 'CHOC' ? 1000 : w.v;
+    wedge = {...w, val};
+    if (w.v === 'CHOC') { setLanded('Chocolate Touch! 1000'); sfx.big(); }
+    else setLanded(String(val));
+    state = 'guess';
+    setHint(`${teams[turn].name}: call a letter!`, true);
+  }
+
+  function guess(L){
+    if (state !== 'guess' || used.has(L)) return;
+    used.add(L); renderLetters();
+    const tiles = [...document.querySelectorAll(`.tile[data-ch="${L}"]`)];
+    if (!tiles.length) {
+      sfx.buzz(); setHint('');
+      setMsg(`No ${L}. Next team!`);
+      state = 'wait';
+      later(1600, () => { nextTeam(); setMsg(''); setLanded(''); toSpin(); });
+      return;
+    }
+    state = 'wait'; setHint('');
+    setMsg(`${tiles.length} ${L}${tiles.length > 1 ? "'s" : ''}! +${tiles.length * wedge.val}`);
+    tiles.forEach((t, k) => {
+      later(k * 280, () => { t.classList.add('lit'); sfx.ding(0); });
+      later(k * 280 + 500, () => t.classList.add('show'));
+    });
+    later(tiles.length * 280 + 700, () => {
+      addPoints(tiles.length * wedge.val);
+      const left = document.querySelectorAll('.tile[data-ch]:not(.show)').length;
+      if (!left) { solved(0); return; }
+      toSpin();
+    });
+  }
+
+  function solved(bonus){
+    clearTimers();
+    state = 'solved';
+    document.querySelectorAll('.tile[data-ch]').forEach((t, k) => setTimeout(() => t.classList.add('show'), k * 40));
+    if (bonus) addPoints(bonus);
+    setHint(''); setLanded('');
+    setMsg(`${teams[turn].name} solved it!${bonus ? ' +' + bonus : ''}  Press Enter for the next puzzle.`);
+    sfx.solve(); makeDrips();
+    setTimeout(() => say(phrase), 1100);
+  }
+
+  function pass(){
+    if (state !== 'spin' && state !== 'guess') return;
+    sfx.buzz(); setMsg(`Next team!`); setLanded('');
+    state = 'wait';
+    later(1200, () => { nextTeam(); setMsg(''); toSpin(); });
+  }
+
+  function makeDrips(){
+    const d = $('drips'); d.innerHTML = '<div class="dripbar"></div>';
+    for (let x = 10; x < 1280; x += 60 + Math.random() * 70) {
+      const el = document.createElement('div');
+      el.className = 'drip';
+      el.style.left = x + 'px';
+      el.style.width = (30 + Math.random() * 30) + 'px';
+      el.style.setProperty('--h', (40 + Math.random() * 80) + 'px');
+      el.style.animationDelay = (.2 + Math.random() * .7) + 's';
+      d.appendChild(el);
+    }
+  }
+
+  /* ---------- puzzle picker (shows only number + category so answers stay hidden) ---------- */
+  function nextUnplayed(){ for (let i = 0; i < PUZZLES.length; i++) if (!played.has(i)) return i; return -1; }
+  function showPick(){
+    clearTimers(); state = 'pick';
+    speechSynthesis?.cancel();
+    const nx = nextUnplayed();
+    $('pickGrid').innerHTML = PUZZLES.map((p, i) =>
+      `<button data-p="${i}" class="${played.has(i) ? 'done' : ''}${i === nx ? ' next' : ''}"><b>${i + 1}</b>${p[0]}</button>`).join('');
+    $('pick').hidden = false;
+  }
+  $('pickGrid').addEventListener('click', e => { const b = e.target.closest('button'); if (b) loadPuzzle(+b.dataset.p); });
+
+  function showFinal(){
+    state = 'final';
+    const ranked = [...teams].sort((a, b) => b.score - a.score);
+    $('finalList').innerHTML = ranked.map(t => `<div><span style="color:${t.c}">${t.name}</span><span>${t.score}</span></div>`).join('');
+    $('pick').hidden = true; $('final').hidden = false;
+    sfx.solve(); makeDrips();
+  }
+  $('btnEnd').onclick = showFinal;
+  $('btnBack').onclick = () => { $('final').hidden = true; showPick(); };
+
+  /* ---------- start card ---------- */
+  function renderCount(){
+    $('teamCount').innerHTML = [2,3,4].map(n => `<button data-n="${n}" class="${n === nTeams ? 'sel' : ''}">${n}</button>`).join('');
+  }
+  $('teamCount').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { nTeams = +b.dataset.n; renderCount(); } });
+  renderCount();
+  function begin(){
+    audio();
+    teams = TEAM_DEFS.slice(0, nTeams).map(t => ({...t, score:0}));
+    turn = 0;
+    $('start').hidden = true;
+    renderTeams(); showPick();
+  }
+  $('btnGo').onclick = begin;
+
+  /* ---------- help + corner buttons ---------- */
+  const help = $('help');
+  $('helpCard').innerHTML = document.querySelector('#start .card').innerHTML
+    .replace(/<p>How many teams[\s\S]*<\/button>/, '<p>Tap <b>?</b> or press <kbd>Esc</kbd> to close. <button class="go" id="btnScores" style="font-size:17px;padding:9px 18px">Final scores</button></p>');
+  function toggleHelp(){ help.hidden = !help.hidden; }
+  $('btnHelp').onclick = toggleHelp;
+  help.addEventListener('click', e => { if (e.target.id === 'btnScores') { help.hidden = true; showFinal(); } else if (e.target === help) toggleHelp(); });
+  $('btnSound').onclick = () => { muted = !muted; $('btnSound').style.opacity = muted ? .35 : 1; if (muted) speechSynthesis?.cancel(); };
+  $('btnFull').onclick = () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+    else document.documentElement.requestFullscreen?.().catch(()=>{});
+  };
+  // on-screen letters; blur every button so Space/Enter keep going to the game
+  $('letters').addEventListener('click', e => { const b = e.target.closest('button'); if (b) guess(b.dataset.l); });
+  document.addEventListener('click', e => { if (e.target.blur) e.target.blur(); if (e.target.closest?.('button')) e.target.closest('button').blur(); });
+
+  /* ---------- keys ---------- */
+  const SPIN_KEYS = ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+  let lastSpin = 0;
+  addEventListener('keydown', e => {
+    audio();
+    if (e.key === 'Escape') { if (!help.hidden) toggleHelp(); return; }
+    if (SPIN_KEYS.includes(e.code)) {
+      e.preventDefault();
+      if (e.repeat) return;
+      const now = performance.now();
+      if (now - lastSpin < 300) return;   // foil can "chatter"
+      lastSpin = now;
+      if (help.hidden) spin();
+      return;
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault(); if (e.repeat) return;
+      if (state === 'start') begin();
+      else if (state === 'pick') { const nx = nextUnplayed(); if (nx >= 0) loadPuzzle(nx); else showFinal(); }
+      else if (state === 'spin' || state === 'guess') solved(500);
+      else if (state === 'solved') showPick();
+      return;
+    }
+    if (e.key === 'Backspace') { e.preventDefault(); pass(); return; }
+    if (/^[a-z]$/i.test(e.key) && !e.metaKey && !e.ctrlKey && help.hidden) guess(e.key.toUpperCase());
+  });
+
+  // test hook for automated checks
+  window.__wheel = {
+    begin, loadPuzzle, spin, guess, pass, solved, showPick, layout, PUZZLES,
+    landOn: i => { if (state !== 'spin') return; state = 'spinning'; spinTo(i, () => landed(WEDGES[i])); },
+    state: () => ({ state, turn, phrase, used:[...used], scores: teams.map(t => t.score), wedge }),
+  };
+
+  const nag = $('focusNag');
+  const checkFocus = () => { nag.hidden = document.hasFocus(); };
+  addEventListener('blur', checkFocus); addEventListener('focus', checkFocus);
+  nag.addEventListener('click', () => { nag.hidden = true; audio(); });
+  setTimeout(checkFocus, 300);
+})();
+</script>
+</body>
+</html>

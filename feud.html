@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chocolate Feud</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..800&family=Nunito+Sans:wght@400;700;800;900&display=swap">
+<style>
+  /* Two-team survey game for the smart screen. Face-off: one student per team at the Makey Makey, Team Milk's Kiss on Left,
+     Team Dark's Kiss on Right, first touch wins. The teacher flips answers with number keys. Same stage and palette as wheel.html.
+     feud.html#key shows the answer key instead (for the teacher's phone, or to print). */
+  :root{
+    --cocoa:#2A1810; --cocoa2:#3B2318; --cocoa3:#4E3122; --milk:#7A4A2E; --choc:#5A3420;
+    --cream:#FAF4E8; --muted:#D8CBB8; --dust:#A08B78; --amber:#E0A15C; --butter:#FFE9B8;
+    --foil:#E8C66A; --grey:#6E6A66; --teamA:#C98A3D; --teamB:#B5523B;
+    --serif:Fraunces,Georgia,"Times New Roman",serif;
+    --sans:"Nunito Sans",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{height:100%}
+  body{margin:0;background:#120b07;color:var(--cream);font-family:var(--sans);overflow:hidden}
+
+  #viewport{position:fixed;inset:0;overflow:hidden}
+  #stage{width:1280px;height:720px;position:absolute;left:0;top:0;transform-origin:0 0;overflow:hidden;
+         background:radial-gradient(ellipse at 50% 0%, var(--cocoa3) 0%, var(--cocoa) 60%, #1E110A 100%);
+         border-radius:6px;box-shadow:0 24px 70px rgba(0,0,0,.6);transition:background .4s}
+  #stage.buzzA{background:radial-gradient(ellipse at 0% 50%, #8A5A26 0%, var(--cocoa) 55%, #1E110A 100%)}
+  #stage.buzzB{background:radial-gradient(ellipse at 100% 50%, #7E3324 0%, var(--cocoa) 55%, #1E110A 100%)}
+
+  #corner{position:absolute;top:18px;right:18px;display:flex;gap:8px;z-index:4}
+  #corner button{width:44px;height:44px;border-radius:12px;border:1px solid rgba(232,198,106,.3);background:rgba(250,244,232,.06);
+                 color:var(--butter);font:900 19px var(--sans);cursor:pointer}
+
+  #qnum{position:absolute;top:24px;left:0;right:0;text-align:center;font-weight:900;font-size:17px;letter-spacing:2.4px;text-transform:uppercase;color:var(--amber)}
+  #question{position:absolute;top:52px;left:170px;right:170px;text-align:center;font-family:var(--serif);font-weight:800;font-size:38px;line-height:1.15;text-wrap:balance}
+
+  /* team columns */
+  .side{position:absolute;top:190px;width:200px;text-align:center}
+  #sideA{left:26px} #sideB{right:26px}
+  .side .nm{font-weight:900;font-size:24px;padding:10px 0;border-radius:14px;border:3px solid transparent;transition:all .25s}
+  #sideA .nm{color:var(--teamA)} #sideB .nm{color:var(--teamB)}
+  .side .pts{font-family:var(--serif);font-weight:800;font-size:72px;margin-top:6px}
+  .side .pad{margin-top:8px;font-size:16px;font-weight:800;color:rgba(250,244,232,.45)}
+  #sideA.on .nm,#sideB.on .nm{color:var(--cocoa);background:var(--c);border-color:var(--c);transform:scale(1.06)}
+  .side.on .pad{color:var(--butter)}
+  .side .strikes{margin-top:22px;height:56px;display:flex;justify-content:center;gap:8px}
+  .side .strikes span{width:52px;height:56px;border-radius:10px;border:3px solid rgba(220,60,50,.35);color:#E2483D;font:900 42px/50px var(--sans)}
+  .side.bump .pts{animation:bump .6s}
+  @keyframes bump{40%{transform:scale(1.3);color:var(--butter)}}
+
+  /* the board */
+  #pot{position:absolute;top:150px;left:0;right:0;text-align:center}
+  #pot span{display:inline-block;min-width:130px;padding:4px 22px;border-radius:12px;background:var(--cocoa);border:2px solid var(--foil);font:800 34px var(--serif);color:var(--butter)}
+  #board{position:absolute;top:212px;left:250px;right:250px;display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:column;grid-template-rows:repeat(4,78px);gap:12px}
+  .slot{perspective:600px}
+  .slot .in{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .55s}
+  .slot .f,.slot .b{position:absolute;inset:0;border-radius:12px;backface-visibility:hidden;display:flex;align-items:center}
+  .slot .f{background:linear-gradient(170deg,#6A4430,#4E3122);border:2px solid rgba(232,198,106,.35);justify-content:center}
+  .slot .f b{width:52px;height:52px;border-radius:50%;background:var(--cocoa);border:2px solid var(--foil);color:var(--foil);font:900 28px/48px var(--sans);text-align:center}
+  .slot .b{background:linear-gradient(170deg,var(--butter),var(--foil));color:var(--cocoa);transform:rotateX(180deg);justify-content:space-between;padding:0 8px 0 20px;
+           box-shadow:inset 0 -4px 0 rgba(90,52,32,.25)}
+  .slot .b .ans{font:900 25px/1.1 var(--sans);text-transform:uppercase}
+  .slot .b .n{min-width:62px;height:58px;border-radius:9px;background:var(--cocoa);color:var(--butter);font:800 32px/58px var(--serif);text-align:center}
+  .slot.show .in{transform:rotateX(180deg)}
+  .slot.late .b{filter:saturate(.35) brightness(.85)}
+  .slot.empty .f{background:rgba(250,244,232,.03);border-color:rgba(250,244,232,.06)}
+  .slot.empty .f b{display:none}
+
+  #msg{position:absolute;top:572px;left:250px;right:250px;text-align:center;font-weight:900;font-size:30px;color:var(--butter);min-height:44px}
+  #msg.pulse{animation:hint 1.2s ease-in-out infinite}
+  @keyframes hint{50%{opacity:.45}}
+  #legend{position:absolute;bottom:18px;left:0;right:0;text-align:center;font-size:16px;font-weight:800;color:rgba(250,244,232,.4)}
+  #legend kbd{font-size:14px;padding:1px 7px}
+
+  /* the big red X */
+  #bigX{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:30px;pointer-events:none;z-index:3}
+  #bigX span{font:900 300px/1 var(--sans);color:#E2483D;text-shadow:0 0 40px rgba(226,72,61,.6),0 10px 0 #6E1B14;animation:xpop .9s ease-out both}
+  @keyframes xpop{0%{transform:scale(.3);opacity:0}20%{transform:scale(1.1);opacity:1}75%{opacity:1}100%{opacity:0;transform:scale(1)}}
+
+  /* overlays */
+  .over{position:absolute;inset:0;background:rgba(18,11,7,.93);display:flex;align-items:center;justify-content:center;z-index:5}
+  .card{background:linear-gradient(170deg,var(--cocoa3),var(--cocoa2));border:1px solid rgba(232,198,106,.3);border-radius:18px;padding:26px 38px;max-width:1000px;text-align:left}
+  .card h2{font-family:var(--serif);font-size:36px;margin:0 0 10px}
+  .card p{font-size:18px;color:var(--muted);line-height:1.45;margin:0 0 10px}
+  .card table{border-collapse:collapse;font-size:18px;margin:4px 0 12px}
+  .card td{padding:4px 18px 4px 0;color:var(--muted);vertical-align:top}
+  .card td:first-child{white-space:nowrap}
+  .card a{color:var(--foil)}
+  kbd{font:900 16px var(--sans);color:var(--cocoa);background:var(--butter);border-radius:6px;padding:2px 8px}
+  .go{display:inline-block;margin-top:6px;margin-right:8px;background:var(--foil);color:var(--cocoa);font:900 21px var(--sans);border:0;border-radius:12px;padding:13px 26px;cursor:pointer}
+  .go.ghost{background:transparent;color:var(--foil);border:2px solid var(--foil)}
+
+  #pick .card{max-width:1100px;text-align:center}
+  #pickGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin:16px 0 10px}
+  #pickGrid button{border-radius:12px;border:1px solid rgba(232,198,106,.3);background:rgba(250,244,232,.07);color:var(--cream);cursor:pointer;padding:12px 6px;
+                   font:800 14px var(--sans);text-transform:uppercase;letter-spacing:.6px}
+  #pickGrid button b{display:block;font:800 40px var(--serif);color:var(--butter)}
+  #pickGrid button.done{opacity:.25}
+  #pickGrid button.next{border-color:var(--foil);box-shadow:0 0 0 2px var(--foil)}
+
+  #final h2{font-size:56px;text-align:center}
+  #finalList{font-size:30px;font-weight:900;margin:10px 0 18px}
+  #finalList div{display:flex;justify-content:space-between;gap:60px;padding:6px 0;border-bottom:1px solid rgba(250,244,232,.1)}
+
+  #drips{position:absolute;top:0;left:0;right:0;height:0;pointer-events:none;z-index:3}
+  .drip{position:absolute;top:-10px;width:46px;background:var(--choc);border-radius:0 0 23px 23px;height:0;
+        box-shadow:inset -6px 0 0 rgba(0,0,0,.15);animation:drip 1.4s ease-in forwards}
+  @keyframes drip{to{height:var(--h)}}
+  .dripbar{position:absolute;top:0;left:0;right:0;height:0;background:var(--choc);animation:bar .5s ease-out forwards}
+  @keyframes bar{to{height:14px}}
+
+  #focusNag{position:fixed;inset:0;z-index:10;background:rgba(18,11,7,.82);display:flex;align-items:center;justify-content:center;cursor:pointer}
+  #focusNag div{background:var(--foil);color:var(--cocoa);font:900 28px var(--sans);padding:22px 34px;border-radius:16px;text-align:center;max-width:80vw}
+
+  /* teacher key: feud.html#key, readable on a phone and printable */
+  body.keyview{overflow:auto;background:#FFFDF8;color:#2A1810}
+  body.keyview #viewport,body.keyview #focusNag{display:none!important}
+  #key{display:none;max-width:780px;margin:0 auto;padding:24px 16px 40px;font-family:var(--sans)}
+  body.keyview #key{display:block}
+  #key h1{font-family:var(--serif);font-size:30px;margin:0 0 4px}
+  #key .note{color:#6B5544;margin:0 0 16px;font-size:15px}
+  #key .q{break-inside:avoid;border:1px solid #D9C9B4;border-radius:10px;padding:10px 14px;margin-bottom:10px}
+  #key .q h3{margin:0 0 6px;font-size:17px}
+  #key .q h3 span{color:#A0632F}
+  #key ol{margin:0;padding-left:26px;font-size:15px}
+  @media (min-width:560px), print{ #key ol{columns:2;column-gap:28px} }
+  #key li{padding:1px 0;break-inside:avoid}
+  #key li i{color:#8A7360;font-style:normal}
+  #key .tools{margin-bottom:14px}
+  #key .tools button{font:800 15px var(--sans);padding:8px 14px;border-radius:8px;border:1px solid #A0632F;background:#fff;color:#2A1810;margin-right:6px}
+  @media print{ #key .tools{display:none} #key{padding:0} }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+  <div id="corner">
+    <button id="btnHelp" title="Help">?</button>
+    <button id="btnSound" title="Sound on/off">♪</button>
+    <button id="btnFull" title="Fullscreen">⛶</button>
+  </div>
+
+  <div id="qnum"></div>
+  <div id="question"></div>
+
+  <div class="side" id="sideA" style="--c:var(--teamA)">
+    <div class="nm">Team Milk</div>
+    <div class="pts" id="scoreA">0</div>
+    <div class="pad">Left Kiss</div>
+    <div class="strikes" id="strikesA"></div>
+  </div>
+  <div class="side" id="sideB" style="--c:var(--teamB)">
+    <div class="nm">Team Dark</div>
+    <div class="pts" id="scoreB">0</div>
+    <div class="pad">Right Kiss</div>
+    <div class="strikes" id="strikesB"></div>
+  </div>
+
+  <div id="pot"><span id="potNum">0</span></div>
+  <div id="board"></div>
+  <div id="msg"></div>
+  <div id="legend"><kbd>1</kbd>-<kbd>8</kbd> flip answer &nbsp;·&nbsp; <kbd>X</kbd> strike &nbsp;·&nbsp; <kbd>S</kbd> switch team &nbsp;·&nbsp; <kbd>Backspace</kbd> undo strike &nbsp;·&nbsp; <kbd>Enter</kbd> next</div>
+
+  <div id="bigX"></div>
+  <div id="drips"></div>
+
+  <div class="over" id="start">
+    <div class="card">
+      <h2>Chocolate Feud</h2>
+      <p><b>Wiring:</b> Team Milk's Kiss on <b>Left arrow</b>, Team Dark's Kiss on <b>Right arrow</b>, and an <b>Earth</b> clip under each team's foil star (the Makey Makey has several Earth holes). No second Kiss? The Left and Right keys on the keyboard work as buzzers too.</p>
+      <table>
+        <tr><td><b>Face-off</b></td><td>Read the question. One student from each team, hand on their star. First to touch their Kiss gets to answer. If their answer isn't the top one, you can press <kbd>S</kbd> to give play to the other team.</td></tr>
+        <tr><td><kbd>1</kbd> to <kbd>8</kbd></td><td>Flip that answer (check your key; close enough counts)</td></tr>
+        <tr><td><kbd>X</kbd></td><td>Strike. Three strikes and the other team gets one try to steal.</td></tr>
+        <tr><td><kbd>Backspace</kbd></td><td>Undo a strike you gave by mistake</td></tr>
+        <tr><td><kbd>Enter</kbd></td><td>Show the leftover answers, then go to the next question</td></tr>
+      </table>
+      <p>The answers are not on this screen. Open the <a href="#key" target="_blank">teacher key</a> on your phone, or print it.</p>
+      <button class="go" id="btnGo">Start (or press Enter)</button><button class="go ghost" id="btnKey">Print teacher key</button>
+    </div>
+  </div>
+
+  <div class="over" id="pick" hidden>
+    <div class="card">
+      <h2>Pick a question</h2>
+      <div id="pickGrid"></div>
+      <p>Numbers match your teacher key. Tap one, or press <kbd>Enter</kbd> for the highlighted one. &nbsp;<button class="go" id="btnEnd" style="font-size:17px;padding:9px 18px">Final scores</button></p>
+    </div>
+  </div>
+
+  <div class="over" id="help" hidden><div class="card" id="helpCard"></div></div>
+
+  <div class="over" id="final" hidden>
+    <div class="card">
+      <h2>Final Scores</h2>
+      <div id="finalList"></div>
+      <button class="go" id="btnBack">Back to the questions</button>
+    </div>
+  </div>
+</div></div>
+<div id="focusNag" hidden><div>Click anywhere so the Kisses work</div></div>
+
+<div id="key"></div>
+
+<script>
+(() => {
+  /* ---------- questions (through Chapter 8; points total 100, bigger for more obvious answers) ---------- */
+  const QUESTIONS = [
+    ['Name something that turned to chocolate in John\'s mouth.',
+      [['Toothpaste',24],['Water',18],['Pencil',16],['Gloves',12],['Breakfast (eggs, bacon, juice, toast)',10],['Silver dollar',8],['Trumpet',7],['Lunch (lettuce, chips, milk)',5]]],
+    ['Name a person in the book besides John.',
+      [['Susan',26],['Spider',20],['Miss Plimsoll',16],['Mary',12],['Mom or Dad',10],['Dr. Cranium',8],['The storekeeper',5],['Mrs. Quaver',3]]],
+    ['Name someone who got upset with John.',
+      [['Susan',38],['Spider',24],['Miss Plimsoll',18],['Mrs. Quaver',12],['Dr. Cranium (the kick)',8]]],
+    ['Name something John could NOT do because of the chocolate touch.',
+      [['Drink water',30],['Do well on his test',22],['Play his trumpet',18],['Eat his lunch',16],['Get Susan to believe him',14]]],
+    ['Name a way John felt on the first day of the chocolate touch.',
+      [['Thirsty',28],['Happy or excited',22],['Scared',20],['Embarrassed',16],['Sorry',14]]],
+    ['Name something John had for breakfast the morning it started.',
+      [['Orange juice',30],['Bacon',26],['Eggs',24],['Toast',20]]],
+    ['Why did John\'s parents take him to Dr. Cranium?',
+      [['Spots on his face',40],['Too much candy',30],['They were worried',18],['He didn\'t eat healthy food',12]]],
+    ['Name something John did that was NOT a great choice.',
+      [['Ate too much candy',30],['Chewed his gloves',20],['Ate the toothpaste',16],['Chewed his pencil in the test',14],['Skipped Susan\'s for candy',12],['Bit Susan\'s silver dollar',8]]],
+    ['Name something that happened at school that day.',
+      [['The test',26],['Chocolate water fountain',22],['Susan\'s silver dollar',20],['Chocolate lunch',18],['The trumpet solo',14]]],
+    ['Name a food you would NOT want to turn into chocolate.', 'opinion',
+      [['Pizza',30],['French fries',22],['Chicken nuggets',18],['Mac and cheese',14],['Tacos',10],['Water',6]]],
+    ['Name something in our classroom that would be a disaster made of chocolate.', 'opinion',
+      [['Pencil',28],['Chair',22],['Computer',20],['Books',16],['Scissors',14]]],
+    ['Name a candy you might find in a candy store.', 'opinion',
+      [['Chocolate',36],['Lollipops',20],['Gummy bears',18],['Jelly beans',14],['Licorice',12]]],
+  ].map(q => ({ text:q[0], opinion:q[1] === 'opinion', answers:q[q.length - 1] }));
+
+  const $ = id => document.getElementById(id);
+
+  /* ---------- teacher key (feud.html#key) ---------- */
+  $('key').innerHTML = `<div class="tools"><button onclick="print()">Print</button><button onclick="location.hash='';">Back to the game</button></div>
+    <h1>Chocolate Feud: Teacher Key</h1>
+    <p class="note">Keep this off the smart screen. Press the number to flip an answer. Be generous: close enough counts.</p>` +
+    QUESTIONS.map((q, i) => `<div class="q"><h3><span>${i + 1}.</span> ${q.text}${q.opinion ? ' <i style="font-weight:700;color:#8A7360">(opinion)</i>' : ''}</h3>
+      <ol>${q.answers.map(a => `<li>${a[0]} <i>${a[1]}</i></li>`).join('')}</ol></div>`).join('');
+  function route(){ document.body.classList.toggle('keyview', location.hash === '#key'); }
+  addEventListener('hashchange', route); route();
+  $('btnKey').onclick = () => { location.hash = 'key'; setTimeout(() => print(), 300); };
+
+  /* ---------- stage scaling ---------- */
+  const stage = $('stage');
+  function fit(){
+    const s = Math.min(innerWidth/1280, innerHeight/720);
+    stage.style.transform = `translate(${(innerWidth-1280*s)/2}px,${(innerHeight-720*s)/2}px) scale(${s})`;
+  }
+  addEventListener('resize', fit); fit();
+
+  /* ---------- sound ---------- */
+  let ctx = null, muted = false;
+  function audio(){
+    if (!ctx) { try { ctx = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){ return null; } }
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+  function tone(freq, dur, type='sine', vol=.2, when=0, slideTo=null){
+    if (muted) return; const a = audio(); if (!a) return;
+    const t = a.currentTime + when, o = a.createOscillator(), g = a.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t+dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t+.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    o.connect(g).connect(a.destination); o.start(t); o.stop(t+dur+.05);
+  }
+  const sfx = {
+    buzzA:  () => { tone(523, .18, 'square', .12); tone(784, .3, 'square', .1, .14); },
+    buzzB:  () => { tone(392, .18, 'square', .12); tone(587, .3, 'square', .1, .14); },
+    ding:   () => { tone(1047, .45, 'sine', .18); tone(1568, .5, 'sine', .08, .05); },
+    strike: () => { tone(110, .7, 'sawtooth', .14); tone(116, .7, 'square', .07); },
+    win:    () => { [523,659,784,1047,1319].forEach((f,k) => tone(f, .35, 'triangle', .17, k*.1)); tone(1568, .9, 'sine', .1, .55); },
+    reveal: () => tone(660, .2, 'triangle', .08),
+  };
+
+  /* ---------- state ---------- */
+  // start -> pick -> faceoff -> play -> (3 strikes) steal -> over -> (Enter) revealed -> (Enter) pick
+  let state = 'start', qi = -1, ctrl = null, strikes = 0, pot = 0, shown = new Set(), played = new Set();
+  const scores = {A:0, B:0}, other = t => t === 'A' ? 'B' : 'A', NAME = {A:'Team Milk', B:'Team Dark'};
+
+  function setMsg(text, pulse){ const m = $('msg'); m.textContent = text; m.classList.toggle('pulse', !!pulse); }
+  function render(){
+    $('scoreA').textContent = scores.A; $('scoreB').textContent = scores.B; $('potNum').textContent = pot;
+    const lit = state === 'steal' ? other(ctrl) : ctrl;
+    $('sideA').classList.toggle('on', lit === 'A' && state !== 'over' && state !== 'revealed');
+    $('sideB').classList.toggle('on', lit === 'B' && state !== 'over' && state !== 'revealed');
+    stage.classList.toggle('buzzA', lit === 'A' && (state === 'play' || state === 'steal'));
+    stage.classList.toggle('buzzB', lit === 'B' && (state === 'play' || state === 'steal'));
+    for (const t of ['A','B']) {
+      const n = t === ctrl ? strikes : 0;
+      $('strikes' + t).innerHTML = Array.from({length:3}, (_, k) => `<span>${k < n ? 'X' : ''}</span>`).join('');
+    }
+  }
+
+  function loadQuestion(i){
+    qi = i; played.add(i);
+    const q = QUESTIONS[i];
+    ctrl = null; strikes = 0; pot = 0; shown = new Set();
+    $('qnum').textContent = `Question ${i + 1}${q.opinion ? ' · just for fun' : ''}`;
+    $('question').textContent = q.text;
+    $('board').innerHTML = Array.from({length:8}, (_, k) => {
+      const a = q.answers[k];
+      if (!a) return '<div class="slot empty"><div class="in"><div class="f"><b></b></div></div></div>';
+      return `<div class="slot" id="slot${k}"><div class="in"><div class="f"><b>${k + 1}</b></div><div class="b"><span class="ans">${a[0]}</span><span class="n">${a[1]}</span></div></div></div>`;
+    }).join('');
+    $('drips').innerHTML = '';
+    $('pick').hidden = true;
+    state = 'faceoff';
+    setMsg('Face-off! First to touch their Kiss answers.', true);
+    render();
+  }
+
+  function buzz(t){
+    if (state !== 'faceoff') return;
+    ctrl = t; state = 'play';
+    t === 'A' ? sfx.buzzA() : sfx.buzzB();
+    setMsg(`${NAME[t]}! What's your answer?`);
+    render();
+  }
+
+  function switchTeam(){
+    if (state !== 'play' || strikes) return;
+    ctrl = other(ctrl); setMsg(`${NAME[ctrl]} is playing!`); render();
+  }
+
+  function flip(k){
+    const q = QUESTIONS[qi], a = q && q.answers[k];
+    if (!a || shown.has(k)) return;
+    if (state === 'play' || state === 'steal') {
+      shown.add(k); $('slot' + k).classList.add('show'); sfx.ding();
+      pot += a[1]; render();
+      if (state === 'steal') return award(other(ctrl), `${NAME[other(ctrl)]} stole it!`);
+      if (shown.size === q.answers.length) return award(ctrl, `${NAME[ctrl]} cleared the board!`);
+      setMsg('Good answer! Next player.');
+    } else if (state === 'over') {
+      shown.add(k); $('slot' + k).classList.add('show', 'late'); sfx.reveal();   // just showing it, no points
+    }
+  }
+
+  function strike(){
+    if (state === 'steal') { state = 'wait'; bigX(1); sfx.strike(); return setTimeout(() => award(ctrl, `${NAME[ctrl]} keeps the points!`), 900); }
+    if (state !== 'play' || strikes >= 3) return;
+    strikes++; render(); bigX(strikes); sfx.strike();
+    if (strikes === 3) {
+      state = 'steal'; render();
+      setMsg(`${NAME[other(ctrl)]}: one answer to steal the points!`, true);
+    } else setMsg(`Strike ${strikes}! Next player.`);
+  }
+
+  function undoStrike(){
+    if (state === 'steal') { state = 'play'; strikes = 2; }
+    else if (state === 'play' && strikes) strikes--;
+    else return;
+    setMsg(`Strike taken back. ${NAME[ctrl]} is still playing.`); render();
+  }
+
+  function award(t, line){
+    state = 'over';
+    scores[t] += pot;
+    render();
+    const el = $('side' + t); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+    setMsg(`${line} +${pot}. Press Enter to see the rest.`);
+    sfx.win(); makeDrips();
+  }
+
+  function next(){
+    if (state === 'over') {
+      const q = QUESTIONS[qi];
+      const left = q.answers.map((_, k) => k).filter(k => !shown.has(k));
+      left.forEach((k, n) => setTimeout(() => { shown.add(k); $('slot' + k).classList.add('show', 'late'); sfx.reveal(); }, n * 350));
+      state = 'revealed';
+      setMsg(left.length ? 'Here\'s the rest. Enter for the next question.' : 'Enter for the next question.');
+      render();
+    } else if (state === 'revealed') showPick();
+  }
+
+  function makeDrips(){
+    const d = $('drips'); d.innerHTML = '<div class="dripbar"></div>';
+    for (let x = 10; x < 1280; x += 60 + Math.random() * 70) {
+      const el = document.createElement('div');
+      el.className = 'drip';
+      el.style.left = x + 'px';
+      el.style.width = (30 + Math.random() * 30) + 'px';
+      el.style.setProperty('--h', (40 + Math.random() * 80) + 'px');
+      el.style.animationDelay = (.2 + Math.random() * .7) + 's';
+      d.appendChild(el);
+    }
+  }
+  function bigX(n){
+    const b = $('bigX'); b.innerHTML = '';
+    void b.offsetWidth;
+    b.innerHTML = '<span>X</span>'.repeat(n);
+  }
+
+  /* ---------- question picker ---------- */
+  function nextUnplayed(){ for (let i = 0; i < QUESTIONS.length; i++) if (!played.has(i)) return i; return -1; }
+  function showPick(){
+    state = 'pick';
+    const nx = nextUnplayed();
+    $('pickGrid').innerHTML = QUESTIONS.map((q, i) =>
+      `<button data-q="${i}" class="${played.has(i) ? 'done' : ''}${i === nx ? ' next' : ''}"><b>${i + 1}</b>${q.opinion ? 'Just for fun' : 'Book'}</button>`).join('');
+    $('pick').hidden = false;
+  }
+  $('pickGrid').addEventListener('click', e => { const b = e.target.closest('button'); if (b) loadQuestion(+b.dataset.q); });
+
+  function showFinal(){
+    state = 'final';
+    const ranked = ['A','B'].sort((a, b) => scores[b] - scores[a]);
+    $('finalList').innerHTML = ranked.map(t => `<div><span style="color:var(--team${t})">${NAME[t]}</span><span>${scores[t]}</span></div>`).join('');
+    $('pick').hidden = true; $('final').hidden = false;
+    sfx.win(); makeDrips();
+  }
+  $('btnEnd').onclick = showFinal;
+  $('btnBack').onclick = () => { $('final').hidden = true; showPick(); };
+
+  function begin(){ audio(); $('start').hidden = true; render(); showPick(); }
+  $('btnGo').onclick = begin;
+
+  /* ---------- help + corner buttons ---------- */
+  const help = $('help');
+  $('helpCard').innerHTML = document.querySelector('#start .card').innerHTML
+    .replace(/<button class="go" id="btnGo"[\s\S]*$/, '<p>Tap <b>?</b> or press <kbd>Esc</kbd> to close. <button class="go" id="btnScores" style="font-size:17px;padding:9px 18px">Final scores</button></p>');
+  function toggleHelp(){ help.hidden = !help.hidden; }
+  $('btnHelp').onclick = toggleHelp;
+  help.addEventListener('click', e => { if (e.target.id === 'btnScores') { help.hidden = true; showFinal(); } else if (e.target === help) toggleHelp(); });
+  $('btnSound').onclick = () => { muted = !muted; $('btnSound').style.opacity = muted ? .35 : 1; };
+  $('btnFull').onclick = () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+    else document.documentElement.requestFullscreen?.().catch(()=>{});
+  };
+  document.addEventListener('click', e => { const b = e.target.closest?.('button'); if (b) b.blur(); });
+
+  /* ---------- keys ---------- */
+  let lastBuzz = 0;
+  addEventListener('keydown', e => {
+    if (document.body.classList.contains('keyview')) return;
+    audio();
+    if (e.key === 'Escape') { if (!help.hidden) toggleHelp(); return; }
+    if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+      e.preventDefault();
+      if (e.repeat) return;
+      const now = performance.now();
+      if (now - lastBuzz < 300) return;   // foil can "chatter"
+      lastBuzz = now;
+      if (help.hidden) buzz(e.code === 'ArrowLeft' ? 'A' : 'B');
+      return;
+    }
+    if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'ArrowDown') { e.preventDefault(); return; }
+    if (e.repeat) return;
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (state === 'start') begin();
+      else if (state === 'pick') { const nx = nextUnplayed(); if (nx >= 0) loadQuestion(nx); else showFinal(); }
+      else next();
+      return;
+    }
+    if (e.key === 'Backspace') { e.preventDefault(); undoStrike(); return; }
+    if (!help.hidden) return;
+    if (/^[1-8]$/.test(e.key)) return flip(+e.key - 1);
+    const k = e.key.toLowerCase();
+    if (k === 'x') strike();
+    else if (k === 's') switchTeam();
+  });
+
+  // test hook for automated checks
+  window.__feud = { begin, loadQuestion, buzz, flip, strike, undoStrike, switchTeam, next, QUESTIONS,
+    state: () => ({ state, qi, ctrl, strikes, pot, scores:{...scores}, shown:[...shown] }) };
+
+  const nag = $('focusNag');
+  const checkFocus = () => { nag.hidden = document.hasFocus() || document.body.classList.contains('keyview'); };
+  addEventListener('blur', checkFocus); addEventListener('focus', checkFocus);
+  nag.addEventListener('click', () => { nag.hidden = true; audio(); });
+  setTimeout(checkFocus, 300);
+})();
+</script>
+</body>
+</html>

@@ -6,11 +6,45 @@ Classroom pages for a 3rd-4th grade reading group working through *The Chocolate
 
 | Page | What it is | Link |
 |---|---|---|
+| Chocolate Wheel | Ch 1-8 word puzzle game. Same wiring as the test station. Help card is the **?** button. | [Open](https://benfminer.github.io/chocolate-touch/wheel.html) |
+| Chocolate Feud | Ch 1-8 two-team survey game. Kisses on Left and Right arrows. Teacher key at `feud.html#key`. | [Open](https://benfminer.github.io/chocolate-touch/feud.html) |
 | Do You Have the Chocolate Touch? | Ch 6 walk-up station with one Makey Makey | [Open](https://benfminer.github.io/chocolate-touch/chocolate-touch-test.html) |
 | Chocolate Touch Lab | Ch 6 Makey Makey games for up to 6 players | [Open](https://benfminer.github.io/chocolate-touch/ch6-makey-makey.html) |
 | Story Recap | Chapter recap slideshow with a spoiler gate | [Open](https://benfminer.github.io/chocolate-touch/chocolate-touch-recap.html) |
 | Chapter 3 Lesson | Presentation deck with speaker notes | [Open](https://benfminer.github.io/chocolate-touch/ch3-presentation.html) |
 | Chapter 3 Packet | Printable materials | [Open](https://benfminer.github.io/chocolate-touch/ch3-packet.html) |
+
+## Chocolate Wheel
+
+A word puzzle game for the whole group, covering Chapters 1-8. **Open it: https://benfminer.github.io/chocolate-touch/wheel.html**
+
+Wiring is the same as the test station: the Hershey's Kiss on **Space**, Earth under the foil star. A student touches the Kiss to spin, their team calls a letter, and you type it (or tap it on screen).
+
+| Key | What it does |
+|---|---|
+| Space (the Kiss) | Spin |
+| A to Z | Guess a letter (vowels are free) |
+| Enter | They solved it (+500) / next puzzle |
+| Backspace | Wrong solve, or pass to the next team |
+
+Help, sound, and fullscreen are the buttons in the top-right corner. There's no Bankrupt. Landing on "Yuck!" (the tonic) loses the turn.
+
+## Chocolate Feud
+
+A two-team survey game covering Chapters 1-8. **Open it: https://benfminer.github.io/chocolate-touch/feud.html**
+
+**Teacher key (open on your phone or print it): https://benfminer.github.io/chocolate-touch/feud.html#key**
+
+Wiring: Team Milk's Kiss goes on **Left arrow**, Team Dark's Kiss on **Right arrow**, with an Earth clip under each team's foil star. No second Kiss? The Left and Right keys on the keyboard work as buzzers.
+
+| Key | What it does |
+|---|---|
+| Left / Right Kiss | Face-off buzzers (first touch wins) |
+| 1 to 8 | Flip that answer |
+| X | Strike (three strikes and the other team can steal) |
+| S | Give play to the other team after the face-off |
+| Backspace | Undo a strike |
+| Enter | Show the leftover answers / next question |
 
 ## Do You Have the Chocolate Touch?
 
