@@ -7,67 +7,61 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..800&family=Nunito+Sans:wght@400;700;800;900&display=swap">
+<link rel="stylesheet" href="candy.css">
 <style>
   /* One Makey Makey Hershey's Kiss at the front of the room. Each person walks up, rests a hand on the foil star (earth), touches the Kiss,
      and finds out if they have the chocolate touch. The teacher secretly decides: it works unless T was pressed.
-     Same fixed 1280x720 projected stage and palette as ch6-makey-makey.html. */
-  :root{
-    --cocoa:#2A1810; --cocoa2:#3B2318; --cocoa3:#4E3122; --milk:#7A4A2E; --choc:#5A3420;
-    --cream:#FAF4E8; --muted:#D8CBB8; --dust:#A08B78; --amber:#E0A15C; --butter:#FFE9B8;
-    --foil:#E8C66A; --grey:#6E6A66;
-    --serif:Fraunces,Georgia,"Times New Roman",serif;
-    --sans:"Nunito Sans",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;
-    color-scheme:dark;
-  }
+     Same fixed 1280x720 projected stage as ch6-makey-makey.html. Candy Shop theme (candy.css) with an orange wrapper. */
   *{box-sizing:border-box}
   [hidden]{display:none!important}
   html,body{height:100%}
-  body{margin:0;background:#120b07;color:var(--cream);font-family:var(--sans);overflow:hidden}
+  body{margin:0;color:var(--ink);font-family:var(--sans);overflow:hidden}
 
   #viewport{position:fixed;inset:0;overflow:hidden}
   #stage{width:1280px;height:720px;position:absolute;left:0;top:0;transform-origin:0 0;overflow:hidden;
-         background:radial-gradient(ellipse at 50% 0%, var(--cocoa3) 0%, var(--cocoa) 60%, #1E110A 100%);
-         border-radius:6px;box-shadow:0 24px 70px rgba(0,0,0,.6);transition:background .6s}
-  #stage.win{background:radial-gradient(ellipse at 50% 30%, #A0643C 0%, var(--milk) 45%, var(--choc) 100%)}
-  #stage.lose{background:radial-gradient(ellipse at 50% 30%, #4A4643 0%, #34302D 60%, #221F1D 100%)}
+         background:radial-gradient(ellipse at 50% 0%, var(--accent-soft) 0%, rgba(255,230,212,0) 62%);transition:background .6s}
+  /* winning = warm caramel glow; the chocolate drips do the rest */
+  #stage.win{background:radial-gradient(ellipse at 50% 40%, #FFF2C9 0%, #FFD9A8 55%, #F5BE86 100%)}
+  /* fizzle = calm, plain grey-cream */
+  #stage.lose{background:radial-gradient(ellipse at 50% 30%, #FBF8F4 0%, #ECE6DF 60%, #DDD5CC 100%)}
 
   .screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 70px}
   .screen.on{display:flex}
-  .kicker{font-weight:900;font-size:16px;letter-spacing:2.4px;text-transform:uppercase;color:var(--amber);margin-bottom:14px}
-  h1{font-family:var(--serif);font-weight:800;margin:0;line-height:1.02;text-wrap:balance}
-  .sub{font-size:26px;color:var(--muted);line-height:1.4;margin:18px 0 0;max-width:900px;text-wrap:balance}
+  .kicker{font-weight:900;font-size:16px;letter-spacing:2.4px;text-transform:uppercase;color:var(--accent-deep);margin-bottom:14px}
+  h1{font-family:var(--serif);font-weight:800;margin:0;line-height:1.02;text-wrap:balance;color:var(--ink)}
+  .sub{font-size:26px;color:var(--ink-soft);line-height:1.4;margin:18px 0 0;max-width:900px;text-wrap:balance}
 
   /* the Hershey's Kiss (drawn in SVG, silver foil + paper plume) */
-  .kiss{width:190px;height:228px;margin:26px auto 0;display:block;filter:drop-shadow(0 18px 30px rgba(0,0,0,.5))}
+  .kiss{width:190px;height:228px;margin:26px auto 0;display:block;filter:drop-shadow(0 6px 0 rgba(59,33,22,.35)) drop-shadow(0 16px 22px rgba(59,33,22,.22))}
   #ready .kiss{animation:bob 2.4s ease-in-out infinite}
-  @keyframes bob{50%{transform:translateY(-10px);filter:drop-shadow(0 26px 34px rgba(0,0,0,.45)) drop-shadow(0 0 18px rgba(220,225,235,.25))}}
+  @keyframes bob{50%{transform:translateY(-10px);filter:drop-shadow(0 10px 0 rgba(59,33,22,.25)) drop-shadow(0 24px 26px rgba(59,33,22,.2)) drop-shadow(0 0 18px rgba(255,138,61,.35))}}
 
   /* ready */
   #ready h1{font-size:70px}
-  #ready h1 em{font-style:italic;color:var(--foil)}
+  #ready h1 em{font-style:italic;color:var(--accent-deep)}
   .steps{display:flex;gap:26px;margin-top:34px}
-  .step{background:rgba(250,244,232,.06);border:1px solid rgba(250,244,232,.12);border-radius:14px;padding:14px 22px;font-size:22px;font-weight:800;color:var(--butter)}
-  .step span{color:var(--amber);margin-right:8px}
+  .step{background:var(--card);border:var(--stroke);box-shadow:var(--pop-sm);border-radius:18px;padding:14px 22px;font-size:22px;font-weight:900;color:var(--ink)}
+  .step span{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--accent);border:3px solid var(--ink);color:var(--ink);margin-right:10px;font-size:18px;vertical-align:1px}
 
   /* testing */
   #testing h1{font-size:62px}
   #testing .kiss{animation:pulse .5s ease-in-out infinite}
-  @keyframes pulse{50%{transform:scale(1.06);filter:drop-shadow(0 0 30px rgba(232,198,106,.7)) drop-shadow(0 0 70px rgba(232,198,106,.4))}}
-  .meter{width:620px;height:30px;border-radius:15px;background:rgba(250,244,232,.08);border:2px solid rgba(232,198,106,.4);margin-top:40px;overflow:hidden}
-  .meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--milk),var(--amber),var(--foil));border-radius:15px}
-  #testMsg{font-size:28px;font-weight:800;color:var(--butter);margin-top:20px;min-height:40px}
+  @keyframes pulse{50%{transform:scale(1.06);filter:drop-shadow(0 0 26px rgba(255,138,61,.7)) drop-shadow(0 0 60px rgba(255,201,60,.5))}}
+  .meter{width:620px;height:34px;border-radius:17px;background:var(--card);border:var(--stroke);box-shadow:var(--pop-sm);margin-top:40px;overflow:hidden}
+  .meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--milk),var(--accent),var(--lemon));border-radius:0 14px 14px 0}
+  #testMsg{font-size:28px;font-weight:900;color:var(--ink);margin-top:20px;min-height:40px}
 
   /* results */
-  #win h1{font-size:92px;color:var(--butter);text-shadow:0 6px 0 var(--choc),0 10px 40px rgba(0,0,0,.4);animation:pop .6s cubic-bezier(.2,1.6,.4,1) both}
-  #win .sub{color:#FFF1D6;font-size:30px}
-  #lose h1{font-size:84px;color:#E9E4DE;animation:sag .8s ease-out both}
-  #lose .sub{color:#C9C2BA;font-size:30px}
+  #win h1{font-size:92px;color:var(--choc);text-shadow:0 5px 0 #fff,0 9px 0 var(--accent);animation:pop .6s cubic-bezier(.2,1.6,.4,1) both}
+  #win .sub{color:var(--ink);font-size:30px;font-weight:700}
+  #lose h1{font-size:84px;color:#4F4844;animation:sag .8s ease-out both}
+  #lose .sub{color:#6B635D;font-size:30px}
   @keyframes pop{from{transform:scale(.3);opacity:0}}
   @keyframes sag{from{transform:translateY(-40px);opacity:0}}
   .bigicon{font-size:120px;line-height:1;margin-bottom:10px}
-  .question{margin-top:30px;font-family:var(--serif);font-style:italic;font-size:32px;color:var(--foil)}
-  #lose .question{color:#D9D0C5}
-  .nextwait{position:absolute;bottom:58px;left:0;right:0;font-size:18px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:rgba(250,244,232,.45)}
+  .question{margin-top:30px;font-family:var(--serif);font-style:italic;font-weight:700;font-size:32px;color:var(--accent-deep)}
+  #lose .question{color:#6B635D}
+  .nextwait{position:absolute;bottom:58px;left:0;right:0;font-size:18px;font-weight:900;letter-spacing:1.6px;text-transform:uppercase;color:rgba(59,33,22,.5)}
 
   /* chocolate drips for the win screen */
   #drips{position:absolute;top:0;left:0;right:0;height:0;pointer-events:none}
@@ -78,29 +72,34 @@
   @keyframes bar{to{height:28px}}
 
   /* tally (visible to the class, it's part of the fun) */
-  #tally{position:absolute;bottom:16px;left:24px;font-size:16px;font-weight:800;color:rgba(250,244,232,.5);letter-spacing:.4px}
-  #tally b{color:var(--butter)}
+  #tally{position:absolute;bottom:16px;left:24px;font-size:16px;font-weight:800;color:var(--ink-soft);letter-spacing:.4px}
+  #tally b{color:var(--ink)}
 
   /* the teacher's secret tell: a tiny dot bottom-right. solid = will work, hollow ring = next touch fizzles */
-  #tell{position:absolute;bottom:20px;right:22px;width:10px;height:10px;border-radius:50%;background:rgba(250,244,232,.22)}
-  #tell.armed{background:transparent;box-shadow:inset 0 0 0 2px rgba(250,244,232,.32)}
+  #tell{position:absolute;bottom:20px;right:22px;width:10px;height:10px;border-radius:50%;background:rgba(59,33,22,.28)}
+  #tell.armed{background:transparent;box-shadow:inset 0 0 0 2px rgba(59,33,22,.38)}
 
   /* start + help cards */
-  .card{background:linear-gradient(170deg,var(--cocoa3),var(--cocoa2));border:1px solid rgba(232,198,106,.3);border-radius:18px;padding:30px 40px;max-width:900px;text-align:left}
+  .card{background:var(--card);border:var(--stroke);box-shadow:var(--pop);border-radius:var(--radius);padding:30px 40px;max-width:900px;text-align:left;color:var(--ink)}
   .card h2{font-family:var(--serif);font-size:38px;margin:0 0 14px}
-  .card p{font-size:19px;color:var(--muted);line-height:1.5;margin:0 0 12px}
+  .card p{font-size:19px;color:var(--ink-soft);line-height:1.5;margin:0 0 12px}
+  .card p b{color:var(--ink)}
   .card table{border-collapse:collapse;font-size:19px;margin:6px 0 14px}
-  .card td{padding:6px 18px 6px 0;color:var(--muted);vertical-align:top}
+  .card td{padding:6px 18px 6px 0;color:var(--ink-soft);vertical-align:top}
+  .card td b{color:var(--ink)}
   .card td:first-child{white-space:nowrap}
-  kbd{font:900 17px var(--sans);color:var(--cocoa);background:var(--butter);border-radius:6px;padding:2px 9px}
-  .go{display:inline-block;margin-top:8px;background:var(--foil);color:var(--cocoa);font:900 22px var(--sans);border:0;border-radius:12px;padding:14px 28px;cursor:pointer}
-  #help{position:absolute;inset:0;background:rgba(18,11,7,.92);display:flex;align-items:center;justify-content:center;z-index:5}
+  kbd{font:900 17px var(--sans);color:var(--ink);background:var(--accent-soft);border:2px solid var(--ink);border-radius:7px;padding:1px 8px;box-shadow:0 2px 0 var(--ink)}
+  .go{display:inline-block;margin-top:8px;background:var(--accent);color:var(--ink);font:900 22px var(--sans);border:var(--stroke);border-radius:999px;padding:14px 28px;cursor:pointer;box-shadow:var(--pop-sm);transition:transform .12s, box-shadow .12s}
+  .go:hover{transform:translateY(-2px);box-shadow:var(--pop)}
+  .go:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+  #help{position:absolute;inset:0;background:rgba(255,247,236,.92);display:flex;align-items:center;justify-content:center;z-index:5}
 
-  #focusNag{position:fixed;inset:0;z-index:10;background:rgba(18,11,7,.82);display:flex;align-items:center;justify-content:center;cursor:pointer}
-  #focusNag div{background:var(--foil);color:var(--cocoa);font:900 28px var(--sans);padding:22px 34px;border-radius:16px;text-align:center;max-width:80vw}
+  #focusNag{position:fixed;inset:0;z-index:10;background:rgba(255,247,236,.86);display:flex;align-items:center;justify-content:center;cursor:pointer}
+  #focusNag div{background:var(--accent);color:var(--ink);font:900 28px var(--sans);padding:22px 34px;border:var(--stroke);box-shadow:var(--pop);border-radius:var(--radius);text-align:center;max-width:80vw}
 </style>
 </head>
-<body>
+<body class="candy-bg theme-orange">
+<a class="home-pill" href="index.html">← Home</a>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <linearGradient id="foil" x1="0" x2="1" y1="0" y2="0">
