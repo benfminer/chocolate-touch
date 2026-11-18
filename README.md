@@ -6,13 +6,35 @@ Classroom pages for a 3rd-4th grade reading group working through *The Chocolate
 
 | Page | What it is | Link |
 |---|---|---|
+| Story Recap | Chapter recap slideshow with a spoiler gate. Its "We've finished up to" setting also shows on the homepage. | [Open](https://benfminer.github.io/chocolate-touch/chocolate-touch-recap.html) |
+| Apple Bob | Ch 1-9 "whose fault is it?" game. Real apples on Left and Right arrows. | [Open](https://benfminer.github.io/chocolate-touch/apple-bob.html) |
 | Chocolate Wheel | Ch 1-8 word puzzle game. Same wiring as the test station. Help card is the **?** button. | [Open](https://benfminer.github.io/chocolate-touch/wheel.html) |
 | Chocolate Feud | Ch 1-8 two-team survey game. Kisses on Left and Right arrows. Teacher key at `feud.html#key`. | [Open](https://benfminer.github.io/chocolate-touch/feud.html) |
-| Do You Have the Chocolate Touch? | Ch 6 walk-up station with one Makey Makey | [Open](https://benfminer.github.io/chocolate-touch/chocolate-touch-test.html) |
+| Chocolate Mad Libs | Ch 1-7 silly stories for the whole group, read out loud | [Open](https://benfminer.github.io/chocolate-touch/madlibs.html) |
+| Do You Have the Chocolate Touch? | Walk-up station with one Makey Makey | [Open](https://benfminer.github.io/chocolate-touch/chocolate-touch-test.html) |
 | Chocolate Touch Lab | Ch 6 Makey Makey games for up to 6 players | [Open](https://benfminer.github.io/chocolate-touch/ch6-makey-makey.html) |
-| Story Recap | Chapter recap slideshow with a spoiler gate | [Open](https://benfminer.github.io/chocolate-touch/chocolate-touch-recap.html) |
-| Chapter 3 Lesson | Presentation deck with speaker notes | [Open](https://benfminer.github.io/chocolate-touch/ch3-presentation.html) |
-| Chapter 3 Packet | Printable materials | [Open](https://benfminer.github.io/chocolate-touch/ch3-packet.html) |
+
+Every page shares the Candy Shop look in `candy.css` and has a **Home** button back to the menu.
+
+## Apple Bob
+
+A Chapter 9 game about the question John dodges at the start of the chapter: whose fault is it? **Open it: https://benfminer.github.io/chocolate-touch/apple-bob.html**
+
+Wiring: push a real apple onto the **Left arrow** clip (Red Apples) and another onto **Right arrow** (Green Apples), with an Earth clip under each team's foil star. No Makey Makey? Tap a team's box on screen to buzz in.
+
+Each card is a moment from Chapters 1-9. The first student to touch their apple picks a verdict (John's fault, someone else's, nobody's, a bit of both) and has to say why. You judge the **reason**, not the verdict. A good reason ducks an apple out of the bucket for their team. There are 12 cards and 12 apples, like the race at Susan's party.
+
+| Key | What it does |
+|---|---|
+| Left / Right apple | Face-off buzzers (first touch wins) |
+| 1 to 4 | The verdict they picked |
+| Y | Good reason: they get an apple |
+| N | Not yet: the other team gets a try (N again and nobody gets it) |
+| Enter | Show what happened in the book / next card |
+| R | Read the card out loud |
+| C | **Secret:** the next apple ducked turns the bucket into chocolate syrup. The tiny dot bottom-right turns into a ring while it's set. |
+
+Every key also has an on-screen button for the smart board.
 
 ## Chocolate Wheel
 

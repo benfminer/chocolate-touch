@@ -4,31 +4,192 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Chocolate Touch</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=Nunito+Sans:wght@700;900&display=swap">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,800&family=Nunito+Sans:wght@700;800;900&display=swap">
+<link rel="stylesheet" href="candy.css">
 <style>
-  :root{--cocoa:#2A1810;--cocoa2:#3B2318;--cocoa3:#4E3122;--cream:#FAF4E8;--muted:#D8CBB8;--foil:#E8C66A;--amber:#E0A15C;color-scheme:dark}
   *{box-sizing:border-box}
-  body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,var(--cocoa3),var(--cocoa) 60%,#1E110A);color:var(--cream);
-       font-family:"Nunito Sans",-apple-system,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;align-items:center;padding:48px 16px}
-  h1{font-family:Fraunces,Georgia,serif;font-size:clamp(36px,6vw,64px);margin:0 0 32px;text-align:center}
-  ul{list-style:none;margin:0;padding:0;display:grid;gap:16px;width:100%;max-width:760px}
-  a{display:block;background:linear-gradient(170deg,var(--cocoa3),var(--cocoa2));border:1px solid rgba(232,198,106,.3);border-radius:16px;
-    padding:22px 28px;color:var(--cream);text-decoration:none;font-weight:900;font-size:26px}
-  a:hover,a:focus-visible{border-color:var(--foil);outline:none}
-  a span{display:block;font-weight:700;font-size:17px;color:var(--muted);margin-top:4px}
+  body{margin:0;min-height:100vh;font-family:var(--sans)}
+  .drip{display:block;width:100%;height:70px}
+  header{text-align:center;padding:4px 16px 8px}
+  h1{font:800 clamp(42px,7vw,84px)/1 var(--serif);margin:0;color:var(--choc);letter-spacing:-.5px}
+  .sub{margin:12px 0 0;font-weight:800;font-size:clamp(17px,2vw,21px);color:var(--ink-soft)}
+  .reading{display:inline-block;margin-top:16px;font:900 18px var(--sans);background:var(--lemon);border:var(--stroke);
+           border-radius:999px;padding:8px 20px;box-shadow:var(--pop-sm)}
+  main{max-width:1180px;margin:0 auto;padding:16px 16px 60px}
+  h2{font:800 30px var(--serif);margin:34px 0 14px;display:flex;align-items:center;gap:12px}
+  h2::after{content:"";flex:1;height:3px;border-radius:3px;background:var(--line)}
+  .grid{display:grid;gap:22px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+  .grid.big{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+
+  .tile{display:flex;flex-direction:column;text-decoration:none;color:var(--ink);background:var(--card);
+        border:var(--stroke);border-radius:24px;box-shadow:var(--pop);overflow:hidden;transition:transform .15s, box-shadow .15s}
+  .tile:hover,.tile:focus-visible{transform:translateY(-4px) rotate(-.4deg);box-shadow:0 10px 0 var(--ink);outline:none}
+  .tile:active{transform:translateY(4px);box-shadow:0 2px 0 var(--ink)}
+  .tile .art{background:var(--accent);border-bottom:var(--stroke);height:130px;display:grid;place-items:center;position:relative;
+             background-image:repeating-linear-gradient(-45deg, rgba(255,255,255,.18) 0 14px, transparent 14px 28px)}
+  .grid.big .tile .art{height:170px}
+  .tile .art svg{width:96px;height:96px;filter:drop-shadow(0 4px 0 rgba(59,33,22,.35))}
+  .grid.big .tile .art svg{width:124px;height:124px}
+  .tile .body{padding:16px 20px 20px}
+  .tile h3{margin:0;font:800 27px/1.1 var(--serif)}
+  .grid.big .tile h3{font-size:32px}
+  .tile p{margin:8px 0 12px;font-weight:700;font-size:17px;color:var(--ink-soft);line-height:1.35}
+  .tags{display:flex;flex-wrap:wrap;gap:6px}
+  .tag{font:900 13px var(--sans);padding:4px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent-deep);border:2px solid var(--accent-deep)}
+  .tag.mm{background:var(--paper2);color:var(--ink);border-color:var(--ink)}
+  .new{position:absolute;top:12px;right:12px;font:900 15px var(--sans);background:var(--lemon);border:var(--stroke);border-radius:999px;
+       padding:5px 12px;transform:rotate(6deg);box-shadow:var(--pop-sm)}
+  footer{text-align:center;color:var(--ink-soft);font-weight:700;font-size:14px;padding:0 16px 30px}
 </style>
 </head>
-<body>
-  <h1>The Chocolate Touch</h1>
-  <ul>
-    <li><a href="wheel.html">Chocolate Wheel<span>Ch 1-8 word puzzle game, spin with the Makey Makey Kiss</span></a></li>
-    <li><a href="feud.html">Chocolate Feud<span>Ch 1-8 two-team survey game with Makey Makey buzzers</span></a></li>
-    <li><a href="madlibs.html">Chocolate Mad Libs<span>Ch 1-7 silly stories for the whole group</span></a></li>
-    <li><a href="chocolate-touch-test.html">Do You Have the Chocolate Touch?<span>Ch 6 walk-up Makey Makey station</span></a></li>
-    <li><a href="ch6-makey-makey.html">Chocolate Touch Lab<span>Ch 6 Makey Makey games</span></a></li>
-    <li><a href="chocolate-touch-recap.html">Story Recap<span>Slideshow with a spoiler gate</span></a></li>
-    <li><a href="ch3-presentation.html">Chapter 3 Lesson<span>Presentation deck</span></a></li>
-    <li><a href="ch3-packet.html">Chapter 3 Packet<span>Printable materials</span></a></li>
-  </ul>
+<body class="candy-bg">
+  <svg class="drip" viewBox="0 0 1200 70" preserveAspectRatio="none" aria-hidden="true">
+    <path fill="#5A3420" d="M0 0H1200V22c-20 0-22 30-42 30s-20-30-44-30c-26 0-18 44-46 44s-20-44-44-44c-30 0-26 20-56 20s-22-20-50-20
+      c-24 0-20 36-46 36s-22-36-48-36-24 18-50 18-26-18-52-18-20 40-48 40-22-40-48-40-24 24-52 24-24-24-50-24-22 32-46 32-24-32-50-32
+      -26 16-52 16-24-16-50-16-22 42-50 42-24-42-48-42-26 22-54 22-24-22-50-22-20 30-44 30-24-30-48-30-26 14-50 14-22-14-48-14
+      -22 34-46 34S28 22 0 22z"/>
+  </svg>
+  <header>
+    <h1>The Chocolate Touch</h1>
+    <p class="sub">Games and recaps for our reading group</p>
+    <div class="reading" id="reading" hidden></div>
+  </header>
+
+  <main>
+    <h2>Start here</h2>
+    <div class="grid big">
+      <a class="tile theme-lemon" href="chocolate-touch-recap.html">
+        <div class="art">
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <rect x="8" y="22" width="84" height="64" rx="10" fill="#FFF7EC" stroke="#3B2116" stroke-width="4"/>
+            <g stroke="#3B2116" stroke-width="3">
+              <rect x="18" y="32" width="18" height="18" rx="5" fill="#8B5534"/><rect x="41" y="32" width="18" height="18" rx="5" fill="#5A3420"/><rect x="64" y="32" width="18" height="18" rx="5" fill="#8B5534"/>
+              <rect x="18" y="57" width="18" height="18" rx="5" fill="#5A3420"/><rect x="41" y="57" width="18" height="18" rx="5" fill="#8B5534"/><rect x="64" y="57" width="18" height="18" rx="5" fill="#FFC93C"/>
+            </g>
+            <path d="M50 22 L40 8 M50 22 L60 8" stroke="#FF5C7A" stroke-width="6" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="body">
+          <h3>Story Recap</h3>
+          <p>What happened so far? Pick a chocolate from the box to recap any chapter we've read.</p>
+          <div class="tags"><span class="tag">Before reading</span><span class="tag">No spoilers</span></div>
+        </div>
+      </a>
+      <a class="tile theme-strawberry" href="apple-bob.html">
+        <div class="art">
+          <span class="new">NEW</span>
+          <svg viewBox="0 0 40 40" aria-hidden="true">
+            <path d="M20 12 Q21 5 25 3" fill="none" stroke="#5A3420" stroke-width="3" stroke-linecap="round"/>
+            <path d="M22 9 Q30 2 34 7 Q28 12 22 9z" fill="#2FA36B" stroke="#3B2116" stroke-width="1.5"/>
+            <path d="M20 11c-3-3-9-4-13 0-5 5-3 15 1 20 3 4 6 6 9 4 2-1 4-1 6 0 3 2 6 0 9-4 4-5 6-15 1-20-4-4-10-3-13 0z" fill="#FF5C7A" stroke="#3B2116" stroke-width="2.2"/>
+            <path d="M11 17 Q10 22 12 26" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
+          </svg>
+        </div>
+        <div class="body">
+          <h3>Apple Bob</h3>
+          <p>Whose fault is it? Buzz in with a real apple, give your reason, and duck an apple out of the bucket.</p>
+          <div class="tags"><span class="tag">Ch 1-9</span><span class="tag mm">Makey Makey</span></div>
+        </div>
+      </a>
+    </div>
+
+    <h2>Games</h2>
+    <div class="grid">
+      <a class="tile theme-mint" href="wheel.html">
+        <div class="art">
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="42" fill="#FFF7EC" stroke="#3B2116" stroke-width="4"/>
+            <path d="M50 50 L50 8 A42 42 0 0 1 86 29 Z" fill="#FF5C7A"/><path d="M50 50 L86 29 A42 42 0 0 1 86 71 Z" fill="#FFC93C"/>
+            <path d="M50 50 L86 71 A42 42 0 0 1 50 92 Z" fill="#4D8DF7"/><path d="M50 50 L50 92 A42 42 0 0 1 14 71 Z" fill="#9B6BF2"/>
+            <path d="M50 50 L14 71 A42 42 0 0 1 14 29 Z" fill="#FF8A3D"/><path d="M50 50 L14 29 A42 42 0 0 1 50 8 Z" fill="#8B5534"/>
+            <circle cx="50" cy="50" r="42" fill="none" stroke="#3B2116" stroke-width="4"/>
+            <circle cx="50" cy="50" r="9" fill="#FFF7EC" stroke="#3B2116" stroke-width="4"/>
+          </svg>
+        </div>
+        <div class="body">
+          <h3>Chocolate Wheel</h3>
+          <p>Spin the wheel and solve word puzzles from the story.</p>
+          <div class="tags"><span class="tag">Ch 1-8</span><span class="tag mm">Makey Makey</span></div>
+        </div>
+      </a>
+      <a class="tile theme-lemon" href="feud.html">
+        <div class="art">
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <rect x="10" y="14" width="80" height="62" rx="10" fill="#4D8DF7" stroke="#3B2116" stroke-width="4"/>
+            <g fill="#FFF7EC" stroke="#3B2116" stroke-width="3">
+              <rect x="18" y="22" width="30" height="14" rx="4"/><rect x="52" y="22" width="30" height="14" rx="4"/>
+              <rect x="18" y="40" width="30" height="14" rx="4"/><rect x="52" y="40" width="30" height="14" rx="4"/>
+            </g>
+            <text x="33" y="33" font-family="Nunito Sans,Arial" font-weight="900" font-size="11" text-anchor="middle" fill="#3B2116">1</text>
+            <rect x="34" y="76" width="32" height="14" rx="4" fill="#FF5C7A" stroke="#3B2116" stroke-width="4"/>
+          </svg>
+        </div>
+        <div class="body">
+          <h3>Chocolate Feud</h3>
+          <p>Two teams race to name the top answers on the board.</p>
+          <div class="tags"><span class="tag">Ch 1-8</span><span class="tag mm">Makey Makey</span></div>
+        </div>
+      </a>
+      <a class="tile theme-blueberry" href="madlibs.html">
+        <div class="art">
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <rect x="16" y="12" width="60" height="76" rx="8" fill="#FFF7EC" stroke="#3B2116" stroke-width="4"/>
+            <g stroke="#3B2116" stroke-width="4" stroke-linecap="round"><path d="M26 30H66"/><path d="M26 44H44"/><path d="M26 58H60"/><path d="M26 72H48"/></g>
+            <path d="M50 44H66" stroke="#FF5C7A" stroke-width="6" stroke-linecap="round"/>
+            <path d="M62 84 L86 40 L94 45 L70 89 L60 92 Z" fill="#FFC93C" stroke="#3B2116" stroke-width="4" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="body">
+          <h3>Chocolate Mad Libs</h3>
+          <p>Fill in silly words and hear the story read out loud.</p>
+          <div class="tags"><span class="tag">Ch 1-7</span><span class="tag">Whole group</span></div>
+        </div>
+      </a>
+    </div>
+
+    <h2>Makey Makey stations</h2>
+    <div class="grid">
+      <a class="tile theme-orange" href="chocolate-touch-test.html">
+        <div class="art">
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <path d="M50 10 C54 30 80 50 80 70 C80 84 66 90 50 90 C34 90 20 84 20 70 C20 50 46 30 50 10 Z" fill="#C9D0D6" stroke="#3B2116" stroke-width="4" stroke-linejoin="round"/>
+            <path d="M36 52 C40 46 44 42 46 36" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".8"/>
+            <path d="M50 10 C58 2 72 4 78 0" stroke="#FFF7EC" stroke-width="5" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="body">
+          <h3>Do You Have the Chocolate Touch?</h3>
+          <p>Walk up, touch the Kiss, and find out if you have the magic.</p>
+          <div class="tags"><span class="tag">Any chapter</span><span class="tag mm">Makey Makey</span></div>
+        </div>
+      </a>
+      <a class="tile theme-grape" href="ch6-makey-makey.html">
+        <div class="art">
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <path d="M38 10H62V38L84 80C88 88 84 92 76 92H24C16 92 12 88 16 80L38 38Z" fill="#FFF7EC" stroke="#3B2116" stroke-width="4" stroke-linejoin="round"/>
+            <path d="M27 62H73L80 80C82 85 80 87 75 87H25C20 87 18 85 20 80Z" fill="#8B5534"/>
+            <circle cx="44" cy="72" r="4" fill="#FFC93C"/><circle cx="58" cy="76" r="3" fill="#FF5C7A"/>
+            <path d="M34 10H66" stroke="#3B2116" stroke-width="5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="body">
+          <h3>Chocolate Touch Lab</h3>
+          <p>Turn things to chocolate, Truth or Excuse, and John's Thirst.</p>
+          <div class="tags"><span class="tag">Ch 1-6</span><span class="tag mm">Makey Makey</span></div>
+        </div>
+      </a>
+    </div>
+  </main>
+  <footer>Based on <i>The Chocolate Touch</i> by Patrick Skene Catling</footer>
+
+<script>
+  // Show how far the group has read, using the same setting as the Story Recap's "We've finished up to".
+  try {
+    const n = JSON.parse(localStorage.getItem('ct-gate'));
+    if (n > 0) { const r = document.getElementById('reading'); r.textContent = n >= 12 ? 'We finished the book!' : `We've read up to Chapter ${n}`; r.hidden = false; }
+  } catch (e) {}
+</script>
 </body>
 </html>
