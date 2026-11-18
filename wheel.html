@@ -7,110 +7,109 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..800&family=Nunito+Sans:wght@400;700;800;900&display=swap">
+<link rel="stylesheet" href="candy.css">
 <style>
   /* Whole-group word puzzle game for the smart screen. A student touches the Makey Makey Kiss (Space) to spin,
-     their team calls a letter, the teacher types it. Same fixed 1280x720 stage and palette as chocolate-touch-test.html. */
-  :root{
-    --cocoa:#2A1810; --cocoa2:#3B2318; --cocoa3:#4E3122; --milk:#7A4A2E; --choc:#5A3420;
-    --cream:#FAF4E8; --muted:#D8CBB8; --dust:#A08B78; --amber:#E0A15C; --butter:#FFE9B8;
-    --foil:#E8C66A; --grey:#6E6A66;
-    --serif:Fraunces,Georgia,"Times New Roman",serif;
-    --sans:"Nunito Sans",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;
-    color-scheme:dark;
-  }
+     their team calls a letter, the teacher types it. Fixed 1280x720 stage; colors come from candy.css (mint page). */
   *{box-sizing:border-box}
   [hidden]{display:none!important}
   html,body{height:100%}
-  body{margin:0;background:#120b07;color:var(--cream);font-family:var(--sans);overflow:hidden}
+  html{background:var(--paper)}
+  body{margin:0;font-family:var(--sans);overflow:hidden}
 
   #viewport{position:fixed;inset:0;overflow:hidden}
-  #stage{width:1280px;height:720px;position:absolute;left:0;top:0;transform-origin:0 0;overflow:hidden;
-         background:radial-gradient(ellipse at 50% 0%, var(--cocoa3) 0%, var(--cocoa) 60%, #1E110A 100%);
-         border-radius:6px;box-shadow:0 24px 70px rgba(0,0,0,.6)}
+  #stage{width:1280px;height:720px;position:absolute;left:0;top:0;transform-origin:0 0;overflow:hidden;background:transparent}
 
   /* team scores across the top */
   #teams{position:absolute;top:18px;left:24px;right:200px;display:flex;gap:14px}
-  .team{flex:1;border-radius:14px;padding:8px 16px;background:rgba(250,244,232,.06);border:3px solid transparent;
-        display:flex;align-items:center;justify-content:space-between;transition:transform .25s,border-color .25s,background .25s}
-  .team .nm{font-weight:900;font-size:21px;color:var(--muted)}
-  .team .pts{font-family:var(--serif);font-weight:800;font-size:34px;color:var(--cream)}
-  .team.on{border-color:var(--c);background:color-mix(in srgb, var(--c) 22%, transparent);transform:scale(1.04)}
-  .team.on .nm{color:var(--cream)}
-  .team .sw{display:inline-block;width:16px;height:16px;border-radius:50%;background:var(--c);margin-right:9px;vertical-align:-1px}
+  .team{flex:1;min-width:0;border-radius:16px;padding:6px 14px;background:var(--card);border:var(--stroke);box-shadow:var(--pop-sm);
+        display:flex;align-items:center;justify-content:space-between;gap:8px;transition:transform .25s,background .25s}
+  .team .nm{font-weight:900;font-size:20px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .team .pts{font-family:var(--serif);font-weight:800;font-size:34px;color:var(--ink)}
+  .team.on{background:var(--c);transform:scale(1.05)}
+  .team.on .nm{color:var(--ink)}
+  .team .sw{display:inline-block;width:18px;height:18px;border-radius:50%;background:var(--c);border:3px solid var(--ink);margin-right:8px;vertical-align:-2px}
+  .team.on .sw{background:var(--card)}
   .team.bump .pts{animation:bump .5s}
-  @keyframes bump{40%{transform:scale(1.35);color:var(--butter)}}
+  @keyframes bump{40%{transform:scale(1.35);color:var(--accent-deep)}}
 
-  /* corner buttons */
-  #corner{position:absolute;top:22px;right:22px;display:flex;gap:8px;z-index:4}
-  #corner button{width:48px;height:48px;border-radius:12px;border:1px solid rgba(232,198,106,.3);background:rgba(250,244,232,.06);
-                 color:var(--butter);font:900 20px var(--sans);cursor:pointer}
+  /* corner buttons (the Home pill sits first in this row) */
+  #corner{position:absolute;top:20px;right:22px;display:flex;gap:10px;z-index:4}
+  #corner button{width:48px;height:48px;border-radius:14px;border:var(--stroke);background:var(--card);box-shadow:var(--pop-sm);
+                 color:var(--ink);font:900 20px var(--sans);cursor:pointer}
+  /* Home sits under the corner buttons, above the start/help/final cards (but under the wide puzzle picker) */
+  #stage > .home-pill{position:absolute;top:84px;right:22px;left:auto;z-index:6;height:40px;padding:0 16px 0 12px;font-size:17px}
+  #stage:has(#pick:not([hidden])) > .home-pill{z-index:3}
 
   /* the wheel */
-  #wheelWrap{position:absolute;left:22px;top:112px;width:460px;height:460px}
-  #wheel{width:460px;height:460px;filter:drop-shadow(0 18px 30px rgba(0,0,0,.5))}
-  #pointer{position:absolute;left:50%;top:-14px;width:44px;height:52px;margin-left:-22px;z-index:2;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
-  #spinHint{position:absolute;left:22px;width:460px;top:590px;text-align:center;font-weight:900;font-size:24px;color:var(--butter);min-height:34px}
+  #wheelWrap{position:absolute;left:22px;top:104px;width:460px;height:460px}
+  #wheel{width:460px;height:460px;filter:drop-shadow(0 8px 0 var(--ink))}
+  #pointer{position:absolute;left:50%;top:-14px;width:44px;height:52px;margin-left:-22px;z-index:2;filter:drop-shadow(0 3px 0 var(--ink))}
+  #spinHint{position:absolute;left:22px;width:460px;top:588px;text-align:center;font-weight:900;font-size:24px;color:var(--ink);min-height:34px}
   #spinHint.pulse{animation:hint 1.2s ease-in-out infinite}
   @keyframes hint{50%{opacity:.45}}
-  #landed{position:absolute;left:22px;width:460px;top:630px;text-align:center;font-family:var(--serif);font-weight:800;font-size:40px;color:var(--foil);min-height:50px}
+  #landed{position:absolute;left:22px;width:460px;top:628px;text-align:center;font-family:var(--serif);font-weight:800;font-size:40px;color:var(--strawberry-deep);min-height:50px}
   #landed.pop{animation:pop .45s cubic-bezier(.2,1.6,.4,1) both}
   @keyframes pop{from{transform:scale(.4);opacity:0}}
 
   /* puzzle board */
-  #cat{position:absolute;left:510px;right:24px;top:108px;text-align:center;font-weight:900;font-size:22px;letter-spacing:2.4px;text-transform:uppercase;color:var(--amber)}
-  #board{position:absolute;left:510px;right:24px;top:146px;display:grid;grid-template-rows:repeat(4,64px);gap:7px;justify-items:center}
+  #cat{position:absolute;left:510px;right:24px;top:104px;text-align:center;font-weight:900;font-size:22px;letter-spacing:2.4px;text-transform:uppercase;color:var(--accent-deep)}
+  #board{position:absolute;left:510px;right:24px;top:144px;display:grid;grid-template-rows:repeat(4,64px);gap:7px;justify-items:center}
   .row{display:flex;gap:6px}
-  .tile{width:47px;height:64px;border-radius:7px;perspective:400px}
-  .tile.gap{background:rgba(250,244,232,.04)}
+  .tile{width:47px;height:64px;border-radius:9px;perspective:400px}
+  .tile.gap{background:var(--accent-soft);border:2px dashed color-mix(in srgb,var(--accent) 60%,transparent)}
   .tile .in{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .5s}
-  .tile .f,.tile .b{position:absolute;inset:0;border-radius:7px;backface-visibility:hidden;display:flex;align-items:center;justify-content:center}
-  .tile .f{background:linear-gradient(170deg,#FFF8EA,#EBDCC2);box-shadow:inset 0 -4px 0 rgba(90,52,32,.18)}
-  .tile .b{background:linear-gradient(170deg,var(--butter),var(--foil));color:var(--cocoa);font:900 40px var(--sans);transform:rotateY(180deg);
-           box-shadow:inset 0 -4px 0 rgba(90,52,32,.25)}
+  .tile .f,.tile .b{position:absolute;inset:0;border-radius:9px;backface-visibility:hidden;display:flex;align-items:center;justify-content:center;border:3px solid var(--ink)}
+  .tile .f{background:var(--card);box-shadow:inset 0 -5px 0 var(--line)}
+  .tile .b{background:var(--card);color:var(--choc);font:900 40px var(--sans);transform:rotateY(180deg);box-shadow:inset 0 -5px 0 var(--line)}
   .tile.show .in{transform:rotateY(180deg)}
-  .tile.lit .f{background:linear-gradient(170deg,#9FD9FF,#5CB6F2)}
+  .tile.lit .f{background:var(--lemon);box-shadow:inset 0 -5px 0 rgba(59,33,22,.18)}
 
-  #msg{position:absolute;left:510px;right:24px;top:446px;text-align:center;font-weight:900;font-size:27px;color:var(--butter);min-height:40px}
+  #msg{position:absolute;left:510px;right:24px;top:432px;text-align:center;font-weight:900;font-size:25px;line-height:1.12;color:var(--ink);min-height:40px;text-wrap:balance}
 
   /* letter board */
-  #letters{position:absolute;left:510px;right:24px;top:500px;display:grid;grid-template-columns:repeat(13,1fr);gap:8px}
-  #letters button{height:58px;border-radius:10px;border:0;background:rgba(250,244,232,.12);color:var(--cream);font:900 28px var(--sans);cursor:pointer;
+  #letters{position:absolute;left:510px;right:24px;top:494px;display:grid;grid-template-columns:repeat(13,1fr);gap:8px}
+  #letters button{height:58px;border-radius:12px;border:var(--stroke);background:var(--card);box-shadow:var(--pop-sm);color:var(--ink);font:900 28px var(--sans);cursor:pointer;
                   transition:background .2s,opacity .2s}
-  #letters button.used{opacity:.22;cursor:default}
-  #letters button.hit{background:var(--milk)}
+  #letters button.used{opacity:.25;cursor:default;box-shadow:none}
+  #letters button.hit{background:var(--accent)}
   /* teacher controls for touch screens; kept small and quiet so they read as grown-up buttons */
   #wheelWrap{cursor:pointer}
-  #legend{position:absolute;left:510px;right:24px;top:640px;display:flex;justify-content:center;gap:14px}
-  #legend button{height:46px;padding:0 20px;border-radius:12px;border:1px solid rgba(232,198,106,.3);background:rgba(250,244,232,.06);
-                 color:var(--muted);font:800 17px var(--sans);cursor:pointer;transition:opacity .2s}
-  #legend button:disabled{opacity:.25;cursor:default}
+  #legend{position:absolute;left:510px;right:24px;top:642px;display:flex;justify-content:center;gap:14px}
+  #legend button{height:46px;padding:0 20px;border-radius:999px;border:2px solid var(--ink-soft);background:var(--card);
+                 color:var(--ink-soft);font:800 17px var(--sans);cursor:pointer;transition:opacity .2s}
+  #legend button:disabled{opacity:.3;cursor:default}
   #legend kbd{font-size:13px;padding:1px 6px;margin-left:6px}
 
   /* overlays: start card, puzzle picker, help, final */
-  .over{position:absolute;inset:0;background:rgba(18,11,7,.93);display:flex;align-items:center;justify-content:center;z-index:5}
-  .card{background:linear-gradient(170deg,var(--cocoa3),var(--cocoa2));border:1px solid rgba(232,198,106,.3);border-radius:18px;padding:28px 40px;max-width:960px;text-align:left}
-  .card h2{font-family:var(--serif);font-size:38px;margin:0 0 12px}
-  .card p{font-size:19px;color:var(--muted);line-height:1.5;margin:0 0 12px}
+  .over{position:absolute;inset:0;background:rgba(255,247,236,.9);display:flex;align-items:center;justify-content:center;z-index:5}
+  .card{background:var(--card);border:var(--stroke);border-radius:var(--radius);box-shadow:var(--pop);padding:28px 40px;max-width:960px;text-align:left;color:var(--ink)}
+  .card h2{font-family:var(--serif);font-size:38px;margin:0 0 12px;color:var(--ink)}
+  .card p{font-size:19px;color:var(--ink-soft);line-height:1.5;margin:0 0 12px}
+  .card b{color:var(--ink)}
   .card table{border-collapse:collapse;font-size:19px;margin:6px 0 14px}
-  .card td{padding:5px 18px 5px 0;color:var(--muted);vertical-align:top}
+  .card td{padding:5px 18px 5px 0;color:var(--ink-soft);vertical-align:top}
   .card td:first-child{white-space:nowrap}
-  kbd{font:900 17px var(--sans);color:var(--cocoa);background:var(--butter);border-radius:6px;padding:2px 9px}
-  .go{display:inline-block;margin-top:6px;background:var(--foil);color:var(--cocoa);font:900 22px var(--sans);border:0;border-radius:12px;padding:14px 28px;cursor:pointer}
+  kbd{font:900 17px var(--sans);color:var(--ink);background:var(--paper2);border:2px solid var(--ink);box-shadow:0 2px 0 var(--ink);border-radius:7px;padding:1px 8px}
+  .go{display:inline-block;margin-top:6px;background:var(--accent);color:var(--ink);font:900 22px var(--sans);border:var(--stroke);border-radius:999px;box-shadow:var(--pop-sm);padding:13px 28px;cursor:pointer}
   .count{display:inline-flex;gap:8px;margin-left:10px;vertical-align:middle}
-  .count button{width:54px;height:46px;border-radius:10px;border:2px solid rgba(232,198,106,.35);background:transparent;color:var(--cream);font:900 22px var(--sans);cursor:pointer}
-  .count button.sel{background:var(--foil);color:var(--cocoa);border-color:var(--foil)}
+  .count button{width:54px;height:46px;border-radius:12px;border:var(--stroke);background:var(--card);color:var(--ink);font:900 22px var(--sans);cursor:pointer}
+  .count button.sel{background:var(--accent);box-shadow:var(--pop-sm)}
 
   #pick .card{max-width:1120px;text-align:center}
-  #pickGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin:16px 0 8px}
-  #pickGrid button{border-radius:12px;border:1px solid rgba(232,198,106,.3);background:rgba(250,244,232,.07);color:var(--cream);cursor:pointer;padding:10px 6px;font:800 13px var(--sans);
+  #pickGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin:16px 0 14px}
+  #pickGrid button{border-radius:14px;border:var(--stroke);background:var(--card);box-shadow:var(--pop-sm);color:var(--ink-soft);cursor:pointer;padding:8px 6px 10px;font:800 13px var(--sans);
                    text-transform:uppercase;letter-spacing:.6px;line-height:1.25}
-  #pickGrid button b{display:block;font:800 32px var(--serif);text-transform:none;letter-spacing:0;color:var(--butter)}
-  #pickGrid button.done{opacity:.25}
-  #pickGrid button.next{border-color:var(--foil);box-shadow:0 0 0 2px var(--foil)}
+  #pickGrid button b{display:block;font:800 32px var(--serif);text-transform:none;letter-spacing:0;color:var(--ink)}
+  #pickGrid button.done{opacity:.3;box-shadow:none}
+  #pickGrid button.next{background:var(--accent);color:var(--ink);transform:translateY(-2px);box-shadow:var(--pop)}
 
   #final h2{font-size:56px;text-align:center}
   #finalList{font-size:28px;font-weight:900;margin:10px 0 18px}
-  #finalList div{display:flex;justify-content:space-between;gap:60px;padding:6px 0;border-bottom:1px solid rgba(250,244,232,.1)}
+  #finalList div{display:flex;justify-content:space-between;gap:60px;padding:6px 0;border-bottom:2px dashed var(--line)}
+  /* the team's name stays ink so it reads well; its color shows as a dot */
+  #finalList span:first-child{-webkit-text-fill-color:var(--ink)}
+  #finalList span:first-child::before{content:"";display:inline-block;width:20px;height:20px;border-radius:50%;background:currentColor;border:3px solid var(--ink);margin-right:12px;vertical-align:-1px}
 
   /* chocolate drips for a solve */
   #drips{position:absolute;top:0;left:0;right:0;height:0;pointer-events:none;z-index:3}
@@ -120,12 +119,13 @@
   .dripbar{position:absolute;top:0;left:0;right:0;height:0;background:var(--choc);animation:bar .5s ease-out forwards}
   @keyframes bar{to{height:14px}}
 
-  #focusNag{position:fixed;inset:0;z-index:10;background:rgba(18,11,7,.82);display:flex;align-items:center;justify-content:center;cursor:pointer}
-  #focusNag div{background:var(--foil);color:var(--cocoa);font:900 28px var(--sans);padding:22px 34px;border-radius:16px;text-align:center;max-width:80vw}
+  #focusNag{position:fixed;inset:0;z-index:10;background:rgba(255,247,236,.85);display:flex;align-items:center;justify-content:center;cursor:pointer}
+  #focusNag div{background:var(--card);color:var(--ink);font:900 28px var(--sans);padding:22px 34px;border:var(--stroke);border-radius:var(--radius);box-shadow:var(--pop);text-align:center;max-width:80vw}
 </style>
 </head>
-<body>
+<body class="candy-bg theme-mint">
 <div id="viewport"><div id="stage">
+  <a class="home-pill" href="index.html">← Home</a>
 
   <div id="teams"></div>
   <div id="corner">
@@ -135,10 +135,10 @@
   </div>
 
   <div id="wheelWrap">
-    <svg id="pointer" viewBox="0 0 44 52" aria-hidden="true"><path d="M4 4 H40 L22 48 Z" fill="#FFE9B8" stroke="#2A1810" stroke-width="3" stroke-linejoin="round"/></svg>
+    <svg id="pointer" viewBox="0 0 44 52" aria-hidden="true"><path d="M4 4 H40 L22 48 Z" fill="#FF5C7A" stroke="#3B2116" stroke-width="3" stroke-linejoin="round"/></svg>
     <svg id="wheel" viewBox="-230 -230 460 460" aria-hidden="true"><g id="spinner"></g>
-      <circle r="44" fill="#3B2318" stroke="#E8C66A" stroke-width="5"/>
-      <text text-anchor="middle" dy="9" font-family="Fraunces,Georgia,serif" font-weight="800" font-size="26" fill="#E8C66A">spin</text>
+      <circle r="44" fill="#FFFFFF" stroke="#3B2116" stroke-width="5"/>
+      <text text-anchor="middle" dy="9" font-family="Fraunces,Georgia,serif" font-weight="800" font-size="26" fill="#3B2116">spin</text>
     </svg>
   </div>
   <div id="spinHint"></div>
@@ -277,10 +277,10 @@
   /* ---------- wheel ---------- */
   // value: points per letter. TONIC loses the turn. No Bankrupt on purpose.
   const WEDGES = [
-    {v:300, c:'#7A4A2E'}, {v:500, c:'#B5523B'}, {v:150, c:'#3E6B4F'}, {v:250, c:'#C98A3D'},
-    {v:'TONIC', c:'#5E7A2E', label:'Yuck!'}, {v:400, c:'#2F5E7E'}, {v:200, c:'#8A3B5C'}, {v:350, c:'#7A4A2E'},
-    {v:100, c:'#C98A3D'}, {v:'CHOC', c:'#E8C66A', label:'1000', ink:'#2A1810'}, {v:250, c:'#3E6B4F'}, {v:450, c:'#B5523B'},
-    {v:200, c:'#2F5E7E'}, {v:300, c:'#8A3B5C'},
+    {v:300, c:'#FF5C7A'}, {v:500, c:'#3CCB9A'}, {v:150, c:'#FFC93C'}, {v:250, c:'#4D8DF7'},
+    {v:'TONIC', c:'#6236B8', label:'Yuck!', ink:'#FFFFFF'}, {v:400, c:'#FF8A3D'}, {v:200, c:'#FF5C7A'}, {v:350, c:'#3CCB9A'},
+    {v:100, c:'#4D8DF7'}, {v:'CHOC', c:'#5A3420', label:'1000', ink:'#FFC93C'}, {v:250, c:'#3CCB9A'}, {v:450, c:'#FF8A3D'},
+    {v:200, c:'#FFC93C'}, {v:300, c:'#4D8DF7'},
   ];
   const SEG = 360 / WEDGES.length, R = 220;
   (function drawWheel(){
@@ -288,13 +288,13 @@
     let svg = '';
     WEDGES.forEach((w, i) => {   // wedge i is centered at i*SEG degrees clockwise from the top
       const [x1,y1] = pt(i*SEG - SEG/2, R), [x2,y2] = pt(i*SEG + SEG/2, R);
-      svg += `<path d="M0 0 L${x1} ${y1} A${R} ${R} 0 0 1 ${x2} ${y2} Z" fill="${w.c}" stroke="#2A1810" stroke-width="3"/>`;
-      const label = w.label || w.v, ink = w.ink || '#FAF4E8';
+      svg += `<path d="M0 0 L${x1} ${y1} A${R} ${R} 0 0 1 ${x2} ${y2} Z" fill="${w.c}" stroke="#3B2116" stroke-width="3"/>`;
+      const label = w.label || w.v, ink = w.ink || '#3B2116';
       svg += `<g transform="rotate(${i*SEG})"><text x="0" y="${-R+20}" transform="rotate(90 0 ${-R+20})" text-anchor="start" dominant-baseline="central"
                 font-family="Nunito Sans,sans-serif" font-weight="900" font-size="${String(label).length > 4 ? 24 : 30}" fill="${ink}">${label}</text></g>`;
     });
-    svg += `<circle r="${R}" fill="none" stroke="#E8C66A" stroke-width="8"/>`;
-    for (let i = 0; i < WEDGES.length; i++) { const [x,y] = pt(i*SEG - SEG/2, R); svg += `<circle cx="${x}" cy="${y}" r="5" fill="#FFE9B8"/>`; }
+    svg += `<circle r="${R}" fill="none" stroke="#3B2116" stroke-width="8"/>`;
+    for (let i = 0; i < WEDGES.length; i++) { const [x,y] = pt(i*SEG - SEG/2, R); svg += `<circle cx="${x}" cy="${y}" r="5" fill="#FFFFFF"/>`; }
     g.innerHTML = svg;
   })();
 
@@ -318,8 +318,8 @@
 
   /* ---------- teams ---------- */
   const TEAM_DEFS = [
-    {name:'Team Milk', c:'#C98A3D'}, {name:'Team Dark', c:'#B5523B'},
-    {name:'Team Mint', c:'#4FA477'}, {name:'Team Blueberry', c:'#4A8FC4'},
+    {name:'Team Milk', c:'#FF8A3D'}, {name:'Team Dark', c:'#FF5C7A'},
+    {name:'Team Mint', c:'#3CCB9A'}, {name:'Team Blueberry', c:'#4D8DF7'},
   ];
   let nTeams = 2, teams = [], turn = 0;
   function renderTeams(){
