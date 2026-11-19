@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fruit Piano Setup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,800&family=Nunito+Sans:wght@600;700;800;900&display=swap">
+<link rel="stylesheet" href="candy.css">
+<style>
+  /* Printable setup pack for fruit-piano.html: wiring map, food place cards, teacher cheat sheet.
+     Three US Letter pages. Print with Cmd+P, color on, margins default. */
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--sans);color:var(--ink);background:#e9e1d6;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  @page{size:letter;margin:0.45in}
+  .page{width:7.6in;min-height:10.1in;margin:24px auto;padding:0.1in;background:#fff;box-shadow:0 4px 18px rgba(0,0,0,.15);position:relative}
+  @media print{
+    body{background:#fff}
+    .page{margin:0;box-shadow:none;width:auto;min-height:auto;page-break-after:always;break-after:page}
+    .page:last-of-type{page-break-after:auto;break-after:auto}
+    .noprint{display:none}
+  }
+  .noprint{max-width:7.6in;margin:20px auto 0;font-weight:800;font-size:16px;background:var(--lemon-soft);border:var(--stroke);border-radius:14px;padding:12px 16px}
+  h1{font:800 34px/1.05 var(--serif);margin:0;color:var(--choc)}
+  h2{font:800 21px var(--serif);margin:16px 0 6px;color:var(--grape-deep)}
+  .kicker{font-weight:900;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-soft)}
+  p,li,td{font-size:14.5px;line-height:1.4}
+  ol,ul{margin:4px 0;padding-left:22px}
+  li{margin:3px 0}
+  .box{border:2.5px solid var(--ink);border-radius:14px;padding:10px 14px;margin-top:10px}
+  .tip{background:var(--lemon-soft)}
+
+  /* page 1: wiring map */
+  .map{width:100%;height:auto;display:block;margin-top:8px}
+  .map text{font-family:var(--sans)}
+  table.wire{width:100%;border-collapse:collapse;margin-top:6px}
+  table.wire td,table.wire th{border:2px solid var(--ink);padding:5px 8px;text-align:left;font-size:14.5px}
+  table.wire th{background:var(--paper2);font-weight:900}
+  .sw{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid var(--ink);vertical-align:-2px;margin-right:6px}
+
+  /* page 2: place cards */
+  .cards{display:grid;grid-template-columns:1fr 1fr;margin-top:10px}
+  .card{height:2.8in;border:2px dashed #9b8a7a;padding:12px;display:flex;align-items:center;justify-content:center}
+  .card .in{width:100%;height:100%;border:4px solid var(--ink);border-radius:20px;background:var(--c-soft);display:flex;flex-direction:column;
+            align-items:center;justify-content:center;position:relative}
+  .card .num{position:absolute;top:10px;left:12px;width:52px;height:52px;border-radius:50%;background:var(--c);border:4px solid var(--ink);
+             font:900 30px/44px var(--sans);text-align:center}
+  .card svg{width:1.25in;height:1.25in}
+  .card .nm{font:800 36px/1 var(--serif);margin-top:4px}
+  .card .pad{margin-top:8px;font:900 17px var(--sans);background:#fff;border:2.5px solid var(--ink);border-radius:999px;padding:4px 16px}
+
+  /* page 3: cheat sheet */
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .check li{list-style:none;position:relative;padding-left:4px}
+  .check li::before{content:"";position:absolute;left:-22px;top:3px;width:14px;height:14px;border:2.5px solid var(--ink);border-radius:4px}
+  kbd{font:900 13px var(--sans);background:var(--paper2);border:2px solid var(--ink);border-radius:6px;padding:0 6px}
+  table.trouble{width:100%;border-collapse:collapse}
+  table.trouble td{border-top:2px solid var(--line);padding:6px 6px 6px 0;vertical-align:top;font-size:13.5px}
+  table.trouble td:first-child{font-weight:900;width:38%}
+</style>
+</head>
+<body>
+<div class="noprint">Press <b>Cmd+P</b> to print (3 pages, color if you can). Page 2 is cut-apart place cards.</div>
+
+<!-- ============ PAGE 1: WIRING MAP ============ -->
+<section class="page">
+  <div class="kicker">Fruit Piano · Page 1 of 3</div>
+  <h1>Wiring map</h1>
+  <svg class="map" viewBox="0 0 1000 600" role="img" aria-label="Makey Makey wiring: six foods to the six front pads, wrist strap to Earth">
+    <!-- wires (drawn first so they sit under everything) -->
+    <g fill="none" stroke-width="7" stroke-linecap="round">
+      <path d="M95 150 C95 260 250 250 362 300" stroke="#FF5C7A"/>
+      <path d="M260 150 C260 210 400 200 420 250" stroke="#FF8A3D"/>
+      <path d="M425 150 C425 220 470 260 478 300" stroke="#FFC93C"/>
+      <path d="M590 150 C590 300 470 330 420 350" stroke="#3CCB9A"/>
+      <path d="M755 150 C755 230 640 250 612 290" stroke="#4D8DF7"/>
+      <path d="M920 150 C920 280 760 300 706 330" stroke="#9B6BF2"/>
+      <path d="M500 432 C500 470 500 480 500 505" stroke="#3B2116" stroke-dasharray="2 12"/>
+    </g>
+    <!-- foods -->
+    <g id="foods"></g>
+    <!-- board -->
+    <rect x="300" y="240" width="460" height="200" rx="22" fill="#E5484D" stroke="#3B2116" stroke-width="5"/>
+    <text x="660" y="272" text-anchor="middle" font-weight="900" font-size="20" fill="#fff">MAKEY MAKEY</text>
+    <g stroke="#3B2116" stroke-width="4" fill="#fff">
+      <circle cx="420" cy="290" r="26"/><circle cx="362" cy="330" r="26"/><circle cx="478" cy="330" r="26"/><circle cx="420" cy="370" r="26"/>
+      <circle cx="612" cy="320" r="34"/><circle cx="706" cy="340" r="24"/>
+    </g>
+    <g font-weight="900" font-size="14" text-anchor="middle" fill="#3B2116">
+      <text x="420" y="296">Up</text><text x="362" y="336">Left</text><text x="478" y="336">Right</text><text x="420" y="376">Down</text>
+      <text x="612" y="326">Space</text><text x="706" y="345">Click</text>
+    </g>
+    <rect x="330" y="405" width="400" height="26" rx="6" fill="#C9C2B8" stroke="#3B2116" stroke-width="3"/>
+    <text x="530" y="424" text-anchor="middle" font-weight="900" font-size="16" fill="#3B2116">EARTH (bottom strip)</text>
+    <!-- wrist strap -->
+    <g transform="translate(500 545)">
+      <ellipse rx="70" ry="30" fill="#2b2b2b" stroke="#3B2116" stroke-width="4"/>
+      <ellipse rx="52" ry="17" fill="#fff"/>
+      <rect x="-22" y="-38" width="44" height="18" rx="4" fill="#bfbfbf" stroke="#3B2116" stroke-width="3"/>
+    </g>
+    <text x="600" y="530" font-weight="900" font-size="20" fill="#3B2116">Wrist strap clip → Earth</text>
+    <text x="600" y="556" font-weight="700" font-size="17" fill="#7A5A48">Player wears it snug on bare skin, gray side in</text>
+    <text x="40" y="530" font-weight="900" font-size="18" fill="#3B2116">USB → computer</text>
+    <path d="M300 320 L230 320 L230 500 L180 500" fill="none" stroke="#3B2116" stroke-width="5"/>
+  </svg>
+
+  <table class="wire">
+    <tr><th>#</th><th>Food</th><th>Clip it to</th><th>Note</th></tr>
+    <tbody id="wireRows"></tbody>
+  </table>
+
+  <div class="box tip">
+    <b>Line the food up left to right in number order</b>, so it goes low note to high note like a real piano.
+    On the <b>chopping board</b>: cut the food first, pat it dry, wipe up any juice, and leave a finger's width between pieces.
+    If two foods touch, or a wet streak of juice connects them, both notes play.
+    You have <b>one spare alligator clip</b>: keep it ready for a food that stops working.
+  </div>
+</section>
+
+<!-- ============ PAGE 2: PLACE CARDS ============ -->
+<section class="page">
+  <div class="kicker">Fruit Piano · Page 2 of 3</div>
+  <h1>Food place cards</h1>
+  <p style="margin:4px 0 0">Cut on the dashed lines. Line them up along the edge of the chopping board, each in front of its food, so the board matches the screen.</p>
+  <div class="cards" id="cards"></div>
+</section>
+
+<!-- ============ PAGE 3: CHEAT SHEET ============ -->
+<section class="page">
+  <div class="kicker">Fruit Piano · Page 3 of 3</div>
+  <h1>Teacher cheat sheet</h1>
+  <div class="cols">
+    <div>
+      <h2>Before the kids arrive</h2>
+      <ol class="check">
+        <li>Plug the Makey Makey into the computer. Open <b>benfminer.github.io/chocolate-touch</b> → <b>Fruit Piano</b>. Press ⛶ for full screen.</li>
+        <li>Turn the volume up.</li>
+        <li>Click once anywhere on the page. (A yellow "Click anywhere" banner means the page lost focus.)</li>
+        <li>Put on the wrist strap. Press ⚙ and touch each food: the matching key should light up.</li>
+        <li>In ⚙, tap <b>Change fruit</b> if a key's picture doesn't match your table. Press ⚙ again to finish.</li>
+        <li><b>Park the mouse pointer in the empty space above the keys.</b> The Click pad clicks wherever the pointer is.</li>
+      </ol>
+
+      <h2>Running it</h2>
+      <p><b>Free Play</b> (warm-up): everyone gets a quick turn. Try all three sounds. The Chocolate Trumpet gets laughs.</p>
+      <p><b>Learn a Song:</b> start with <b>Hot Cross Buns</b> (it only uses apple, grapes, banana). Press <b>Listen first</b>. The next food bounces on screen. Wrong notes are fine; it waits.
+         Then Mary Had a Little Lamb, Jingle Bells, Twinkle Twinkle. <i>Twinkle is the only song that uses raisins.</i></p>
+      <p><b>Copy Cat:</b> one player wears the strap. Watch, then copy. One more note each round. A miss turns the food to chocolate. <kbd>Enter</kbd> = next player. The screen keeps "Best today."</p>
+    </div>
+    <div>
+      <h2>Teacher keys</h2>
+      <table class="trouble">
+        <tr><td><kbd>Enter</kbd></td><td>Start / next player (Copy Cat). Start the song over (Learn a Song).</td></tr>
+        <tr><td><kbd>T</kbd> (secret)</td><td>Next food a kid touches comes out as a gloopy chocolate trumpet, then back to normal. Tiny dot in the bottom-right corner: solid = armed.</td></tr>
+        <tr><td><kbd>1</kbd>–<kbd>6</kbd></td><td>Play the foods from the keyboard (handy for testing).</td></tr>
+        <tr><td>Tap the screen</td><td>Kids can also tap the food keys on the smart screen.</td></tr>
+      </table>
+
+      <h2>If something goes wrong</h2>
+      <table class="trouble">
+        <tr><td>No food works at all</td><td>Strap snug on bare skin? Strap clip on Earth? Click the page once. USB plugged in?</td></tr>
+        <tr><td>One food doesn't work</td><td>Push the clip deeper into it. Cut a fresh piece. Swap in the spare clip.</td></tr>
+        <tr><td>Raisins are spotty</td><td>Squish several into one clump on the clip. Dampen them a little. Still bad? Use a spare piece of cucumber, apple or jicama and change key 6 in ⚙.</td></tr>
+        <tr><td>Two notes play at once</td><td>Two foods are touching, or juice on the chopping board connects them. Spread them out and wipe the board dry.</td></tr>
+        <tr><td>Mode or sound changes by itself</td><td>That's the Click pad clicking a button. Move the pointer to empty space.</td></tr>
+        <tr><td>No sound</td><td>Volume up, then click the page once (browsers wait for one click before playing sound).</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="fruit-apple">
+      <path d="M20 12 Q21 5 25 3" fill="none" stroke="#5A3420" stroke-width="3" stroke-linecap="round"/>
+      <path d="M22 9 Q30 2 34 7 Q28 12 22 9z" fill="#2FA36B" stroke="#3B2116" stroke-width="1.5"/>
+      <path d="M20 11c-3-3-9-4-13 0-5 5-3 15 1 20 3 4 6 6 9 4 2-1 4-1 6 0 3 2 6 0 9-4 4-5 6-15 1-20-4-4-10-3-13 0z" fill="#FF5C7A" stroke="#3B2116" stroke-width="2.2"/>
+      <path d="M11 17 Q10 22 12 26" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
+    </g>
+    <g id="fruit-banana">
+      <path d="M8 6 L13 6 L12.5 11 L9 11z" fill="#5A3420" stroke="#3B2116" stroke-width="1.2"/>
+      <path d="M9 10 Q5 28 21 34 Q31 37 37 29 Q28 30 21 26 Q13 21 13 10z" fill="#FFD84A" stroke="#3B2116" stroke-width="2.2" stroke-linejoin="round"/>
+      <path d="M11 16 Q12 25 20 29" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".65"/>
+      <path d="M37 29 L38 31" stroke="#3B2116" stroke-width="2.4" stroke-linecap="round"/>
+    </g>
+    <g id="fruit-grapes">
+      <path d="M21 11 Q21 5 24 3" fill="none" stroke="#5A3420" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M22 8 Q29 2 34 6 Q28 11 22 8z" fill="#2FA36B" stroke="#3B2116" stroke-width="1.4"/>
+      <g fill="#9B6BF2" stroke="#3B2116" stroke-width="1.8">
+        <circle cx="13" cy="15" r="5.2"/><circle cx="21.5" cy="14" r="5.2"/><circle cx="30" cy="15" r="5.2"/>
+        <circle cx="17" cy="23" r="5.2"/><circle cx="26" cy="23" r="5.2"/><circle cx="21.5" cy="31" r="5.2"/>
+      </g>
+      <g fill="#fff" opacity=".55"><circle cx="11.5" cy="13.5" r="1.5"/><circle cx="20" cy="12.5" r="1.5"/><circle cx="15.5" cy="21.5" r="1.5"/></g>
+    </g>
+    <g id="fruit-cucumber">
+      <ellipse cx="17" cy="17" rx="15" ry="6.5" transform="rotate(-35 17 17)" fill="#3C9A4E" stroke="#3B2116" stroke-width="2.2"/>
+      <path d="M8 21 Q15 15 24 9" fill="none" stroke="#8FD48A" stroke-width="2" stroke-linecap="round" opacity=".8"/>
+      <g fill="#1F6B32"><circle cx="12" cy="16" r="1"/><circle cx="20" cy="14" r="1"/><circle cx="16" cy="22" r="1"/><circle cx="25" cy="15" r="1"/></g>
+      <circle cx="29" cy="29" r="8.5" fill="#3C9A4E" stroke="#3B2116" stroke-width="2"/>
+      <circle cx="29" cy="29" r="6.3" fill="#D4F2C6"/>
+      <g fill="#F4FBEF" stroke="#8DBF7E" stroke-width=".8"><ellipse cx="29" cy="26.3" rx="1" ry="1.6"/><ellipse cx="26.6" cy="30.4" rx="1" ry="1.6" transform="rotate(60 26.6 30.4)"/><ellipse cx="31.4" cy="30.4" rx="1" ry="1.6" transform="rotate(-60 31.4 30.4)"/></g>
+    </g>
+    <g id="fruit-jicama">
+      <path d="M19 9 L20 3 L22 9" fill="#8B5534" stroke="#3B2116" stroke-width="1.4" stroke-linejoin="round"/>
+      <path d="M20 8 C30 8 35 15 34 22 C33 30 26 34 21 35 C21 37 20 38 18 39 C18 37 18 36 17 35 C11 33 6 28 6 21 C6 14 11 8 20 8z" fill="#C9A27A" stroke="#3B2116" stroke-width="2.2"/>
+      <path d="M11 16 Q13 13 16 12" fill="none" stroke="#3B2116" stroke-width="1.2" opacity=".4" stroke-linecap="round"/>
+      <path d="M22 15 L33 20 C33 27 29 31 23 32 Z" fill="#FFF8E8" stroke="#3B2116" stroke-width="1.8" stroke-linejoin="round"/>
+    </g>
+    <g id="fruit-raisins" stroke="#3B2116" stroke-width="1.8">
+      <ellipse cx="13" cy="15" rx="6.5" ry="5" fill="#6A3352" transform="rotate(-20 13 15)"/>
+      <ellipse cx="26" cy="13" rx="6" ry="5" fill="#5B2A46" transform="rotate(15 26 13)"/>
+      <ellipse cx="20" cy="24" rx="7" ry="5.2" fill="#6A3352"/>
+      <ellipse cx="10" cy="29" rx="5.5" ry="4.5" fill="#5B2A46" transform="rotate(25 10 29)"/>
+      <ellipse cx="30" cy="28" rx="6" ry="4.8" fill="#6A3352" transform="rotate(-15 30 28)"/>
+      <g fill="none" stroke="#A86A8C" stroke-width="1.1" stroke-linecap="round">
+        <path d="M10 14 Q13 16 16 14"/><path d="M23 12 Q26 14 29 12"/><path d="M16 23 Q20 26 24 23"/><path d="M8 29 Q10 30 12 28"/><path d="M27 28 Q30 30 33 27"/>
+      </g>
+    </g>
+  </defs>
+</svg>
+
+<script>
+  // One source for the six foods so the map, table and cards always agree with fruit-piano.html's defaults.
+  const FOODS = [
+    { id:'apple',    name:'Apple',    pad:'← Left',  c:'strawberry', hex:'#FF5C7A' },
+    { id:'grapes',   name:'Grapes',   pad:'↑ Up',    c:'orange',     hex:'#FF8A3D' },
+    { id:'banana',   name:'Banana',   pad:'→ Right', c:'lemon',      hex:'#FFC93C' },
+    { id:'cucumber', name:'Cucumber', pad:'↓ Down',  c:'mint',       hex:'#3CCB9A' },
+    { id:'jicama',   name:'Jicama',   pad:'Space',   c:'blueberry',  hex:'#4D8DF7' },
+    { id:'raisins',  name:'Raisins',  pad:'Click',   c:'grape',      hex:'#9B6BF2' },
+  ];
+  const NOTES = {
+    raisins:'Weakest conductor. Squish a clump. Only Twinkle uses it.',
+    jicama:'Cut fresh so it stays juicy.',
+    apple:'Cut fresh so it stays juicy.',
+    grapes:'Push the clip right into one grape.',
+    cucumber:'Strongest conductor of the bunch.',
+    banana:'Clip into the end or a peeled spot.',
+  };
+  const foods = document.getElementById('foods');
+  FOODS.forEach((f, i) => {
+    const x = 95 + i*165;
+    foods.insertAdjacentHTML('beforeend', `
+      <circle cx="${x}" cy="80" r="62" fill="#fff" stroke="${f.hex}" stroke-width="8"/>
+      <circle cx="${x}" cy="80" r="66" fill="none" stroke="#3B2116" stroke-width="3"/>
+      <svg x="${x-40}" y="40" width="80" height="80" viewBox="0 0 40 40"><use href="#fruit-${f.id}"/></svg>
+      <circle cx="${x-50}" cy="28" r="18" fill="${f.hex}" stroke="#3B2116" stroke-width="3"/>
+      <text x="${x-50}" y="35" text-anchor="middle" font-weight="900" font-size="20" fill="#3B2116">${i+1}</text>
+      <text x="${x}" y="175" text-anchor="middle" font-weight="900" font-size="20" fill="#3B2116">${f.name}</text>
+      <text x="${x}" y="198" text-anchor="middle" font-weight="800" font-size="16" fill="#7A5A48">${f.pad}</text>`);
+  });
+  document.getElementById('wireRows').innerHTML = FOODS.map((f, i) =>
+    `<tr><td><span class="sw" style="background:${f.hex}"></span>${i+1}</td><td><b>${f.name}</b></td><td><b>${f.pad}</b></td><td>${NOTES[f.id]}</td></tr>`).join('') +
+    `<tr><td><span class="sw" style="background:#2b2b2b"></span></td><td><b>Wrist strap</b></td><td><b>Earth</b></td><td>Uses its own clip, so your 7 clips cover 6 foods plus a spare.</td></tr>`;
+  document.getElementById('cards').innerHTML = FOODS.map((f, i) => `
+    <div class="card"><div class="in" style="--c:var(--${f.c});--c-soft:var(--${f.c}-soft)">
+      <div class="num">${i+1}</div>
+      <svg viewBox="0 0 40 40" aria-hidden="true"><use href="#fruit-${f.id}"/></svg>
+      <div class="nm">${f.name}</div>
+      <div class="pad">${f.pad}</div>
+    </div></div>`).join('');
+</script>
+</body>
+</html>
