@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fruit Piano</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..800&family=Nunito+Sans:wght@400;700;800;900&display=swap">
+<link rel="stylesheet" href="candy.css">
+<style>
+  /* Chapter 8 tie-in, just for fun: John's trumpet came out as chocolate, so we build a fruit one instead.
+     Six real fruits on the Makey Makey (Left, Up, Right, Down, Space, Click; the 7th clip goes to Earth).
+     Three modes: Free Play, Learn a Song, Copy Cat. Kids can also tap the keys on the smart screen. */
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{height:100%}
+  body{margin:0;font-family:var(--sans);overflow:hidden;user-select:none;-webkit-user-select:none}
+
+  #viewport{position:fixed;inset:0;overflow:hidden}
+  #stage{width:1280px;height:720px;position:absolute;left:0;top:0;transform-origin:0 0;overflow:hidden;
+         background:var(--paper);border:var(--stroke);border-radius:24px}
+
+  /* ---------- top bar ---------- */
+  #brand{position:absolute;top:20px;left:26px;font:800 28px var(--serif);color:var(--grape-deep);display:flex;align-items:center;gap:8px}
+  #brand svg{width:36px;height:36px}
+  #tabs{position:absolute;top:16px;left:50%;transform:translateX(-50%);display:flex;gap:6px;padding:5px;
+        background:var(--paper2);border:var(--stroke);border-radius:999px}
+  #tabs button{font:900 18px var(--sans);color:var(--ink);background:transparent;border:0;border-radius:999px;padding:10px 20px;cursor:pointer}
+  #tabs button.on{background:var(--grape);color:#fff;box-shadow:inset 0 -3px 0 var(--grape-deep)}
+  #corner{position:absolute;top:16px;right:18px;display:flex;gap:8px;z-index:6}
+  #corner a,#corner button{width:46px;height:46px;border-radius:14px;border:var(--stroke);background:var(--card);box-shadow:var(--pop-sm);
+                 color:var(--ink);font:900 20px var(--sans);cursor:pointer;display:grid;place-items:center;text-decoration:none;padding:0}
+  #corner a{width:auto;padding:0 14px;font-size:16px}
+  #corner button.on{background:var(--lemon)}
+  #corner a:active,#corner button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+
+  /* ---------- mode panels (top part of the screen) ---------- */
+  .panel{position:absolute;top:84px;left:40px;right:40px;height:330px;text-align:center}
+  .big{font:800 60px/1.05 var(--serif);color:var(--choc);margin-top:20px}
+  .sub{font-weight:800;font-size:24px;color:var(--ink-soft);margin-top:10px}
+
+  #voices{display:flex;justify-content:center;gap:22px;margin-top:30px}
+  .voice{width:250px;padding:16px 12px 14px;cursor:pointer;font:900 22px var(--sans);color:var(--ink);
+         background:var(--card);border:var(--stroke);border-radius:var(--radius);box-shadow:var(--pop);transition:transform .12s}
+  .voice small{display:block;font-weight:700;font-size:15px;color:var(--ink-soft);margin-top:4px}
+  .voice.on{background:var(--grape-soft);box-shadow:0 6px 0 var(--ink), 0 0 0 6px var(--grape);transform:translateY(-3px)}
+  .voice:active{transform:translateY(4px);box-shadow:0 2px 0 var(--ink)}
+
+  #songs{display:flex;justify-content:center;gap:10px;margin-top:4px}
+  .chip{font:900 17px var(--sans);color:var(--ink);background:var(--card);border:var(--stroke);border-radius:999px;padding:8px 16px;
+        box-shadow:var(--pop-sm);cursor:pointer}
+  .chip.on{background:var(--grape);color:#fff}
+  .chip:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+  #lineNum{margin-top:16px;font-weight:900;font-size:15px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-soft)}
+  .line{display:flex;justify-content:center;gap:10px;margin-top:8px}
+  .bub{width:84px;display:flex;flex-direction:column;align-items:center;gap:4px;transition:opacity .2s}
+  .bub .dot{width:72px;height:72px;border-radius:50%;background:var(--c-soft);border:3px solid var(--c);display:grid;place-items:center;
+            position:relative;transition:transform .15s}
+  .bub .dot svg{width:44px;height:44px}
+  .bub .w{font:800 22px var(--serif);color:var(--ink);white-space:nowrap}
+  .bub.done .dot{background:var(--c);border-color:var(--ink)}
+  .bub.done{opacity:.55}
+  .bub.now .dot{border:4px solid var(--ink);transform:scale(1.14);box-shadow:0 0 0 6px var(--c)}
+  .bub.now .w{color:var(--c-deep);text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:4px}
+  .bub.oops .dot{animation:shake .35s}
+  #nextLine{opacity:.4;transform:scale(.62);transform-origin:top center;margin-top:10px}
+  #songBtns{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:14px}
+  #songDone{position:absolute;left:0;right:0;top:56px}
+
+  #copyStats{display:flex;justify-content:center;gap:14px;margin-top:22px}
+  .stat{font:900 20px var(--sans);background:var(--card);border:var(--stroke);border-radius:999px;padding:8px 18px;box-shadow:var(--pop-sm)}
+  .stat b{color:var(--grape-deep);font-size:24px}
+  #btnCopy{margin-top:26px;font-size:24px;padding:16px 34px}
+
+  /* ---------- fruit keys ---------- */
+  #keys{position:absolute;left:0;right:0;top:432px;height:260px;display:flex;justify-content:center;gap:18px}
+  .key{position:relative;width:186px;height:250px;border:var(--stroke);border-radius:22px;background:var(--c-soft);box-shadow:var(--pop);
+       cursor:pointer;touch-action:none;transition:transform .08s, box-shadow .08s, background .08s;overflow:hidden}
+  .key .num{position:absolute;top:10px;left:10px;width:36px;height:36px;border-radius:50%;background:var(--c);border:3px solid var(--ink);
+            font:900 19px/30px var(--sans);text-align:center;color:var(--ink)}
+  .key .name{position:absolute;left:0;right:0;top:161px;text-align:center;font:800 21px/1 var(--serif);color:var(--ink)}
+  .key .plate{position:absolute;top:22px;left:50%;transform:translateX(-50%);width:132px;height:132px;border-radius:50%;
+              background:var(--card);border:3px solid var(--ink);display:grid;place-items:center}
+  .key .plate svg{width:96px;height:96px;transition:transform .12s}
+  .key .pad{position:absolute;left:12px;right:12px;bottom:12px;font:900 16px var(--sans);color:var(--c-deep);text-align:center;
+            background:var(--card);border:2px solid var(--c-deep);border-radius:999px;padding:6px 0}
+  .key.down{background:var(--c);transform:translateY(6px);box-shadow:0 0 0 var(--ink)}
+  .key.down .plate svg{transform:scale(1.15) rotate(-6deg)}
+  .key.hint{animation:hint 1s infinite}
+  .key .swap{position:absolute;top:8px;right:8px;font:900 13px var(--sans);background:var(--lemon);border:2px solid var(--ink);
+             border-radius:999px;padding:5px 9px;cursor:pointer;color:var(--ink);display:none}
+  #stage.setup .key .swap{display:block}
+  .key .choc{position:absolute;left:0;right:0;top:0;height:0;background:var(--choc);pointer-events:none;
+             border-bottom-left-radius:30px 18px;border-bottom-right-radius:30px 18px}
+  .key .choc.go{animation:drip 1.1s ease-in forwards}
+  /* teacher's tell for the secret chocolate note: hollow = normal, solid = armed */
+  #tell{position:absolute;right:8px;bottom:8px;width:8px;height:8px;border-radius:50%;border:1.5px solid var(--line)}
+  #tell.on{background:var(--ink-soft);border-color:var(--ink-soft)}
+  .fnote{position:absolute;top:0;font:900 44px var(--sans);pointer-events:none;text-shadow:0 3px 0 rgba(59,33,22,.25)}
+  #setupBar{position:absolute;left:40px;right:40px;top:84px;padding:14px 20px;font-weight:800;font-size:20px;background:var(--lemon-soft);
+            border:var(--stroke);border-radius:var(--radius);text-align:center;z-index:4}
+
+  /* ---------- help ---------- */
+  .over{position:fixed;inset:0;z-index:40;background:rgba(59,33,22,.45);display:grid;place-items:center;padding:16px}
+  #helpCard{max-width:720px;width:100%;max-height:90vh;overflow:auto;padding:24px 30px;font-size:18px;line-height:1.45}
+  #helpCard h2{font:800 32px var(--serif);margin:0 0 8px;color:var(--grape-deep)}
+  #helpCard h3{font:800 21px var(--serif);margin:16px 0 4px}
+  #helpCard ul{margin:4px 0;padding-left:22px}
+  #helpCard kbd{font:900 15px var(--sans);background:var(--paper2);border:2px solid var(--ink);border-radius:6px;padding:1px 6px}
+  #helpCard .close{margin-top:16px}
+  #focusNag{position:fixed;inset:0;z-index:60;background:rgba(255,247,236,.82);display:flex;align-items:center;justify-content:center;cursor:pointer}
+  #focusNag div{background:var(--lemon);color:var(--ink);font:900 28px var(--sans);padding:22px 34px;border-radius:18px;border:var(--stroke);box-shadow:var(--pop);text-align:center}
+
+  @keyframes hint{0%,100%{box-shadow:0 6px 0 var(--ink), 0 0 0 0 var(--c)}50%{box-shadow:0 6px 0 var(--ink), 0 0 0 10px var(--c);transform:translateY(-6px)}}
+  @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  @keyframes drip{to{height:100%}}
+  @keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+  .popin{animation:pop .35s ease-out}
+</style>
+</head>
+<body class="candy-bg theme-grape">
+<div id="viewport"><div id="stage">
+  <div id="brand"><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#fruit-grapes"/></svg>Fruit Piano</div>
+  <div id="tabs">
+    <button data-mode="free" class="on">Free Play</button>
+    <button data-mode="song">Learn a Song</button>
+    <button data-mode="copy">Copy Cat</button>
+  </div>
+  <div id="corner">
+    <a href="index.html" title="Back to all the games">← Home</a>
+    <button id="btnSetup" title="Set up your fruit">⚙</button>
+    <button id="btnHelp" title="Help">?</button>
+    <button id="btnFull" title="Fullscreen">⛶</button>
+  </div>
+
+  <section class="panel" id="panelFree">
+    <div class="big">Touch a fruit!</div>
+    <div class="sub">John's trumpet turned to chocolate. Our fruit still works. Pick a sound:</div>
+    <div id="voices">
+      <button class="voice on" data-voice="piano">Piano<small>Nice and plinky</small></button>
+      <button class="voice" data-voice="trumpet">John's Trumpet<small>Before the chocolate</small></button>
+      <button class="voice" data-voice="choc">Chocolate Trumpet<small>Gloopy and gurgly</small></button>
+    </div>
+  </section>
+
+  <section class="panel" id="panelSong" hidden>
+    <div id="songs"></div>
+    <div id="songPlay">
+      <div id="lineNum"></div>
+      <div class="line" id="curLine"></div>
+      <div class="line" id="nextLine"></div>
+    </div>
+    <div id="songDone" hidden>
+      <div class="big popin" id="songDoneTxt"></div>
+      <div class="sub">Who wants to try it next?</div>
+    </div>
+    <div id="songBtns">
+      <button class="candy-btn ghost" id="btnListen">Listen first</button>
+      <button class="candy-btn" id="btnRestart">Start over</button>
+    </div>
+  </section>
+
+  <section class="panel" id="panelCopy" hidden>
+    <div class="big" id="copyBig">Copy Cat</div>
+    <div class="sub" id="copySub">Watch the fruits light up, then play them back.</div>
+    <div id="copyStats">
+      <div class="stat">Notes: <b id="copyLen">0</b></div>
+      <div class="stat">Best today: <b id="copyBest">0</b></div>
+    </div>
+    <button class="candy-btn" id="btnCopy">Start</button>
+  </section>
+
+  <div id="setupBar" hidden>Setup: touch each real fruit to test it. Tap <b>Change fruit</b> so the screen matches your table. Press ⚙ when done.</div>
+
+  <div id="keys"></div>
+  <div id="tell"></div>
+</div></div>
+
+<div class="over" id="help" hidden><div class="candy-card" id="helpCard">
+  <h2>Fruit Piano</h2>
+  <h3>Wiring</h3>
+  <ul>
+    <li><b>Earth</b> goes to the player. Easiest: clip a grounding wrist strap onto Earth and have the player wear it snug on bare skin (gray side in). That frees up all 7 alligator clips for food and a spare.</li>
+    <li>6 clips go to the fruit: <b>Left, Up, Right, Down, Space, Click</b>. Line the fruit up in that order, low note to high note.</li>
+    <li>Press ⚙ to test each fruit and make the screen match your real fruit.</li>
+    <li><b>Click fruit:</b> the Makey Makey clicks wherever the mouse pointer is. Park the pointer in an empty spot (like the middle of the screen), not on a button or the Home link.</li>
+    <li>If you have a jumper wire, the <b>W</b> pin on the back can be the 6th fruit instead of Click.</li>
+  </ul>
+  <h3>Modes</h3>
+  <ul>
+    <li><b>Free Play:</b> just play. Try the Chocolate Trumpet.</li>
+    <li><b>Learn a Song:</b> the next fruit bounces. Wrong notes are fine, it just waits for the right one.</li>
+    <li><b>Copy Cat:</b> watch, then copy. One more note each round. Miss one and it turns to chocolate.</li>
+  </ul>
+  <h3>Teacher keys</h3>
+  <ul>
+    <li><kbd>Enter</kbd> start / next player / start the song over</li>
+    <li><kbd>1</kbd>–<kbd>6</kbd> play the fruits from the keyboard</li>
+    <li><kbd>T</kbd> secret chocolate note: the next fruit a kid touches comes out as a gloopy chocolate trumpet, then it's back to normal. Tiny dot bottom-right: solid = armed.</li>
+    <li>Kids can also tap the fruit keys right on the smart screen.</li>
+  </ul>
+  <button class="candy-btn close" id="btnHelpClose">Got it</button>
+</div></div>
+<div id="focusNag" hidden><div>Click anywhere so the fruit works</div></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="fruit-apple">
+      <path d="M20 12 Q21 5 25 3" fill="none" stroke="#5A3420" stroke-width="3" stroke-linecap="round"/>
+      <path d="M22 9 Q30 2 34 7 Q28 12 22 9z" fill="#2FA36B" stroke="#3B2116" stroke-width="1.5"/>
+      <path d="M20 11c-3-3-9-4-13 0-5 5-3 15 1 20 3 4 6 6 9 4 2-1 4-1 6 0 3 2 6 0 9-4 4-5 6-15 1-20-4-4-10-3-13 0z" fill="#FF5C7A" stroke="#3B2116" stroke-width="2.2"/>
+      <path d="M11 17 Q10 22 12 26" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>
+    </g>
+    <g id="fruit-banana">
+      <path d="M8 6 L13 6 L12.5 11 L9 11z" fill="#5A3420" stroke="#3B2116" stroke-width="1.2"/>
+      <path d="M9 10 Q5 28 21 34 Q31 37 37 29 Q28 30 21 26 Q13 21 13 10z" fill="#FFD84A" stroke="#3B2116" stroke-width="2.2" stroke-linejoin="round"/>
+      <path d="M11 16 Q12 25 20 29" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".65"/>
+      <path d="M37 29 L38 31" stroke="#3B2116" stroke-width="2.4" stroke-linecap="round"/>
+    </g>
+    <g id="fruit-grapes">
+      <path d="M21 11 Q21 5 24 3" fill="none" stroke="#5A3420" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M22 8 Q29 2 34 6 Q28 11 22 8z" fill="#2FA36B" stroke="#3B2116" stroke-width="1.4"/>
+      <g fill="#9B6BF2" stroke="#3B2116" stroke-width="1.8">
+        <circle cx="13" cy="15" r="5.2"/><circle cx="21.5" cy="14" r="5.2"/><circle cx="30" cy="15" r="5.2"/>
+        <circle cx="17" cy="23" r="5.2"/><circle cx="26" cy="23" r="5.2"/><circle cx="21.5" cy="31" r="5.2"/>
+      </g>
+      <g fill="#fff" opacity=".55"><circle cx="11.5" cy="13.5" r="1.5"/><circle cx="20" cy="12.5" r="1.5"/><circle cx="15.5" cy="21.5" r="1.5"/></g>
+    </g>
+    <g id="fruit-cucumber">
+      <ellipse cx="17" cy="17" rx="15" ry="6.5" transform="rotate(-35 17 17)" fill="#3C9A4E" stroke="#3B2116" stroke-width="2.2"/>
+      <path d="M8 21 Q15 15 24 9" fill="none" stroke="#8FD48A" stroke-width="2" stroke-linecap="round" opacity=".8"/>
+      <g fill="#1F6B32"><circle cx="12" cy="16" r="1"/><circle cx="20" cy="14" r="1"/><circle cx="16" cy="22" r="1"/><circle cx="25" cy="15" r="1"/></g>
+      <circle cx="29" cy="29" r="8.5" fill="#3C9A4E" stroke="#3B2116" stroke-width="2"/>
+      <circle cx="29" cy="29" r="6.3" fill="#D4F2C6"/>
+      <g fill="#F4FBEF" stroke="#8DBF7E" stroke-width=".8"><ellipse cx="29" cy="26.3" rx="1" ry="1.6"/><ellipse cx="26.6" cy="30.4" rx="1" ry="1.6" transform="rotate(60 26.6 30.4)"/><ellipse cx="31.4" cy="30.4" rx="1" ry="1.6" transform="rotate(-60 31.4 30.4)"/></g>
+    </g>
+    <g id="fruit-jicama">
+      <path d="M19 9 L20 3 L22 9" fill="#8B5534" stroke="#3B2116" stroke-width="1.4" stroke-linejoin="round"/>
+      <path d="M20 8 C30 8 35 15 34 22 C33 30 26 34 21 35 C21 37 20 38 18 39 C18 37 18 36 17 35 C11 33 6 28 6 21 C6 14 11 8 20 8z" fill="#C9A27A" stroke="#3B2116" stroke-width="2.2"/>
+      <path d="M11 16 Q13 13 16 12" fill="none" stroke="#3B2116" stroke-width="1.2" opacity=".4" stroke-linecap="round"/>
+      <path d="M22 15 L33 20 C33 27 29 31 23 32 Z" fill="#FFF8E8" stroke="#3B2116" stroke-width="1.8" stroke-linejoin="round"/>
+    </g>
+    <g id="fruit-raisins" stroke="#3B2116" stroke-width="1.8">
+      <ellipse cx="13" cy="15" rx="6.5" ry="5" fill="#6A3352" transform="rotate(-20 13 15)"/>
+      <ellipse cx="26" cy="13" rx="6" ry="5" fill="#5B2A46" transform="rotate(15 26 13)"/>
+      <ellipse cx="20" cy="24" rx="7" ry="5.2" fill="#6A3352"/>
+      <ellipse cx="10" cy="29" rx="5.5" ry="4.5" fill="#5B2A46" transform="rotate(25 10 29)"/>
+      <ellipse cx="30" cy="28" rx="6" ry="4.8" fill="#6A3352" transform="rotate(-15 30 28)"/>
+      <g fill="none" stroke="#A86A8C" stroke-width="1.1" stroke-linecap="round">
+        <path d="M10 14 Q13 16 16 14"/><path d="M23 12 Q26 14 29 12"/><path d="M16 23 Q20 26 24 23"/><path d="M8 29 Q10 30 12 28"/><path d="M27 28 Q30 30 33 27"/>
+      </g>
+    </g>
+  </defs>
+</svg>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+
+  /* ---------- setup data ---------- */
+  // Low to high: C D E F G A. Pad order matches the front of the Makey Makey.
+  const PADS = ['← Left', '↑ Up', '→ Right', '↓ Down', 'Space', 'Click'];
+  const KEYMAP = { ArrowLeft:0, ArrowUp:1, ArrowRight:2, ArrowDown:3, Space:4, KeyW:5,
+                   Digit1:0, Digit2:1, Digit3:2, Digit4:3, Digit5:4, Digit6:5 };
+  const COLORS = ['strawberry', 'orange', 'lemon', 'mint', 'blueberry', 'grape'];
+  const FREQ = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00];
+  const FRUITS = ['apple', 'grapes', 'banana', 'cucumber', 'jicama', 'raisins'];
+  const NAMES = { apple:'apple', banana:'banana', grapes:'grapes', cucumber:'cucumber', jicama:'jicama', raisins:'raisins' };
+
+  const NOTE = { C:0, D:1, E:2, F:3, G:4, A:5 };
+  // "Note:syllable" pairs; | starts a new line on screen.
+  const SONGS = [
+    { name:'Hot Cross Buns', text:'E:Hot D:cross C:buns | E:hot D:cross C:buns | C:One C:a C:pen C:ny D:two D:a D:pen D:ny | E:hot D:cross C:buns' },
+    { name:'Mary Had a Little Lamb', text:'E:Ma D:ry C:had D:a E:lit E:tle E:lamb | D:lit D:tle D:lamb | E:lit G:tle G:lamb | E:Ma D:ry C:had D:a E:lit E:tle E:lamb | E:its D:fleece D:was E:white D:as C:snow' },
+    { name:'Twinkle Twinkle', text:'C:Twin C:kle G:twin G:kle A:lit A:tle G:star | F:how F:I E:won E:der D:what D:you C:are' },
+    { name:'Jingle Bells', text:'E:Jin E:gle E:bells | E:jin E:gle E:bells | E:jin G:gle C:all D:the E:way | F:Oh F:what F:fun F:it F:is E:to E:ride E:in E:a | D:one D:horse E:o D:pen G:sleigh' },
+  ].map(s => {
+    const lines = s.text.split('|').map(l => l.trim().split(/\s+/).map(t => { const [n, w] = t.split(':'); return { n:NOTE[n], w }; }));
+    return { name:s.name, lines, flat:lines.flat() };
+  });
+
+  let fruits = [...FRUITS];
+  try {
+    const saved = JSON.parse(localStorage.getItem('fp-fruits'));
+    if (Array.isArray(saved) && saved.length === 6 && saved.every(f => FRUITS.includes(f))) fruits = saved;
+  } catch (e) {}
+  const saveFruits = () => { try { localStorage.setItem('fp-fruits', JSON.stringify(fruits)); } catch (e) {} };
+  const fruitSVG = i => `<svg viewBox="0 0 40 40" aria-hidden="true"><use href="#fruit-${fruits[i]}"/></svg>`;
+
+  /* ---------- stage scaling ---------- */
+  const stage = $('stage');
+  function fit(){
+    const s = Math.min(innerWidth/1280, innerHeight/720);
+    stage.style.transform = `translate(${(innerWidth-1280*s)/2}px,${(innerHeight-720*s)/2}px) scale(${s})`;
+  }
+  addEventListener('resize', fit); fit();
+
+  /* ---------- sound ---------- */
+  let ctx = null, out = null;
+  function audio(){
+    if (!ctx) {
+      try {
+        ctx = new (window.AudioContext||window.webkitAudioContext)();
+        out = ctx.createGain(); out.gain.value = .9;
+        out.connect(ctx.createDynamicsCompressor()).connect(ctx.destination);
+      } catch(e){ return null; }
+    }
+    if (ctx.state === 'suspended') ctx.resume();
+    return ctx;
+  }
+  const osc = (type, f, t) => { const o = ctx.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t); return o; };
+  function env(t, vol, attack, decay){
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t+attack);
+    g.gain.exponentialRampToValueAtTime(.0001, t+attack+decay);
+    return g;
+  }
+  function blip(t, f, vol=.12){
+    const o = osc('sine', f, t), g = env(t, vol, .01, .09);
+    o.frequency.exponentialRampToValueAtTime(f*2.2, t+.08);
+    o.connect(g).connect(out); o.start(t); o.stop(t+.12);
+  }
+  const VOICES = {
+    piano(f, t){
+      const g = env(t, .32, .006, 1.5), g2 = ctx.createGain(); g2.gain.value = .25;
+      const o1 = osc('triangle', f*2, t), o2 = osc('sine', f*4, t);
+      o1.connect(g); o2.connect(g2).connect(g); g.connect(out);
+      [o1, o2].forEach(o => { o.start(t); o.stop(t+1.6); });
+    },
+    trumpet(f, t){
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.22, t+.04);
+      g.gain.setValueAtTime(.2, t+.4); g.gain.exponentialRampToValueAtTime(.0001, t+.7);
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 2;
+      lp.frequency.setValueAtTime(700, t); lp.frequency.exponentialRampToValueAtTime(2800, t+.06); lp.frequency.exponentialRampToValueAtTime(1800, t+.4);
+      const o = osc('sawtooth', f, t), lfo = osc('sine', 5.5, t), lg = ctx.createGain();
+      lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(f*.012, t+.3);
+      lfo.connect(lg).connect(o.frequency);
+      o.connect(lp).connect(g).connect(out);
+      [o, lfo].forEach(x => { x.start(t); x.stop(t+.75); });
+    },
+    choc(f, t){
+      // a trumpet full of melted chocolate: muffled, sagging, with bubbles
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.3, t+.06);
+      g.gain.setValueAtTime(.26, t+.6); g.gain.exponentialRampToValueAtTime(.0001, t+.95);
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 9; lp.frequency.value = 480;
+      const wah = osc('sine', 7, t), wg = ctx.createGain(); wg.gain.value = 260;
+      wah.connect(wg).connect(lp.frequency);
+      const o = osc('sawtooth', f, t); o.frequency.exponentialRampToValueAtTime(f*.86, t+.9);
+      o.connect(lp).connect(g).connect(out);
+      [o, wah].forEach(x => { x.start(t); x.stop(t+1); });
+      for (let k = 0; k < 4; k++) blip(t + .12 + k*.17 + Math.random()*.05, 250 + Math.random()*350);
+    },
+  };
+  let voice = 'piano';
+  function playNote(i, v = voice){ const a = audio(); if (a) VOICES[v](FREQ[i], a.currentTime); }
+  function gloop(){
+    const a = audio(); if (!a) return; const t = a.currentTime;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 500;
+    const o = osc('sawtooth', 200, t), g = env(t, .16, .02, 1.1);
+    o.frequency.exponentialRampToValueAtTime(55, t+1.1);
+    o.connect(lp).connect(g).connect(out); o.start(t); o.stop(t+1.2);
+    const s = osc('sine', 100, t), sg = env(t, .3, .02, 1.2);
+    s.frequency.exponentialRampToValueAtTime(40, t+1.2);
+    s.connect(sg).connect(out); s.start(t); s.stop(t+1.3);
+    [0, .15, .3, .45, .6].forEach(w => blip(t + .5 + w, 300 + Math.random()*300, .08));
+  }
+  function cheer(big){
+    const a = audio(); if (!a) return; const t = a.currentTime;
+    const notes = big ? [0, 2, 4, 5, 4, 5] : [2, 4];
+    notes.forEach((n, k) => VOICES.piano(FREQ[n] * (big && k > 2 ? 2 : 1), t + k*.11));
+  }
+
+  /* ---------- fruit keys ---------- */
+  const keysEl = $('keys');
+  const keys = PADS.map((pad, i) => {
+    const k = document.createElement('div');
+    k.className = 'key'; k.dataset.i = i;
+    k.style.setProperty('--c', `var(--${COLORS[i]})`);
+    k.style.setProperty('--c-deep', `var(--${COLORS[i]}-deep)`);
+    k.style.setProperty('--c-soft', `var(--${COLORS[i]}-soft)`);
+    k.innerHTML = `<div class="choc"></div><div class="num">${i+1}</div><div class="plate">${fruitSVG(i)}</div><div class="name"></div>
+                   <div class="pad">${pad}</div><button class="swap" data-i="${i}">Change fruit</button>`;
+    keysEl.append(k);
+    return k;
+  });
+  function redrawFruit(){
+    keys.forEach((k, i) => {
+      k.querySelector('.plate').innerHTML = fruitSVG(i);
+      const nm = NAMES[fruits[i]];
+      k.querySelector('.name').textContent = nm[0].toUpperCase() + nm.slice(1);
+      k.setAttribute('aria-label', `${NAMES[fruits[i]]} ${i+1}`);
+    });
+    if (mode === 'song') renderSong();
+  }
+
+  function floatNote(i){
+    const k = keys[i], n = document.createElement('div');
+    n.className = 'fnote'; n.textContent = ['♪','♫','♩'][Math.floor(Math.random()*3)];
+    n.style.left = (k.offsetLeft + k.offsetWidth/2) + 'px';
+    n.style.color = `var(--${COLORS[i]}-deep)`;
+    keysEl.append(n);
+    const dx = (Math.random()-.5)*90, r = (Math.random()-.5)*60;
+    n.animate([{ transform:'translate(-50%,0) rotate(0)', opacity:1 },
+               { transform:`translate(calc(-50% + ${dx}px),-200px) rotate(${r}deg)`, opacity:0 }],
+              { duration:1300, easing:'ease-out' }).onfinish = () => n.remove();
+  }
+  // sound + float, used for both kids' presses and the computer's playback.
+  // The teacher's secret T key arms a chocolate note: the next fruit a kid touches gloops, then it's back to normal.
+  let armed = false;
+  function setArmed(on){ armed = on; $('tell').classList.toggle('on', on); }
+  function sound(i, kid){
+    if (kid && armed) {
+      setArmed(false);
+      playNote(i, 'choc');
+      const c = keys[i].querySelector('.choc');
+      c.getAnimations().forEach(a => a.cancel());
+      c.animate([{ height:'0%', opacity:1 }, { height:'100%', opacity:1, offset:.45 }, { height:'100%', opacity:1, offset:.8 }, { height:'100%', opacity:0 }],
+                { duration:2200, easing:'ease-in-out' });
+    } else playNote(i);
+    floatNote(i);
+  }
+  function flash(i, ms){ keys[i].classList.add('down'); later(() => keys[i].classList.remove('down'), ms); }
+
+  /* ---------- timers (cleared on every mode switch) ---------- */
+  let timers = [];
+  const later = (fn, ms) => { const id = setTimeout(fn, ms); timers.push(id); return id; };
+  const clearTimers = () => { timers.forEach(clearTimeout); timers = []; };
+
+  /* ---------- modes ---------- */
+  let mode = 'free';
+  function setMode(m){
+    clearTimers();
+    mode = m;
+    document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
+    $('panelFree').hidden = m !== 'free';
+    $('panelSong').hidden = m !== 'song';
+    $('panelCopy').hidden = m !== 'copy';
+    keys.forEach(k => { k.classList.remove('down', 'hint'); resetChoc(k); });
+    listening = false;
+    if (m === 'song') songRestart();
+    if (m === 'copy') copyReset();
+  }
+  function resetChoc(k){ const c = k.querySelector('.choc'); c.getAnimations().forEach(a => a.cancel()); c.classList.remove('go'); }
+
+  document.querySelectorAll('#tabs button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+  document.querySelectorAll('.voice').forEach(b => b.addEventListener('click', () => {
+    voice = b.dataset.voice;
+    document.querySelectorAll('.voice').forEach(x => x.classList.toggle('on', x === b));
+    playNote(4);
+  }));
+
+  /* ---------- Learn a Song ---------- */
+  let songIdx = 0, songPos = 0, listening = false, listenPos = -1;
+  const songsEl = $('songs');
+  SONGS.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.className = 'chip'; b.textContent = s.name;
+    b.addEventListener('click', () => { songIdx = i; songRestart(); });
+    songsEl.append(b);
+  });
+  function lineOf(song, pos){
+    let start = 0;
+    for (let L = 0; L < song.lines.length; L++) {
+      if (pos < start + song.lines[L].length) return { L, start };
+      start += song.lines[L].length;
+    }
+    return { L: song.lines.length - 1, start: start - song.lines.at(-1).length };
+  }
+  function bubbles(line, start, cur){
+    return line.map((nt, j) => {
+      const p = start + j, cls = p < cur ? 'done' : p === cur ? 'now' : '';
+      return `<div class="bub ${cls}" data-p="${p}" style="--c:var(--${COLORS[nt.n]});--c-soft:var(--${COLORS[nt.n]}-soft);--c-deep:var(--${COLORS[nt.n]}-deep)">
+        <div class="dot">${fruitSVG(nt.n)}</div><div class="w">${nt.w}</div></div>`;
+    }).join('');
+  }
+  function renderSong(){
+    const song = SONGS[songIdx], cur = listening ? listenPos : songPos;
+    [...songsEl.children].forEach((b, i) => b.classList.toggle('on', i === songIdx));
+    const done = !listening && songPos >= song.flat.length;
+    $('songPlay').hidden = done; $('songDone').hidden = !done;
+    $('btnListen').textContent = listening ? 'Stop' : 'Listen first';
+    keys.forEach(k => k.classList.remove('hint'));
+    if (done) return;
+    const { L, start } = lineOf(song, Math.max(cur, 0));
+    $('lineNum').textContent = `Line ${L+1} of ${song.lines.length}`;
+    $('curLine').innerHTML = bubbles(song.lines[L], start, cur);
+    const next = song.lines[L+1];
+    $('nextLine').innerHTML = next ? bubbles(next, start + song.lines[L].length, -1) : '';
+    if (!listening) keys[song.flat[songPos].n].classList.add('hint');
+  }
+  function songRestart(){ clearTimers(); listening = false; songPos = 0; renderSong(); }
+  function songInput(i){
+    const song = SONGS[songIdx];
+    if (songPos >= song.flat.length) return;
+    if (song.flat[songPos].n === i) {
+      songPos++;
+      renderSong();
+      if (songPos >= song.flat.length) {
+        $('songDoneTxt').textContent = `You played ${song.name}!`;
+        later(() => cheer(true), 500);
+      }
+    } else {
+      const b = document.querySelector(`#curLine .bub.now`);
+      if (b) { b.classList.remove('oops'); void b.offsetWidth; b.classList.add('oops'); }
+    }
+  }
+  function listen(){
+    if (listening) return songRestart();
+    clearTimers(); listening = true; listenPos = 0;
+    const song = SONGS[songIdx];
+    song.flat.forEach((nt, k) => later(() => { listenPos = k; renderSong(); sound(nt.n); flash(nt.n, 300); }, 300 + k*480));
+    later(() => { listening = false; songPos = 0; renderSong(); }, 300 + song.flat.length*480 + 400);
+    renderSong();
+  }
+  $('btnListen').addEventListener('click', listen);
+  $('btnRestart').addEventListener('click', songRestart);
+
+  /* ---------- Copy Cat ---------- */
+  const copy = { state:'idle', seq:[], step:0, best:0 };
+  function copyShow(big, sub, btn){
+    $('copyBig').textContent = big; $('copySub').textContent = sub;
+    $('copyBig').classList.remove('popin'); void $('copyBig').offsetWidth; $('copyBig').classList.add('popin');
+    $('btnCopy').hidden = !btn; if (btn) $('btnCopy').textContent = btn;
+    $('copyLen').textContent = copy.state === 'over' ? copy.seq.length - 1 : copy.seq.length;
+    $('copyBest').textContent = copy.best;
+  }
+  function copyReset(){
+    copy.state = 'idle'; copy.seq = []; copy.step = 0;
+    copyShow('Copy Cat', 'Watch the fruits light up, then play them back.', 'Start');
+  }
+  function randNote(){
+    const s = copy.seq, n = s.length;
+    let r; do { r = Math.floor(Math.random()*6); } while (n >= 2 && s[n-1] === r && s[n-2] === r);
+    return r;
+  }
+  function copyStart(){
+    clearTimers();
+    keys.forEach(resetChoc);
+    copy.seq = [randNote()];
+    copyPlayback();
+  }
+  function copyPlayback(){
+    copy.state = 'watch'; copy.step = 0;
+    copyShow('Watch...', `${copy.seq.length} note${copy.seq.length > 1 ? 's' : ''}. Eyes on the fruit!`);
+    const gap = Math.max(380, 720 - copy.seq.length*30);
+    copy.seq.forEach((n, k) => later(() => { sound(n); flash(n, gap*.6); }, 900 + k*gap));
+    later(() => { copy.state = 'turn'; copyShow('Your turn!', 'Play them back in the same order.'); }, 900 + copy.seq.length*gap);
+  }
+  function copyInput(i){
+    if (copy.seq[copy.step] === i) {
+      sound(i, true);
+      copy.step++;
+      if (copy.step === copy.seq.length) {
+        copy.state = 'watch';
+        copy.best = Math.max(copy.best, copy.seq.length);
+        const milestone = copy.seq.length % 5 === 0;
+        later(() => cheer(milestone), 250);
+        copyShow(milestone ? 'Sweet!' : 'Yes!', milestone ? `${copy.seq.length} in a row. Amazing memory!` : 'One more note this time...');
+        later(() => { copy.seq.push(randNote()); copyPlayback(); }, milestone ? 1800 : 1200);
+      }
+    } else {
+      copy.state = 'over';
+      gloop();
+      const c = keys[i].querySelector('.choc'); c.classList.remove('go'); void c.offsetWidth; c.classList.add('go');
+      const right = copy.seq[copy.step];
+      later(() => flash(right, 900), 600);
+      const got = copy.seq.length - 1;
+      copyShow('Oh no, chocolate!', got > 0 ? `You remembered ${got} note${got > 1 ? 's' : ''}! The right fruit was ${NAMES[fruits[right]]} ${right+1}.`
+                                             : `The right fruit was ${NAMES[fruits[right]]} ${right+1}. Try again!`, 'Next player');
+    }
+  }
+  $('btnCopy').addEventListener('click', copyStart);
+
+  /* ---------- input ---------- */
+  const help = $('help');
+  function press(i){
+    if (!help.hidden) return;
+    keys[i].classList.add('down');
+    if (mode === 'copy' && copy.state === 'watch') return;
+    if (mode === 'copy' && copy.state === 'turn') return copyInput(i);
+    if (mode === 'song' && listening) return;
+    sound(i, true);
+    if (mode === 'song') songInput(i);
+  }
+  const release = i => keys[i].classList.remove('down');
+
+  const held = new Map();
+  document.addEventListener('pointerdown', e => {
+    if (e.target.closest('button, a, .over, #focusNag')) return;
+    const k = e.target.closest('.key');
+    let i = null;
+    if (k) i = +k.dataset.i;
+    // the Makey Makey "Click" pad arrives as a mouse click wherever the pointer is parked
+    else if (e.pointerType === 'mouse' && e.button === 0) i = 5;
+    if (i === null) return;
+    e.preventDefault();
+    held.set(e.pointerId, i);
+    press(i);
+  });
+  const lift = e => { if (held.has(e.pointerId)) { release(held.get(e.pointerId)); held.delete(e.pointerId); } };
+  document.addEventListener('pointerup', lift);
+  document.addEventListener('pointercancel', lift);
+
+  document.addEventListener('click', e => {
+    const b = e.target.closest?.('button'); if (b) b.blur();
+    const sw = e.target.closest?.('.swap');
+    if (sw) { const i = +sw.dataset.i; fruits[i] = FRUITS[(FRUITS.indexOf(fruits[i]) + 1) % FRUITS.length]; saveFruits(); redrawFruit(); }
+  });
+
+  addEventListener('keydown', e => {
+    if (e.code in KEYMAP) {
+      e.preventDefault();
+      if (!e.repeat) press(KEYMAP[e.code]);
+      return;
+    }
+    if (e.key === 'Escape') { help.hidden = true; return; }
+    if (e.code === 'KeyT') { setArmed(!armed); return; }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (!help.hidden) { help.hidden = true; return; }
+      if (mode === 'copy' && (copy.state === 'idle' || copy.state === 'over')) copyStart();
+      else if (mode === 'song') songRestart();
+    }
+  });
+  addEventListener('keyup', e => { if (e.code in KEYMAP) release(KEYMAP[e.code]); });
+
+  $('btnHelp').addEventListener('click', () => { help.hidden = false; });
+  $('btnHelpClose').addEventListener('click', () => { help.hidden = true; });
+  help.addEventListener('click', e => { if (e.target === help) help.hidden = true; });
+  $('btnSetup').addEventListener('click', () => {
+    const on = stage.classList.toggle('setup');
+    $('btnSetup').classList.toggle('on', on);
+    $('setupBar').hidden = !on;
+  });
+  $('btnFull').addEventListener('click', () => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen?.().catch(() => {});
+  });
+
+  const nag = $('focusNag');
+  const checkFocus = () => { nag.hidden = document.hasFocus(); };
+  addEventListener('blur', checkFocus); addEventListener('focus', checkFocus);
+  nag.addEventListener('click', () => { nag.hidden = true; audio(); });
+  setTimeout(checkFocus, 300);
+
+  // test hook for automated checks
+  window.__fp = { setMode, press, release, listen, copyStart, SONGS,
+    state: () => ({ mode, voice, fruits:[...fruits], songIdx, songPos, listening, copy:{ ...copy, seq:[...copy.seq] } }) };
+
+  redrawFruit();
+})();
+</script>
+</body>
+</html>
